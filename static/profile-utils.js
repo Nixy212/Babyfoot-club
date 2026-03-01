@@ -131,5 +131,6 @@ window.ProfileUtils = (() => {
   // Exposer globalement pour les appels onclick="logout()" dans les templates
   window.logout = logout;
 
-  return { displayName, avatarHTML, playerCardHTML, updateNav, fetchUserProfile, fetchAllProfiles, _cache_set, logout };
+  function _getAllCache() { return _cache; }
+  return { displayName, avatarHTML, playerCardHTML, updateNav, fetchUserProfile, fetchAllProfiles, _cache_set, _getAllCache, logout };
 })();
