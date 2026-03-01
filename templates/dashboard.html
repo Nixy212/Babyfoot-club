@@ -272,7 +272,7 @@ function updateLobbyCardUI() {
   const card=document.getElementById('lobbyCard'), badge=document.getElementById('lobbyBadge');
   const btn=document.getElementById('lobbyBtn'), title=document.getElementById('lobbyTitle');
   const desc=document.getElementById('lobbyDesc'), icon=document.getElementById('lobbyTitleIcon');
-  const canCreate = isAdmin||hasReservation;
+  const canCreate = isAdmin || hasReservation || !activeLobbyState?.active;
 
   if (activeLobbyState?.active) {
     const L=activeLobbyState;
@@ -312,19 +312,42 @@ function updateLobbyCardUI() {
     card.className='lobby-card lobby-card-disabled'; icon.style.background='rgba(255,255,255,.05)';
     icon.innerHTML='<i class="fas fa-lock" style="color:var(--text-muted)"></i>'; title.textContent='Créer un Lobby';
     badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>🔴</span> Réservation requise';
-    desc.textContent="Réservez d'abord un créneau pour déverrouiller le lobby";
-    btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-lock"></i> Créer un Lobby';
+    desc.textContent="Créez un lobby — une réservation de 15 min sera créée automatiquement";
+    btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-gamepad"></i> Créer un Lobby';
     myJoinRequestPending=false;
   }
 }
 
-function handleLobbyBtn() {
+async function handleLobbyBtn() {
   if (activeLobbyState?.active) {
     const L=activeLobbyState;
     const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername);
     if (imIn) { location.href='/lobby'; }
     else if (!myJoinRequestPending) { socket.emit('request_join_lobby'); myJoinRequestPending=true; updateLobbyCardUI(); showNotif('Demande envoyée à '+L.host,'info'); }
-  } else { socket.emit('create_lobby',{invited:[]}); }
+  } else {
+    // Créer une réservation immédiate + lobby en une seule opération
+    const btn = document.getElementById('lobbyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création…';
+    try {
+      const r = await fetch('/api/reserve_and_lobby', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({duration: 15, mode: '1v1'})
+      }).then(x => x.json());
+      if (r.success) {
+        window.location.href = '/lobby';
+      } else {
+        showNotif('✕ ' + (r.message || 'Erreur lors de la création du lobby'), 'error');
+        btn.disabled = false;
+        updateLobbyCardUI();
+      }
+    } catch(e) {
+      showNotif('✕ Erreur réseau — réessayez', 'error');
+      btn.disabled = false;
+      updateLobbyCardUI();
+    }
+  }
 }
 
 // ── Notifications ────────────────────────────────────────────────────────────

@@ -468,7 +468,7 @@ function nextAvailableGuest() {
   return GUEST_POOL.find(g => !used.includes(g)) || null;
 }
 
-function renderTeam(containerId, players, teamColor) {
+function renderTeam(containerId, players, teamColor, guestOffset) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
   const isHost = currentUsername === lobbyData.host || isAdmin;
@@ -561,8 +561,9 @@ function renderTeam(containerId, players, teamColor) {
   // Guests pas encore dans AUCUNE équipe (team1 + team2 combinées)
   const usedAlready = usedGuests();
   const guestsForDisplay = GUEST_POOL.filter(g => !usedAlready.includes(g));
+  const offset = guestOffset || 0;
   for (let i = 0; i < emptySlots; i++) {
-    const displayGuest = guestsForDisplay[i] || null;
+    const displayGuest = guestsForDisplay[offset + i] || null;
 
     const ghost = document.createElement('div');
     ghost.className = 'player-ghost';
@@ -636,8 +637,11 @@ function updateLobbyUI() {
   if (document.getElementById('team1Mode')) document.getElementById('team1Mode').textContent = `(${mode})`;
   if (document.getElementById('team2Mode')) document.getElementById('team2Mode').textContent = `(${mode})`;
 
-  renderTeam('team1List', lobbyData.team1 || [], '#cd7f32');
-  renderTeam('team2List', lobbyData.team2 || [], '#ffd700');
+  const usedAlready = usedGuests();
+  const availableGuests = GUEST_POOL.filter(g => !usedAlready.includes(g));
+  const team1EmptySlots = Math.max(0, 2 - (lobbyData.team1 || []).length);
+  renderTeam('team1List', lobbyData.team1 || [], '#cd7f32', 0);
+  renderTeam('team2List', lobbyData.team2 || [], '#ffd700', team1EmptySlots);
 
   if ((lobbyData.declined || []).length > 0) {
     document.getElementById('declinedSection').style.display = 'block';
