@@ -67,7 +67,7 @@ body::after {
   animation:bgBreath 18s ease-in-out infinite alternate;
 }
 .page,nav,.mobile-menu,.toast-wrap,#swapRequestNotif,#declinedSection,
-.auth-wrap,.hero,.feat-section{position:relative;z-index:1;}
+.auth-wrap,.hero,.feat-section{position:relative;z-index:2;}
 
 @keyframes gridDrift{0%{background-position:0 0,0 0;}100%{background-position:var(--grid-size) var(--grid-size),var(--grid-size) var(--grid-size);}}
 @keyframes bgBreath{0%{opacity:.5;}50%{opacity:1;}100%{opacity:.6;}}
