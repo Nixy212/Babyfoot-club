@@ -479,29 +479,10 @@ function renderTeam(containerId, players, teamColor, guestOffset) {
   const team1Empty = (lobbyData.team1 || []).length === 0;
   const team2Empty = (lobbyData.team2 || []).length === 0;
 
-  if (isTeam1 && team1Empty && lobbyData.host) {
-    // Afficher l'hôte comme joueur "en attente"
-    const item = document.createElement('div');
-    item.className = 'player-item';
-    item.style.cssText = 'border-color:' + teamColor + '44;background:' + teamColor + '08';
-    const prof = (typeof allUsers.find === 'function' ? allUsers.find(u => (typeof u === 'object' ? u.username : u) === lobbyData.host) : null) || { username: lobbyData.host };
-    const displayN = (prof.nickname && prof.nickname.trim()) ? prof.nickname.trim() : lobbyData.host;
-    let avHtml = prof.avatar_preset ? `<span style="width:28px;height:28px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;font-size:1rem">${prof.avatar_preset}</span>` : `<span style="width:28px;height:28px;border-radius:50%;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700">${lobbyData.host[0].toUpperCase()}</span>`;
-    item.innerHTML = `
-      <span style="display:flex;align-items:center;gap:8px">
-        ${avHtml}
-        <span>
-          <span style="font-weight:700;font-size:0.9rem">${escapeHtml(displayN)} <span style="color:var(--bronze);font-size:0.72rem">★ hôte</span></span>
-          ${displayN !== lobbyData.host ? `<span style="display:block;font-size:0.68rem;color:var(--text-muted)">${escapeHtml(lobbyData.host)}</span>` : ''}
-        </span>
-      </span>
-      <span style="font-size:0.72rem;color:var(--text-muted);font-style:italic">En attente…</span>
-    `;
-    container.appendChild(item);
-    // Pas de ghost slots si on affiche l'hôte en placeholder
-    return;
-  }
-  players.forEach(player => {
+  // Si team1 est vide, traiter l'hôte comme s'il était dans team1 pour l'affichage
+  // (il est dans accepted mais pas encore assigné à une équipe côté serveur)
+  const effectivePlayers = (isTeam1 && team1Empty && lobbyData.host) ? [lobbyData.host] : players;
+  effectivePlayers.forEach(player => {
     const isGuest = GUEST_POOL.includes(player);
 
     if (isGuest) {
@@ -557,7 +538,7 @@ function renderTeam(containerId, players, teamColor, guestOffset) {
   });
 
   // ── Slots vides : afficher les guests dispo avec bouton "+ Ajouter"
-  const emptySlots = MAX_SLOTS - players.length;
+  const emptySlots = MAX_SLOTS - effectivePlayers.length;
   // Guests pas encore dans AUCUNE équipe (team1 + team2 combinées)
   const usedAlready = usedGuests();
   const guestsForDisplay = GUEST_POOL.filter(g => !usedAlready.includes(g));
@@ -639,7 +620,9 @@ function updateLobbyUI() {
 
   const usedAlready = usedGuests();
   const availableGuests = GUEST_POOL.filter(g => !usedAlready.includes(g));
-  const team1EmptySlots = Math.max(0, 2 - (lobbyData.team1 || []).length);
+  // Si team1 est vide, l'hôte sera affiché en placeholder = 1 slot pris
+  const team1EffectiveSize = (lobbyData.team1 || []).length > 0 ? (lobbyData.team1 || []).length : (lobbyData.host ? 1 : 0);
+  const team1EmptySlots = Math.max(0, 2 - team1EffectiveSize);
   renderTeam('team1List', lobbyData.team1 || [], '#cd7f32', 0);
   renderTeam('team2List', lobbyData.team2 || [], '#ffd700', team1EmptySlots);
 
