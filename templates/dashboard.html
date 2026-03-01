@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+{% block title %}Dashboard — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<style>
+.lobby-card { border-radius:16px; padding:1.5rem; border:2px solid; position:relative; overflow:hidden; transition:all .25s; height:100%; display:flex; flex-direction:column; gap:.625rem; }
+.lobby-card-active  { background:linear-gradient(135deg,rgba(205,127,50,.15) 0%,rgba(255,215,0,.06) 100%); border-color:rgba(205,127,50,.5); }
+.lobby-card-active::before  { content:''; position:absolute; top:0;left:0;right:0;height:3px; background:linear-gradient(90deg,#cd7f32,#ffd700,#cd7f32); }
+.lobby-card-disabled { background:var(--bg-secondary); border-color:var(--border-subtle); opacity:.7; }
+.lobby-card-waiting { background:linear-gradient(135deg,rgba(52,152,219,.1) 0%,rgba(52,152,219,.03) 100%); border-color:rgba(52,152,219,.4); }
+.lobby-card-waiting::before { content:''; position:absolute; top:0;left:0;right:0;height:3px; background:linear-gradient(90deg,#2980b9,#3498db,#2980b9); }
+.lobby-title { font-size:1.05rem; font-weight:800; display:flex; align-items:center; gap:.6rem; }
+.lobby-title-icon { width:34px;height:34px; border-radius:10px; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+.lobby-desc { color:var(--text-tertiary); font-size:.875rem; line-height:1.5; flex:1; }
+.lobby-badge { display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .75rem; border-radius:99px; font-size:.75rem; font-weight:700; border:1px solid; width:fit-content; }
+.badge-available   { background:rgba(39,174,96,.12); color:#2ecc71; border-color:rgba(39,174,96,.3); }
+.badge-unavailable { background:rgba(231,76,60,.1); color:#e74c3c; border-color:rgba(231,76,60,.25); }
+.badge-inlobby     { background:rgba(205,127,50,.15); color:#cd7f32; border-color:rgba(205,127,50,.3); }
+.badge-waiting     { background:rgba(52,152,219,.12); color:#3498db; border-color:rgba(52,152,219,.3); }
+.lobby-main-btn { width:100%; padding:.875rem 1.25rem; border-radius:10px; border:none; font-size:.95rem; font-weight:700; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.6rem; font-family:inherit; margin-top:auto; }
+.lobby-main-btn:disabled { opacity:.4; cursor:not-allowed; transform:none !important; }
+.lobby-main-btn:not(:disabled):hover { transform:translateY(-2px); }
+.btn-gold { background:linear-gradient(135deg,#cd7f32 0%,#ffd700 100%); color:#fff; box-shadow:0 4px 20px rgba(205,127,50,.35); }
+.btn-gold:not(:disabled):hover { box-shadow:0 6px 28px rgba(205,127,50,.5); }
+.btn-blue { background:linear-gradient(135deg,#2980b9 0%,#3498db 100%); color:#fff; box-shadow:0 4px 20px rgba(52,152,219,.3); }
+.btn-blue:not(:disabled):hover { box-shadow:0 6px 28px rgba(52,152,219,.45); }
+.btn-ghost-grey { background:rgba(255,255,255,.05); color:var(--text-muted); border:1px solid var(--border-subtle); }
+.btn-ghost-grey:not(:disabled):hover { background:rgba(255,255,255,.09); color:var(--text-primary); }
+.resa-card { border-radius:16px; padding:1.5rem; border:2px solid; position:relative; overflow:hidden; transition:all .25s; display:flex; flex-direction:column; gap:.625rem; }
+.resa-card-has { background:linear-gradient(135deg,rgba(39,174,96,.13) 0%,rgba(39,174,96,.04) 100%); border-color:rgba(39,174,96,.4); }
+.resa-card-has::before { content:''; position:absolute;top:0;left:0;right:0;height:3px; background:linear-gradient(90deg,#27ae60,#2ecc71,#27ae60); }
+.resa-card-empty { background:linear-gradient(135deg,rgba(205,127,50,.1) 0%,rgba(205,127,50,.03) 100%); border-color:rgba(205,127,50,.4); }
+.resa-card-empty::before { content:''; position:absolute;top:0;left:0;right:0;height:3px; background:linear-gradient(90deg,#cd7f32,#ffd700,#cd7f32); background-size:200% auto; animation:grad-slide 3s linear infinite; }
+@keyframes grad-slide { 0%{background-position:0% center} 100%{background-position:200% center} }
+.resa-title { font-size:1.05rem; font-weight:800; display:flex; align-items:center; gap:.6rem; }
+.resa-icon-wrap { width:34px;height:34px; border-radius:10px; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+.resa-slot-display { background:rgba(39,174,96,.08); border:1px solid rgba(39,174,96,.22); border-radius:10px; padding:.75rem 1rem; display:flex; align-items:center; gap:.875rem; }
+.resa-slot-time { font-size:1.2rem; font-weight:800; color:#2ecc71; line-height:1; }
+.resa-slot-label { font-size:.75rem; color:var(--text-muted); margin-top:2px; }
+.notification-bar { position:fixed; top:72px; right:20px; max-width:380px; z-index:9999; display:flex; flex-direction:column; gap:.5rem; pointer-events:none; }
+.notification { background:var(--bg-elevated); border:1px solid var(--border-accent); border-radius:12px; padding:.875rem 1rem; display:flex; align-items:center; gap:.75rem; box-shadow:0 4px 24px rgba(0,0,0,.5); animation:notif-in .3s ease; pointer-events:all; }
+@keyframes notif-in { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+.notification-buttons { display:flex; gap:.375rem; flex-shrink:0; }
+.notification-buttons button { padding:.375rem .75rem; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:.8rem; transition:all .15s; font-family:inherit; }
+.btn-accept  { background:linear-gradient(135deg,#cd7f32,#ffd700); color:#000; }
+.btn-decline { background:rgba(231,76,60,.15); color:#e74c3c; border:1px solid rgba(231,76,60,.3); }
+.stat-mini { padding:.75rem; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border-subtle); text-align:center; }
+.stat-mini-val { font-size:1.75rem; font-weight:800; color:var(--bronze); }
+.stat-mini-label { color:var(--text-tertiary); font-size:.8rem; margin-top:2px; }
+@media(max-width:640px) {
+  #main-action-grid { grid-template-columns:1fr !important; }
+  .lobby-card,.resa-card { padding:1.125rem !important; }
+  .lobby-main-btn { font-size:.88rem !important; }
+  .notification-bar { right:10px; left:10px; max-width:none; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="notification-bar" id="notificationBar"></div>
+
+<div class="page">
+  <div class="container" style="max-width:1100px">
+
+    <div class="page-header fade-up">
+      <h1>Mon espace</h1>
+      <p>Tout ce qu'il vous faut pour jouer au baby-foot</p>
+    </div>
+
+    <!-- Actions rapides : Réservation + Lobby -->
+    <div class="card fade-up" style="animation-delay:.04s">
+      <div class="card-header">
+        <h3>⚡ Actions rapides</h3>
+      </div>
+      <div class="card-body">
+        <div id="main-action-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:stretch">
+
+          <div class="resa-card resa-card-empty" id="resaCard">
+            <div class="resa-title">
+              <div class="resa-icon-wrap" style="background:linear-gradient(135deg,rgba(205,127,50,.2),rgba(205,127,50,.08))">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#cd7f32" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              </div>
+              <span id="resaTitle">Réserver un créneau</span>
+            </div>
+            <div class="lobby-desc" id="resaDesc">Bloquez votre heure à l'avance pour garantir l'accès au baby-foot</div>
+            <div id="resaSlotDisplay" style="display:none" class="resa-slot-display">
+              <div>
+                <div class="resa-slot-time" id="resaSlotTime">—</div>
+                <div class="resa-slot-label">votre créneau</div>
+              </div>
+              <div style="flex:1;font-size:.82rem;color:var(--text-tertiary)" id="resaSlotDetail"></div>
+            </div>
+            <a href="/reservation" class="lobby-main-btn btn-gold" id="resaBtn" style="text-decoration:none;margin-top:.75rem">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              Réserver maintenant
+            </a>
+          </div>
+
+          <div class="lobby-card lobby-card-disabled" id="lobbyCard">
+            <div class="lobby-title">
+              <div class="lobby-title-icon" id="lobbyTitleIcon" style="background:rgba(255,255,255,.05)">
+                <i class="fas fa-lock" style="color:var(--text-muted)"></i>
+              </div>
+              <span id="lobbyTitle">Créer un Lobby</span>
+            </div>
+            <div class="lobby-badge badge-unavailable" id="lobbyBadge"><span>🔴</span> Réservation requise</div>
+            <div class="lobby-desc" id="lobbyDesc">Réservez d'abord un créneau pour déverrouiller la création de lobby</div>
+            <button class="lobby-main-btn btn-ghost-grey" id="lobbyBtn" onclick="handleLobbyBtn()">
+              <i class="fas fa-lock"></i> Créer un Lobby
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Partie Live -->
+    <div class="card fade-up" style="animation-delay:.1s">
+      <div class="card-header">
+        <h3>🎮 Partie Live</h3>
+        <a href="/live-score" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Voir →</a>
+      </div>
+      <div class="card-body">
+        <p style="color:var(--text-tertiary);font-size:.875rem;margin:0 0 1rem">Suivez ou rejoignez les parties en cours — scores mis à jour en temps réel</p>
+        <a href="/live-score" class="btn btn-primary" style="text-decoration:none">
+          <i class="fas fa-eye" style="margin-right:.4rem"></i>Voir la partie en cours
+        </a>
+      </div>
+    </div>
+
+    <!-- Mes Quêtes -->
+    <div class="card fade-up" style="animation-delay:.16s" id="questsWidget">
+      <div class="card-header">
+        <h3>🏅 Mes Quêtes</h3>
+        <a href="/settings#quests" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Tout voir →</a>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div id="questsWidgetList" style="padding:.875rem">
+          <div style="text-align:center;padding:1.25rem;color:var(--text-muted);font-size:.875rem">
+            <div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Servo admin -->
+    <div class="card fade-up" id="servo-controls-card" style="display:none;animation-delay:.2s">
+      <div class="card-header">
+        <h3>🔓 Déverrouillage balle <small style="font-size:.75rem;font-weight:400;color:var(--text-muted)">(Admin)</small></h3>
+      </div>
+      <div class="card-body">
+        <p style="color:var(--text-tertiary);font-size:.875rem;margin:0 0 1rem">Débloquez manuellement la balle pour démarrer une partie</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.875rem">
+          <button class="btn btn-primary" onclick="unlockServo1(this)" style="background:linear-gradient(135deg,#3498db,#2980b9)">
+            🔓 Servo 1<br><small style="font-size:.8em;opacity:.85">(Équipe 1)</small>
+          </button>
+          <button class="btn btn-primary" onclick="unlockServo2(this)" style="background:linear-gradient(135deg,#e74c3c,#c0392b)">
+            🔓 Servo 2<br><small style="font-size:.8em;opacity:.85">(Équipe 2)</small>
+          </button>
+        </div>
+        <div id="servo-feedback" style="margin-top:.875rem;padding:.75rem;border-radius:8px;display:none;text-align:center;font-weight:600;font-size:.9rem"></div>
+      </div>
+    </div>
+
+    <!-- Top 3 -->
+    <div class="card fade-up" style="animation-delay:.22s">
+      <div class="card-header">
+        <h3>🏆 Top 3 du club</h3>
+        <a href="/top" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Voir tout →</a>
+      </div>
+      <div class="card-body">
+        <div id="leaderboard">
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prochains créneaux -->
+    <div class="card fade-up" style="animation-delay:.28s">
+      <div class="card-header">
+        <h3>📅 Prochains créneaux</h3>
+        <a href="/reservation" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">+ Réserver →</a>
+      </div>
+      <div class="card-body">
+        <div id="reservations">
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mes stats -->
+    <div class="card fade-up" style="animation-delay:.34s">
+      <div class="card-header">
+        <h3>📊 Mes Statistiques</h3>
+        <a href="/stats" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Tout voir →</a>
+      </div>
+      <div class="card-body">
+        <div id="userStats">
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let socket;
+try { socket = io({reconnection:true,reconnectionDelay:1000,reconnectionDelayMax:10000,reconnectionAttempts:Infinity,timeout:20000,transports:['websocket','polling']}); }
+catch(e) { socket = {emit:()=>{},on:()=>{},connected:false}; }
+
+let currentUsername=null, isAdmin=false, hasReservation=false;
+let activeLobbyState=null, myJoinRequestPending=false, isGameActive=false;
+
+// ── Chargement utilisateur ──────────────────────────────────────────────────
+async function loadCurrentUser() {
+  const user = await loadBaseUser();
+  if (!user) return;
+  currentUsername = user.username;
+  isAdmin = user.is_admin;
+  hasReservation = user.has_reservation;
+  if (isAdmin) { const sc=document.getElementById('servo-controls-card'); if(sc)sc.style.display='block'; }
+  await Promise.all([checkActiveLobby(), loadMyResa()]);
+  loadUserStats(user.username);
+}
+
+// ── Réservation ─────────────────────────────────────────────────────────────
+async function loadMyResa() {
+  try {
+    const res = await fetch('/api/babyfoot_status');
+    if (!res.ok) return;
+    const data = await res.json();
+    const now = new Date();
+    const all = [...(data.all_today||[]),...(data.all_tomorrow||[])];
+    const mine = all.find(r => r.reserved_by===currentUsername && new Date(r.end_time)>now);
+    if (mine) {
+      hasReservation = true;
+      document.getElementById('resaCard').className = 'resa-card resa-card-has';
+      document.getElementById('resaTitle').textContent = 'Créneau réservé ✓';
+      document.getElementById('resaDesc').textContent = 'Votre créneau est confirmé — le baby-foot vous est réservé';
+      document.getElementById('resaSlotDisplay').style.display = 'flex';
+      const s=new Date(mine.start_time), e=new Date(mine.end_time);
+      const todayStr = s.toDateString()===now.toDateString() ? "Aujourd'hui" : 'Demain';
+      const fmt = d => `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
+      document.getElementById('resaSlotTime').textContent = `${fmt(s)} – ${fmt(e)}`;
+      document.getElementById('resaSlotDetail').textContent = `${todayStr} · ${mine.duration_minutes||15} min · ${mine.mode}`;
+      const btn = document.getElementById('resaBtn');
+      btn.textContent = '✓ Gérer ma réservation';
+      btn.style.cssText = 'background:rgba(39,174,96,.12);color:#2ecc71;border:1px solid rgba(39,174,96,.3);text-decoration:none;margin-top:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.875rem 1.25rem;border-radius:10px;font-weight:700;font-size:.95rem;';
+    }
+    updateLobbyCardUI();
+  } catch(e) {}
+}
+
+// ── Lobby card ───────────────────────────────────────────────────────────────
+async function checkActiveLobby() {
+  try {
+    const [lR,gR] = await Promise.all([fetch('/api/active_lobby'),fetch('/debug/game')]);
+    if (lR.ok) activeLobbyState = await lR.json();
+    if (gR.ok) { const g=await gR.json(); isGameActive=!!(g?.current_game?.active); }
+    updateLobbyCardUI();
+  } catch(e) {}
+}
+
+function updateLobbyCardUI() {
+  if (!currentUsername) return;
+  const card=document.getElementById('lobbyCard'), badge=document.getElementById('lobbyBadge');
+  const btn=document.getElementById('lobbyBtn'), title=document.getElementById('lobbyTitle');
+  const desc=document.getElementById('lobbyDesc'), icon=document.getElementById('lobbyTitleIcon');
+  const canCreate = isAdmin||hasReservation;
+
+  if (activeLobbyState?.active) {
+    const L=activeLobbyState;
+    const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername);
+    if (imIn) {
+      card.className='lobby-card lobby-card-active'; icon.style.background='linear-gradient(135deg,rgba(205,127,50,.25),rgba(255,215,0,.12))';
+      icon.innerHTML='<i class="fas fa-gamepad" style="color:#cd7f32"></i>'; title.textContent='Lobby en cours';
+      badge.className='lobby-badge badge-inlobby'; badge.innerHTML='<span>🟡</span> Vous êtes dans le lobby';
+      desc.textContent=`Hôte : ${L.host} · ${(L.accepted||[]).length} joueur(s) prêt(s)`;
+      btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Retourner dans le Lobby';
+    } else if (myJoinRequestPending) {
+      card.className='lobby-card lobby-card-waiting'; icon.style.background='linear-gradient(135deg,rgba(52,152,219,.2),rgba(52,152,219,.08))';
+      icon.innerHTML='<i class="fas fa-clock" style="color:#3498db"></i>'; title.textContent='Demande envoyée';
+      badge.className='lobby-badge badge-waiting'; badge.innerHTML='<span>🔵</span> En attente';
+      desc.textContent=`Demande envoyée à ${L.host} — en attente de réponse`;
+      btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-hourglass-half"></i> En attente…';
+    } else {
+      card.className='lobby-card lobby-card-waiting'; icon.style.background='linear-gradient(135deg,rgba(52,152,219,.2),rgba(52,152,219,.08))';
+      icon.innerHTML='<i class="fas fa-users" style="color:#3498db"></i>'; title.textContent='Lobby ouvert';
+      badge.className='lobby-badge badge-waiting'; badge.innerHTML=`<span>🔵</span> Hôte : ${L.host}`;
+      desc.textContent=`${L.host} a un lobby · ${(L.accepted||[]).length} joueur(s) — demandez à rejoindre`;
+      btn.className='lobby-main-btn btn-blue'; btn.disabled=false; btn.innerHTML='<i class="fas fa-hand-paper"></i> Demander à rejoindre';
+    }
+  } else if (isGameActive && !isAdmin) {
+    card.className='lobby-card lobby-card-disabled'; icon.style.background='rgba(255,255,255,.05)';
+    icon.innerHTML='<i class="fas fa-futbol" style="color:var(--text-muted)"></i>'; title.textContent='Partie en cours';
+    badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>🔴</span> Partie en cours';
+    desc.textContent='Une partie est en cours — lobby disponible à la fin';
+    btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-lock"></i> Indisponible';
+  } else if (canCreate) {
+    card.className='lobby-card lobby-card-active'; icon.style.background='linear-gradient(135deg,rgba(205,127,50,.25),rgba(255,215,0,.12))';
+    icon.innerHTML='<i class="fas fa-plus" style="color:#cd7f32"></i>'; title.textContent='Créer un Lobby';
+    badge.className='lobby-badge badge-available'; badge.innerHTML='<span>🟢</span> Disponible';
+    desc.textContent='Créez un lobby et invitez vos adversaires — notification instantanée';
+    btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-gamepad"></i> Créer un Lobby';
+  } else {
+    card.className='lobby-card lobby-card-disabled'; icon.style.background='rgba(255,255,255,.05)';
+    icon.innerHTML='<i class="fas fa-lock" style="color:var(--text-muted)"></i>'; title.textContent='Créer un Lobby';
+    badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>🔴</span> Réservation requise';
+    desc.textContent="Réservez d'abord un créneau pour déverrouiller le lobby";
+    btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-lock"></i> Créer un Lobby';
+    myJoinRequestPending=false;
+  }
+}
+
+function handleLobbyBtn() {
+  if (activeLobbyState?.active) {
+    const L=activeLobbyState;
+    const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername);
+    if (imIn) { location.href='/lobby'; }
+    else if (!myJoinRequestPending) { socket.emit('request_join_lobby'); myJoinRequestPending=true; updateLobbyCardUI(); showNotif('Demande envoyée à '+L.host,'info'); }
+  } else { socket.emit('create_lobby',{invited:[]}); }
+}
+
+// ── Notifications ────────────────────────────────────────────────────────────
+function showNotif(msg, type) {
+  const bar = document.getElementById('notificationBar');
+  const colors = {error:'#e74c3c',success:'#2ecc71',info:'var(--bronze)'};
+  const n = document.createElement('div'); n.className='notification';
+  n.style.borderLeft=`3px solid ${colors[type]||colors.info}`;
+  n.innerHTML=`<div style="flex:1;color:var(--text-primary)">${msg}</div><button onclick="this.closest('.notification').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:0 2px;flex-shrink:0">✕</button>`;
+  bar.appendChild(n);
+  setTimeout(()=>{ n.style.cssText+=';opacity:0;transform:translateX(20px);transition:all .3s'; setTimeout(()=>n.remove(),300); },5000);
+}
+
+// ── API calls ────────────────────────────────────────────────────────────────
+async function loadLeaderboard() {
+  const el = document.getElementById('leaderboard');
+  try {
+    const res = await fetch('/leaderboard'); if(!res.ok) throw new Error();
+    let data = (await res.json()).filter(p=>/^Joueur\d+$/i.test(p.username)===false);
+    if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucun classement — jouez une partie !</p>'; return; }
+    const M=['🥇','🥈','🥉'];
+    el.innerHTML=data.slice(0,3).map((p,i)=>`
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.625rem 0;${i<2?'border-bottom:1px solid var(--border-subtle)':''}">
+        <span style="font-size:1.2rem;flex-shrink:0">${M[i]||i+1}</span>
+        <span style="font-weight:700;color:var(--text-primary);flex:1">${p.nickname||p.username}</span>
+        <span style="font-weight:900;color:var(--bronze)">${p.elo||1000} <small style="font-size:.7rem;font-weight:500;color:var(--text-tertiary)">ELO</small></span>
+      </div>`).join('');
+  } catch(e) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Indisponible</p>'; }
+}
+
+async function loadReservations() {
+  const el = document.getElementById('reservations');
+  try {
+    const res = await fetch('/reservations_today'); if(!res.ok) throw new Error();
+    const data = await res.json();
+    if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucune réservation — <a href="/reservation" style="color:var(--bronze)">réservez un créneau</a> !</p>'; return; }
+    const now=new Date();
+    const todayFr=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][now.getDay()];
+    el.innerHTML=data.slice(0,5).map((r,i)=>{
+      const isMine=r.reserved_by===currentUsername;
+      const past=r.day===todayFr&&r.end_time&&now>new Date(r.end_time);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.625rem 0;${i<data.length-1?'border-bottom:1px solid var(--border-subtle);':''}opacity:${past?.4:1}">
+        <div style="display:flex;align-items:center;gap:.625rem">
+          <span style="width:8px;height:8px;border-radius:50%;background:${isMine?'#cd7f32':'rgba(255,255,255,.2)'};flex-shrink:0"></span>
+          <div>
+            <div style="font-weight:600;font-size:.9rem;color:var(--text-primary)">${r.day===todayFr?"Aujourd'hui":'Demain'} · ${r.time}${past?' <span style="font-size:.7rem;color:var(--text-muted)">(passé)</span>':''}</div>
+            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} — ${r.reserved_by}</div>
+          </div>
+        </div>
+        ${isMine?'<span style="font-size:.75rem;padding:2px 10px;border-radius:20px;background:rgba(205,127,50,.15);color:var(--bronze);font-weight:600">Vous</span>':''}
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Indisponible</p>'; }
+}
+
+async function loadUserStats(username) {
+  const el = document.getElementById('userStats');
+  try {
+    const res = await fetch(`/user_stats/${username}`,{headers:{'Accept':'application/json'}});
+    if(!res.ok) throw new Error();
+    const d = await res.json();
+    el.innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:1rem">
+        <div class="stat-mini"><div class="stat-mini-val">${d.total_goals??0}</div><div class="stat-mini-label">Buts marqués</div></div>
+        <div class="stat-mini"><div class="stat-mini-val">${d.total_games??0}</div><div class="stat-mini-label">Parties</div></div>
+        <div class="stat-mini"><div class="stat-mini-val">${d.ratio??0}</div><div class="stat-mini-label">Buts/partie</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;border-top:1px solid var(--border-subtle);font-size:.85rem;color:var(--text-tertiary)">
+        <span>Meilleur score : <strong style="color:var(--text-primary)">${d.best_score||'—'}</strong></span>
+        <a href="/stats" style="color:var(--bronze);font-weight:600;text-decoration:none">Tout voir →</a>
+      </div>`;
+  } catch(e) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Stats indisponibles</p>'; }
+}
+
+async function loadQuestsWidget() {
+  const el=document.getElementById('questsWidgetList'); if(!el) return;
+  try {
+    const res=await fetch('/api/my_quests'); if(!res.ok){el.innerHTML='';return;}
+    const quests=await res.json(); if(quests?.error){el.innerHTML='';return;}
+    const inP=quests.filter(q=>!q.completed&&q.condition_type!=='rank');
+    const done=quests.filter(q=>q.completed);
+    let html='';
+    if(inP.length){
+      html+='<div style="padding:.375rem .25rem .25rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">En cours</div>';
+      html+=inP.slice(0,4).map(q=>{const pct=q.condition_value>0?Math.min(100,Math.round(q.progress/q.condition_value*100)):0;const b=pct>=80?'#2ecc71':pct>=40?'#cd7f32':'#3498db';return`<div style="padding:.625rem .25rem;border-bottom:1px solid var(--border-subtle)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="display:flex;align-items:center;gap:7px"><span>${q.icon}</span><span style="font-weight:700;font-size:.85rem">${q.name}</span></div><span style="font-size:.72rem;color:var(--text-muted)">${q.progress}/${q.condition_value}</span></div><div style="height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;border-radius:99px;background:${b};width:${pct}%;transition:width .8s"></div></div><div style="font-size:.7rem;color:var(--text-muted);margin-top:3px">🎁 ${q.reward_label}</div></div>`;}).join('');
+    }
+    if(done.length){
+      html+='<div style="padding:.625rem .25rem .25rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Débloquées ✅</div>';
+      html+=done.slice(0,3).map(q=>`<div style="padding:.5rem .25rem;display:flex;align-items:center;gap:8px;opacity:.65"><span>${q.icon}</span><span style="font-size:.82rem;text-decoration:line-through;color:var(--text-muted)">${q.name}</span><span style="margin-left:auto;font-size:.72rem;color:#2ecc71;font-weight:700">✓ ${q.reward_label}</span></div>`).join('');
+    }
+    if(!inP.length&&!done.length) html='<div style="text-align:center;padding:1.25rem;color:var(--text-muted);font-size:.875rem">Jouez une partie pour débloquer des quêtes !</div>';
+    el.innerHTML=html;
+  } catch(e){el.innerHTML='';}
+}
+
+// ── Servo ────────────────────────────────────────────────────────────────────
+function unlockServo1(btn){_servo(btn,'unlock_servo1','Servo 1','#3498db');}
+function unlockServo2(btn){_servo(btn,'unlock_servo2','Servo 2','#e74c3c');}
+function _servo(btn,ev,label,color){
+  const fb=document.getElementById('servo-feedback');
+  btn.disabled=true; btn.style.opacity='.5';
+  fb.style.cssText=`display:block;background:${color}18;border:1px solid ${color};color:${color};`;
+  fb.textContent=`Déverrouillage ${label} en cours… (5 sec)`;
+  socket.emit(ev);
+  setTimeout(()=>{btn.disabled=false;btn.style.opacity='1';fb.style.cssText='display:block;background:rgba(39,174,96,.1);border:1px solid #27ae60;color:#27ae60;';fb.textContent=`✓ ${label} reverrouillé`;setTimeout(()=>{fb.style.display='none';},3000);},5000);
+}
+
+// ── Socket ───────────────────────────────────────────────────────────────────
+socket.on('lobby_created',d=>{if(d.host===currentUsername||(d.invited||[]).includes(currentUsername)){showNotif('Lobby créé — redirection…','success');setTimeout(()=>location.href='/lobby',500);}else checkActiveLobby();});
+socket.on('lobby_cancelled',()=>{activeLobbyState=null;myJoinRequestPending=false;updateLobbyCardUI();});
+socket.on('lobby_update',d=>{activeLobbyState=d;updateLobbyCardUI();});
+socket.on('game_started',()=>{isGameActive=true;checkActiveLobby();});
+socket.on('game_stopped',()=>{isGameActive=false;checkActiveLobby();});
+socket.on('join_request_result',d=>{myJoinRequestPending=false;if(d.accepted){showNotif('✓ Accepté par '+d.host+' — redirection…','success');setTimeout(()=>location.href='/lobby',800);}else{showNotif('✕ '+d.host+' a refusé votre demande','error');checkActiveLobby();}});
+socket.on('lobby_invitation',d=>{if(d.to!==currentUsername)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.innerHTML=`<div style="flex:1"><strong style="color:var(--bronze)">${d.from}</strong> vous invite à jouer</div><div class="notification-buttons"><button class="btn-accept" onclick="acceptLobby(this.closest('.notification'))">✓ Accepter</button><button class="btn-decline" onclick="declineLobby(this.closest('.notification'))">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),15000);});
+socket.on('join_request',d=>{if(d.host!==currentUsername&&!isAdmin)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.style.borderLeft='3px solid #3498db';n.innerHTML=`<div style="flex:1"><strong style="color:#3498db">${d.from}</strong> veut rejoindre votre lobby</div><div class="notification-buttons"><button class="btn-accept" style="background:linear-gradient(135deg,#2980b9,#3498db)" onclick="socket.emit('accept_join_request',{from:'${d.from}',request_id:'${d.request_id}'});this.closest('.notification').remove()">✓</button><button class="btn-decline" onclick="socket.emit('decline_join_request',{from:'${d.from}',request_id:'${d.request_id}'});this.closest('.notification').remove()">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),20000);});
+socket.on('error',d=>showNotif('✕ '+(d.message||'Erreur'),'error'));
+socket.on('elo_updated',d=>{if(!d?.changes)return;const me=d.changes.find(c=>c.player===currentUsername);if(!me)return;const sign=me.delta>=0?'+':'';showNotif(`${me.tier_up?'🎉 Niveau supérieur ! ':me.delta>=20?'🔥 Belle victoire ! ':''}${sign}${me.delta} pts ELO`,me.delta>=0?'success':'error');});
+
+function acceptLobby(el){socket.emit('accept_lobby');el?.remove();setTimeout(()=>location.href='/lobby',500);}
+function declineLobby(el){socket.emit('decline_lobby');el?.remove();}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(async()=>{
+  await loadCurrentUser();
+  await Promise.all([loadLeaderboard(),loadReservations(),loadQuestsWidget()]);
+})();
+</script>
+{% endblock %}

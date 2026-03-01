@@ -1,0 +1,36 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#1a1a1a" stroke="#8b6f47" stroke-width="3"/>
+  
+  <!-- Table de baby-foot stylisée -->
+  <rect x="40" y="70" width="120" height="60" rx="5" fill="#2d2d2d" stroke="#8b6f47" stroke-width="2"/>
+  
+  <!-- Lignes du terrain -->
+  <line x1="100" y1="70" x2="100" y2="130" stroke="#8b6f47" stroke-width="1" opacity="0.5"/>
+  <circle cx="100" cy="100" r="8" fill="none" stroke="#8b6f47" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Barres de joueurs -->
+  <line x1="60" y1="60" x2="60" y2="140" stroke="#a68a5c" stroke-width="4" stroke-linecap="round"/>
+  <line x1="80" y1="60" x2="80" y2="140" stroke="#a68a5c" stroke-width="4" stroke-linecap="round"/>
+  <line x1="120" y1="60" x2="120" y2="140" stroke="#a68a5c" stroke-width="4" stroke-linecap="round"/>
+  <line x1="140" y1="60" x2="140" y2="140" stroke="#a68a5c" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Joueurs équipe bleue -->
+  <circle cx="60" cy="85" r="6" fill="#4a90e2"/>
+  <circle cx="60" cy="115" r="6" fill="#4a90e2"/>
+  <circle cx="80" cy="100" r="6" fill="#4a90e2"/>
+  
+  <!-- Joueurs équipe rouge -->
+  <circle cx="120" cy="100" r="6" fill="#e74c3c"/>
+  <circle cx="140" cy="85" r="6" fill="#e74c3c"/>
+  <circle cx="140" cy="115" r="6" fill="#e74c3c"/>
+  
+  <!-- Balle -->
+  <circle cx="95" cy="100" r="4" fill="#ffffff">
+    <animate attributeName="cx" values="95;105;95" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Texte -->
+  <text x="100" y="170" text-anchor="middle" fill="#8b6f47" font-size="20" font-weight="bold" font-family="Arial">BABY-FOOT</text>
+  <text x="100" y="188" text-anchor="middle" fill="#a68a5c" font-size="14" font-family="Arial">CLUB</text>
+</svg>

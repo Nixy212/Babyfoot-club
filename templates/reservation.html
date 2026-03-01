@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+{% set active_page = "reservation" %}
+{% block title %}Réservation — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    @media(max-width:768px){/* removed by design-v3 *//* removed by design-v3 *//* removed by design-v3 */}
+    .nav,.page{position:relative;z-index:1}
+
+    /* Status */
+    .status-card{border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;border:1px solid}
+    .status-free{background:linear-gradient(135deg,rgba(39,174,96,0.12),rgba(39,174,96,0.05));border-color:rgba(39,174,96,0.35)}
+    .status-busy{background:linear-gradient(135deg,rgba(231,76,60,0.12),rgba(231,76,60,0.05));border-color:rgba(231,76,60,0.35)}
+    .status-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;animation:pdot 2s infinite}
+    .status-free .status-dot{background:#27ae60;box-shadow:0 0 8px rgba(39,174,96,0.6)}
+    .status-busy .status-dot{background:#e74c3c;box-shadow:0 0 8px rgba(231,76,60,0.6)}
+    @keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.2)}}
+
+    /* Play now */
+    .play-now-card{background:linear-gradient(135deg,rgba(39,174,96,0.15),rgba(39,174,96,0.05));border:1px solid rgba(39,174,96,0.4);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;display:none}
+    .play-now-card h3{color:#2ecc71;margin:0 0 .75rem;font-size:1.1rem}
+
+    /* Pills */
+    .pill-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+    .dpill{padding:.5rem 1.1rem;border-radius:99px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-weight:600;font-size:.9rem;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .dpill:hover{border-color:rgba(205,127,50,.5);color:var(--text-primary)}
+    .dpill.on{background:linear-gradient(135deg,#cd7f32,#b8732f);border-color:#cd7f32;color:#fff;box-shadow:0 2px 12px rgba(205,127,50,.4)}
+    .mpill{padding:.5rem 1.4rem;border-radius:99px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-weight:600;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .mpill.on{background:linear-gradient(135deg,rgba(205,127,50,.2),rgba(205,127,50,.08));border-color:rgba(205,127,50,.5);color:#cd7f32}
+    .pill-label{font-size:.8rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.06em}
+
+    /* Plan card */
+    .plan-card{background:var(--bg-secondary);border:1px solid var(--border-normal);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem}
+    .plan-card h3{color:var(--bronze);margin:0 0 1.1rem;font-size:1.1rem}
+    .day-tabs{display:flex;gap:.5rem;margin-bottom:1rem}
+    .dtab{flex:1;padding:.65rem;border-radius:10px;border:1.5px solid var(--border-normal);background:transparent;color:var(--text-tertiary);font-weight:600;cursor:pointer;text-align:center;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .dtab.on{background:rgba(205,127,50,.12);border-color:rgba(205,127,50,.4);color:#cd7f32}
+    .time-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+    input[type=time]{width:100%;padding:.7rem 1rem;background:var(--bg-elevated);border:1.5px solid var(--border-normal);border-radius:10px;color:var(--text-primary);font-size:1.1rem;font-weight:600;outline:none;-webkit-appearance:none;transition:border-color .15s;box-sizing:border-box;font-family:inherit}
+    input[type=time]:focus{border-color:rgba(205,127,50,.5);box-shadow:0 0 0 3px rgba(205,127,50,.1)}
+    .end-label{font-size:.85rem;color:var(--text-tertiary);white-space:nowrap;font-weight:500}
+
+    /* Conflict */
+    .conflict-box{display:none;padding:.6rem .85rem;border-radius:8px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;font-size:.85rem;margin-bottom:1rem}
+
+    /* My resa */
+    .my-resa{background:linear-gradient(135deg,rgba(205,127,50,.15),rgba(205,127,50,.05));border:1px solid rgba(205,127,50,.4);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none}
+    .my-resa h3{color:#cd7f32;margin:0 0 .5rem}
+
+    /* Timeline */
+    .timeline-wrap{background:var(--bg-secondary);border:1px solid var(--border-normal);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+    .tl-title{color:var(--text-secondary);font-size:.875rem;text-transform:uppercase;letter-spacing:.07em;margin:0 0 1rem}
+    /* Conteneur scrollable */
+    .tl-outer{
+      overflow-x: auto;
+      overflow-y: hidden;
+      border: 2px solid var(--border-accent);
+      border-radius: 10px;
+      padding: 3px;
+      background: rgba(205,127,50,0.04);
+      margin-bottom:.5rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(205,127,50,0.4) transparent;
+    }
+    .tl-outer::-webkit-scrollbar{height:4px}
+    .tl-outer::-webkit-scrollbar-track{background:transparent}
+    .tl-outer::-webkit-scrollbar-thumb{background:rgba(205,127,50,0.4);border-radius:2px}
+    /* Inner container with fixed width: 80px per hour × 13 hours = 1040px */
+    .tl-inner{width:1040px;position:relative}
+    .tl-bar{position:relative;height:68px;background:rgba(255,255,255,.04);border-radius:7px;overflow:visible;margin-bottom:0}
+    /* Graduations verticales toutes les heures */
+    .tl-bar::before{
+      content:'';
+      position:absolute;inset:0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 79px,
+        rgba(255,255,255,0.08) 79px,
+        rgba(255,255,255,0.08) 80px
+      );
+      pointer-events:none;z-index:1;border-radius:7px;
+    }
+    .tl-block{position:absolute;top:4px;bottom:4px;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;z-index:2}
+    .tl-block.mine{background:linear-gradient(135deg,#cd7f32,#b8732f);color:#fff;box-shadow:0 2px 8px rgba(205,127,50,0.35)}
+    .tl-block.theirs{background:rgba(231,76,60,.4);border:1px solid rgba(231,76,60,.6);color:#ff8080}
+    .tl-block.past{opacity:.35;filter:grayscale(.6)}
+    /* Labels sous la barre, alignés sur les heures */
+    .tl-labels{display:flex;font-size:.75rem;color:var(--text-muted);margin-top:5px;padding:0;font-weight:500;width:1040px}
+    .tl-labels span{width:80px;flex-shrink:0;text-align:center}
+    .tl-now{position:absolute;top:0;bottom:0;width:2px;background:#cd7f32;z-index:3;display:none}
+    .tl-now::before{content:'▼';position:absolute;top:-2px;left:50%;transform:translateX(-50%);font-size:8px;color:#cd7f32;line-height:1}
+    .tl-now::after{content:'';position:absolute;bottom:-3px;left:-3px;width:8px;height:8px;border-radius:50%;background:#cd7f32;box-shadow:0 0 6px rgba(205,127,50,0.7)}
+
+    /* Next free */
+    .free-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+    .free-pill{padding:.4rem .85rem;border-radius:99px;background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:#2ecc71;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .free-pill:hover{background:rgba(39,174,96,.2)}
+
+    /* Confirm btn */
+    .cbtn{width:100%;padding:1rem;border-radius:12px;border:none;background:linear-gradient(135deg,#cd7f32,#b8732f);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:opacity .15s,transform .15s;margin-bottom:.75rem;font-family:inherit}
+    .cbtn:disabled{opacity:.4;cursor:not-allowed}
+    .cbtn:not(:disabled):active{transform:scale(.98)}
+    .cbtn.green{background:linear-gradient(135deg,#27ae60,#219a52)}
+
+    /* Separator */
+    .sep{display:flex;align-items:center;gap:.75rem;margin:.25rem 0 1.25rem;font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+    .sep::before,.sep::after{content:'';flex:1;height:1px;background:var(--border-subtle)}
+
+    /* Toast */
+    .toast-wrap{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none}
+    .toast{background:var(--bg-elevated);border:1px solid var(--border-normal);border-radius:10px;padding:.65rem 1.25rem;font-size:.9rem;font-weight:600;color:var(--text-primary);box-shadow:0 4px 20px rgba(0,0,0,.4);animation:tin .25s ease;white-space:nowrap}
+    .toast.ok{border-color:rgba(39,174,96,.4);color:#2ecc71}
+    .toast.err{border-color:rgba(231,76,60,.4);color:#e74c3c}
+    @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes sp{to{transform:rotate(360deg)}}
+  </style>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block body %}
+<div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+<div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+<div class="bg-orb bg-orb-3" aria-hidden="true"></div>
+
+
+
+
+<script>
+// ── État
+let ME = '', IS_ADMIN = false;
+let durNow = 10, modeNow = '1v1';
+let durPlan = 10, modePlan = '1v1';
+let dayOff = 0;
+let STATUS = null;
+let myId = null;
+
+// ── Helpers
+function toggleMenu() {
+  const isOpen = document.getElementById('mobileMenu').classList.contains('open');
+  document.getElementById('burger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  const overlay = document.getElementById('menuOverlay');
+  if (overlay) overlay.classList.toggle('open');
+  document.body.style.overflow = !isOpen ? 'hidden' : '';
+}
+function logout(){fetch('/api/logout',{method:'POST'}).then(()=>location.href='/');}
+function toast(m,t='inf'){const c=document.getElementById('tw'),d=document.createElement('div');d.className='toast '+t;d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),3000);}
+function hm(iso){if(!iso)return'—';const d=new Date(iso);return d.getHours().toString().padStart(2,'0')+'h'+d.getMinutes().toString().padStart(2,'0');}
+function hhmm(iso){if(!iso)return'—';const d=new Date(iso);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+
+// ── Sélecteurs pills
+function setDur(ctx,v,el){
+  if(ctx==='now'){durNow=v;document.querySelectorAll('.dpill').forEach(p=>{if(p.closest('#playNowSection'))p.classList.remove('on')});}
+  else{durPlan=v;document.querySelectorAll('.dpill').forEach(p=>{if(p.closest('.plan-card'))p.classList.remove('on')});}
+  el.classList.add('on');
+  if(ctx==='now')updatePreview();else{onTime();checkConflict();}
+}
+function setMode(ctx,v){
+  if(ctx==='now'){modeNow=v;document.getElementById('mN1').classList.toggle('on',v==='1v1');document.getElementById('mN2').classList.toggle('on',v==='2v2');}
+  else{modePlan=v;document.getElementById('mP1').classList.toggle('on',v==='1v1');document.getElementById('mP2').classList.toggle('on',v==='2v2');}
+}
+function setDay(off){
+  dayOff=off;
+  document.getElementById('tabT').classList.toggle('on',off===0);
+  document.getElementById('tabD').classList.toggle('on',off===1);
+  onTime();checkConflict();renderTL();renderFree();
+}
+
+// ── Preview "jouer maintenant"
+function updatePreview(){
+  const now=new Date(),end=new Date(now.getTime()+durNow*60000);
+  document.getElementById('nowPreview').textContent='De '+hhmm(now.toISOString())+' à '+hhmm(end.toISOString());
+}
+
+// ── Time input → afficher heure de fin
+function onTime(){
+  const v=document.getElementById('planTime').value;
+  if(!v){document.getElementById('endLabel').textContent='→ fin : —';return;}
+  const [h,m]=v.split(':').map(Number);
+  const em=m+durPlan,eh=h+Math.floor(em/60),emin=em%60;
+  document.getElementById('endLabel').textContent='→ fin : '+String(eh).padStart(2,'0')+'h'+String(emin).padStart(2,'0');
+  checkConflict();
+}
+
+// ── Vérif conflit côté client
+function checkConflict(){
+  const v=document.getElementById('planTime').value,el=document.getElementById('conflict');
+  if(!v||!STATUS){el.style.display='none';return;}
+  const [h,m]=v.split(':').map(Number);
+  const base=new Date();if(dayOff===1)base.setDate(base.getDate()+1);
+  base.setHours(h,m,0,0);
+  const sMs=base.getTime(),eMs=sMs+durPlan*60000;
+  // Créneau dans le passé ?
+  if(dayOff===0&&base<new Date()){el.textContent='Cette heure est déjà passée';el.style.display='block';return;}
+  // Chevauchement ?
+  const key=dayOff===0?'all_today':'all_tomorrow';
+  for(const r of(STATUS[key]||[])){
+    if(r.reserved_by===ME)continue;
+    const rs=new Date(r.start_time).getTime(),re=new Date(r.end_time).getTime();
+    if(sMs<re&&eMs>rs){el.textContent='Créneau pris par '+r.reserved_by+' ('+hm(r.start_time)+'–'+hm(r.end_time)+')';el.style.display='block';return;}
+  }
+  el.style.display='none';
+}
+
+// ── Refresh statut
+async function refresh(){
+  try{
+    const d=await fetch('/api/babyfoot_status').then(r=>r.json());
+    STATUS=d;renderStatus(d);findMyResa(d);renderTL();renderFree();updatePreview();
+  }catch(e){console.error(e);}
+}
+
+function renderStatus(d){
+  const card=document.getElementById('statusCard');
+  const txt=document.getElementById('statusText'),sub=document.getElementById('statusSub');
+  document.getElementById('statusTime').textContent=hhmm(d.server_time);
+  if(d.is_free){
+    card.className='status-card status-free';
+    txt.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> <span>Baby-foot libre</span>';
+    const nx=d.upcoming[0];
+    sub.textContent=nx?'Prochain : '+hm(nx.start_time)+' ('+nx.reserved_by+')':'Aucune réservation prévue';
+    document.getElementById('playNowSection').style.display=myId?'none':'block';
+  }else{
+    card.className='status-card status-busy';
+    const cur=d.current,now=new Date();
+    txt.innerHTML='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e74c3c;margin-right:6px"></span>Occupé jusqu\'à '+hm(cur.end_time);
+    const rem=Math.max(1,Math.ceil((new Date(cur.end_time)-now)/60000));
+    sub.textContent='Par '+cur.reserved_by+' · encore '+rem+' min';
+    document.getElementById('playNowSection').style.display='none';
+  }
+}
+
+function findMyResa(d){
+  const all=[...(d.all_today||[]),...(d.all_tomorrow||[])];
+  const now=new Date();
+  const mine=all.find(r=>r.reserved_by===ME&&new Date(r.end_time)>now);
+  const card=document.getElementById('myResaCard');
+  if(mine){
+    myId=mine.id;
+    const today=new Date(mine.start_time).toDateString()===now.toDateString();
+    document.getElementById('myResaInfo').textContent=(today?"Aujourd'hui":'Demain')+' · '+hm(mine.start_time)+' – '+hm(mine.end_time)+' · '+(mine.duration_minutes||15)+' min · '+mine.mode;
+    card.style.display='block';
+    document.getElementById('playNowSection').style.display='none';
+  }else{
+    myId=null;card.style.display='none';
+  }
+}
+
+// ── Timeline
+function renderTL(){
+  if(!STATUS)return;
+  const key=dayOff===0?'all_today':'all_tomorrow';
+  const resas=STATUS[key]||[];
+  const bar=document.getElementById('tlBar'),nowEl=document.getElementById('tlNow');
+  const outer=document.getElementById('tlOuter');
+  document.getElementById('tlTitle').textContent=dayOff===0?"Aujourd'hui":'Demain';
+  // 80px par heure, 13 heures (8h→21h)
+  const SH=8,EH=21,PX_PER_HOUR=80,TOTAL_PX=(EH-SH)*PX_PER_HOUR;
+  function px(iso){const d=new Date(iso);return Math.max(0,Math.min(TOTAL_PX,((d.getHours()-SH)*60+d.getMinutes())/60*PX_PER_HOUR));}
+  Array.from(bar.children).forEach(c=>{if(c!==nowEl)c.remove();});
+  const now=new Date();
+  const nowPx=((now.getHours()-SH)*60+now.getMinutes())/60*PX_PER_HOUR;
+  if(dayOff===0&&nowPx>=0&&nowPx<=TOTAL_PX){
+    nowEl.style.display='block';nowEl.style.left=nowPx+'px';
+  } else nowEl.style.display='none';
+  const GUEST_RE = /^Joueur\d+$/i;
+  resas.forEach(r=>{
+    if(GUEST_RE.test(r.reserved_by) && r.reserved_by!==ME) return;
+    const l=px(r.start_time),w=px(r.end_time)-l;
+    if(w<=2)return;
+    const b=document.createElement('div');b.className='tl-block';
+    if(new Date(r.end_time)<now&&dayOff===0)b.classList.add('past');
+    b.classList.add(r.reserved_by===ME?'mine':'theirs');
+    b.style.left=l+'px';b.style.width=w+'px';
+    b.title=r.reserved_by+' · '+hm(r.start_time)+'–'+hm(r.end_time);
+    b.textContent=r.reserved_by===ME?'Vous':r.reserved_by;
+    b.onclick=()=>{
+      if(r.reserved_by!==ME){
+        const e=new Date(r.end_time);
+        document.getElementById('planTime').value=String(e.getHours()).padStart(2,'0')+':'+String(e.getMinutes()).padStart(2,'0');
+        onTime();
+      }
+    };
+    bar.appendChild(b);
+  });
+  // Centrer sur l'heure actuelle (seulement aujourd'hui au 1er rendu)
+  if(dayOff===0&&nowPx>0){
+    const visibleW=outer.clientWidth;
+    outer.scrollLeft=Math.max(0,nowPx-visibleW/2);
+  }
+}
+
+// ── Prochains créneaux libres
+function renderFree(){
+  if(!STATUS)return;
+  const key=dayOff===0?'all_today':'all_tomorrow';
+  const now=new Date();
+  let ptr=dayOff===0?new Date():new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,8,0);
+  const max=new Date(ptr);max.setHours(21,0,0,0);
+  const sorted=[...(STATUS[key]||[])].filter(r=>new Date(r.end_time)>now).sort((a,b)=>new Date(a.start_time)-new Date(b.start_time));
+  const sug=[];
+  for(const r of sorted){
+    const rs=new Date(r.start_time),re=new Date(r.end_time);
+    if(rs>ptr&&(rs-ptr)>=5*60000)sug.push(new Date(ptr));
+    if(re>ptr)ptr=re;
+    if(sug.length>=4)break;
+  }
+  if(sug.length<4&&ptr<max)sug.push(new Date(ptr));
+  const c=document.getElementById('freeRow');
+  c.innerHTML=sug.slice(0,4).map(s=>{
+    const hh=String(s.getHours()).padStart(2,'0'),mm=String(s.getMinutes()).padStart(2,'0');
+    return '<button class="free-pill" onclick="applySlot(\''+hh+':'+mm+'\')">'+hh+'h'+mm+'</button>';
+  }).join('')||'<span style="font-size:.82rem;color:var(--text-muted)">Aucun créneau libre</span>';
+}
+
+function applySlot(t){
+  document.getElementById('planTime').value=t;
+  onTime();
+  document.getElementById('planTime').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ── Actions
+async function playNow(){
+  const btn=document.getElementById('btnNow');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>&nbsp;Réservation…';
+  try{
+    const r=await fetch('/api/reserve_and_lobby',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({duration:durNow,mode:modeNow})
+    }).then(x=>x.json());
+    if(r.success){
+      btn.innerHTML='<span class="spin"></span>&nbsp;Redirection…';
+      // Le serveur a créé la réservation ET le lobby en une seule opération
+      // On redirige directement sans attendre un event socket
+      // (le lobby est déjà actif côté serveur, lobby.html vérifiera /api/active_lobby)
+      setTimeout(() => window.location.replace('/lobby'), 300);
+    } else {
+      toast(r.message||'Erreur lors de la réservation','err');
+      btn.disabled=false;btn.innerHTML='Jouer maintenant';
+    }
+  }catch(e){
+    toast('Erreur réseau — réessayez','err');
+    btn.disabled=false;btn.innerHTML='Jouer maintenant';
+  }
+}
+
+async function planReserve(){
+  const t=document.getElementById('planTime').value;
+  if(!t){toast('Choisissez une heure','err');return;}
+  if(document.getElementById('conflict').style.display!=='none'){toast('Résolvez le conflit d\'abord','err');return;}
+  const dateObj=new Date();if(dayOff===1)dateObj.setDate(dateObj.getDate()+1);
+  const dateStr=dateObj.getFullYear()+'-'+String(dateObj.getMonth()+1).padStart(2,'0')+'-'+String(dateObj.getDate()).padStart(2,'0');
+  const btn=document.getElementById('btnPlan');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>&nbsp;Réservation…';
+  try{
+    const r=await fetch('/api/reserve_plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start_time:t,date:dateStr,duration:durPlan,mode:modePlan})}).then(x=>x.json());
+    if(r.success){
+      toast('Créneau réservé : '+hm(r.start)+' – '+hm(r.end),'ok');
+      document.getElementById('planTime').value='';
+      document.getElementById('endLabel').textContent='→ fin : —';
+      await refresh();
+    }else toast(r.message||'Erreur','err');
+  }catch(e){toast('Erreur réseau','err');}
+  btn.disabled=false;btn.textContent='Confirmer la réservation';
+}
+
+async function cancelMyResa(){
+  if(!myId)return;
+  if(!confirm('Annuler votre réservation ?'))return;
+  try{
+    const r=await fetch('/api/cancel_reservation_v2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:myId})}).then(x=>x.json());
+    if(r.success){toast('Réservation annulée','ok');await refresh();}
+    else toast(r.message||'Erreur','err');
+  }catch(e){toast('Erreur réseau','err');}
+}
+
+// ── Socket (pour créer un lobby)
+let _socket = null;
+try {
+  _socket = io({ transports: ['websocket', 'polling'], reconnection: false });
+} catch(e) { _socket = { emit: () => {}, on: () => {} }; }
+
+async function goToLobby(btn) {
+  // Vérifier s'il y a déjà un lobby actif
+  try {
+    const r = await fetch('/api/active_lobby').then(x => x.json());
+    if (r.active) {
+      window.location.href = '/lobby';
+      return;
+    }
+  } catch(e) {}
+  // Créer un nouveau lobby
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Création…'; }
+  let redirected = false;
+  let socketError = false;
+  _socket.emit('create_lobby', { invited: [] });
+  _socket.on('lobby_created', () => {
+    if (!redirected) { redirected = true; window.location.href = '/lobby'; }
+  });
+  _socket.on('error', (data) => {
+    socketError = true;
+    if (btn) { btn.disabled = false; btn.textContent = '👥 Créer un lobby'; }
+    alert('Impossible de créer un lobby : ' + (data.message || '?'));
+  });
+  // Fallback si socket ne répond pas dans 3s (sauf en cas d'erreur explicite)
+  setTimeout(() => { if (!redirected && !socketError) { redirected = true; window.location.href = '/lobby'; } }, 3000);
+}
+
+// ── Init
+async function init(){
+  try{
+    const u=await fetch('/current_user').then(r=>r.json());
+    if(!u){location.href='/login';return;}
+    ME=u.username;IS_ADMIN=u.is_admin;
+    ProfileUtils.updateNav(u);
+    // Lien admin dans menu mobile (si admin)
+    if (u && u.is_admin) {
+      const mm = document.getElementById('mobileMenu');
+      if (mm && !mm.querySelector('a[href="/admin"]')) {
+        const a = document.createElement('a');
+        a.href = '/admin'; a.textContent = '🛡️ Admin';
+        const firstLink = mm.querySelector('a');
+        if (firstLink) mm.insertBefore(a, firstLink);
+      }
+    }
+  }catch(e){console.error(e);}
+  // Heure par défaut = prochain multiple de 5
+  const now=new Date();
+  const nm=Math.ceil((now.getMinutes()+1)/5)*5;
+  const nh=now.getHours()+Math.floor(nm/60);
+  document.getElementById('planTime').value=String(nh%24).padStart(2,'0')+':'+String(nm%60).padStart(2,'0');
+  await refresh();
+  onTime();
+  setInterval(refresh,30000);
+}
+init();
+</script>
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}

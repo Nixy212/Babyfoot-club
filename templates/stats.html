@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% set active_page = "stats" %}
+{% block title %}Stats — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<!-- Mobile Menu -->
+
+
+
+<script>
+  function logout() { fetch('/api/logout', {method:'POST'}).then(() => location.href = '/'); }
+
+  fetch('/current_user').then(r => {
+    if (!r.ok) { location.href = '/login'; return null; }
+    return r.json();
+  }).then(async d => {
+    if (!d || !d.username) { location.href = '/login'; return; }
+
+    ProfileUtils.updateNav(d);
+    const displayName = d.nickname || d.username;
+    document.getElementById('subttl').textContent = `Statistiques de ${displayName}`;
+
+    // Lien admin dans menu mobile
+    if (d.is_admin) {
+      const mm = document.getElementById('mobileMenu');
+      if (mm && !mm.querySelector('a[href="/admin"]')) {
+        const a = document.createElement('a');
+        a.href = '/admin'; a.textContent = '🛡️ Admin';
+        const firstLink = mm.querySelector('a');
+        if (firstLink) mm.insertBefore(a, firstLink);
+      }
+    }
+
+    const s = await fetch(`/user_stats/${d.username}`).then(r => r.json());
+    document.getElementById('sg').textContent = s.total_games ?? 0;
+    document.getElementById('sp').textContent = s.goals_scored ?? s.total_goals ?? 0;
+    document.getElementById('sr').textContent = s.ratio ?? '0.00';
+    document.getElementById('sb').textContent = `${s.goals_scored ?? 0} / ${s.goals_conceded ?? 0}`;
+    document.getElementById('sa').textContent = s.average_score || '—';
+
+    const h = document.getElementById('hist');
+    if (!s.recent_scores?.length) {
+      h.innerHTML = '<p style="padding:3rem;text-align:center;color:var(--text-tertiary);font-size:0.9375rem">Aucune partie jouée — réservez un créneau et lancez votre première partie !</p>';
+      return;
+    }
+
+    // Afficher les scores récents du plus récent au plus ancien
+    const total = s.recent_scores.length;
+    h.innerHTML = s.recent_scores.map((sc, i) => {
+      const num = total - i;
+      const dateStr = sc.date ? new Date(sc.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : '—';
+      const pts = sc.score ?? sc.points ?? '?';
+      return `
+      <div class="hist-row">
+        <div style="font-size:0.9375rem;display:flex;align-items:center;gap:0.5rem">
+          <span style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--bronze);background:rgba(205,127,50,0.12);padding:2px 7px;border-radius:20px">#${num}</span>
+          <span style="font-weight:600">Partie</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <span class="hist-date">${dateStr}</span>
+          <span class="hist-score">${pts} pts</span>
+        </div>
+      </div>`;
+    }).join('');
+  });
+</script>
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}

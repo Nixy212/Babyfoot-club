@@ -1,0 +1,1196 @@
+{% extends "base.html" %}
+{% set active_page = "admin" %}
+{% block title %}Admin — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block body %}
+</div>
+
+<div class="page">
+  <div class="container" style="max-width:900px">
+
+<div class="page-header fade-up">
+  <h1><i class="fas fa-cog"></i> Administration</h1>
+  <p>Outils de gestion du Baby-Foot Club</p>
+</div>
+
+<!-- CONTRÔLE DES SERVOS -->
+<div class="card fade-up" style="animation-delay:.05s">
+  <div class="card-header">
+    <h3>🔧 Contrôle des Servos</h3>
+    <div id="servoStatus" style="font-size:0.8rem;color:var(--text-tertiary)">Prêt</div>
+  </div>
+  <div class="card-body">
+    <p style="color:var(--text-tertiary);margin-bottom:1.5rem;font-size:0.9375rem">
+      Déverrouillez manuellement les servomoteurs pour libérer les balles bloquées.
+      Les servos se reverrouillent automatiquement après 5 secondes.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+      <button
+        class="btn btn-primary"
+        style="padding:1rem;display:flex;flex-direction:column;align-items:center;gap:0.5rem"
+        onclick="unlockServo(1)"
+        id="btnServo1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Servo 1
+        <small style="font-size:0.75rem;opacity:0.8;font-weight:400">(Équipe 1)</small>
+      </button>
+      <button
+        class="btn btn-primary"
+        style="padding:1rem;display:flex;flex-direction:column;align-items:center;gap:0.5rem"
+        onclick="unlockServo(2)"
+        id="btnServo2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Servo 2
+        <small style="font-size:0.75rem;opacity:0.8;font-weight:400">(Équipe 2)</small>
+      </button>
+    </div>
+    <div id="servoResult" style="display:none;padding:1rem;border-radius:10px;font-size:0.9375rem;text-align:center"></div>
+  </div>
+</div>
+
+<!-- GESTION DES UTILISATEURS -->
+<div class="card fade-up" style="animation-delay:.1s">
+  <div class="card-header">
+    <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> Utilisateurs inscrits</h3>
+    <div id="userCount" style="font-size:0.8rem;color:var(--text-tertiary)"></div>
+  </div>
+  <div class="card-body">
+    <div id="usersList" style="display:flex;flex-direction:column;gap:0.75rem">
+      <div style="text-align:center;padding:1rem">
+        <div class="loading-spinner" style="margin:0 auto 0.5rem"></div>
+        <p style="color:var(--text-tertiary);font-size:0.875rem">Chargement...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ÉTAT DU JEU -->
+<div class="card fade-up" style="animation-delay:.15s">
+  <div class="card-header">
+    <h3><i class="fas fa-gamepad"></i> État du jeu en cours</h3>
+    <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.8rem" onclick="loadGameState()">
+      🔄 Actualiser
+    </button>
+  </div>
+  <div class="card-body">
+    <div id="gameState" style="font-family:'Space Mono',monospace;font-size:0.8rem;color:var(--text-tertiary);line-height:1.8">
+      Chargement...
+    </div>
+    <div style="margin-top:1rem">
+      <button class="btn" style="background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);width:100%" onclick="forceStopGame()">
+        🛑 Forcer l'arrêt de la partie
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION TEST COSMÉTIQUES — Super Admin uniquement -->
+<div id="cosmeticsTestZone" class="card fade-up" style="animation-delay:.18s;margin-bottom:1.5rem;display:none;border-color:rgba(205,127,50,0.3)">
+  <div class="card-header" style="border-bottom-color:rgba(205,127,50,0.2)">
+    <h3 style="color:#cd7f32">🎨 Test & Aperçu des Cosmétiques</h3>
+    <span style="font-size:0.75rem;padding:2px 10px;border-radius:99px;background:rgba(205,127,50,0.15);color:#cd7f32;font-weight:700">Super Admin</span>
+  </div>
+  <div class="card-body">
+
+    <!-- Onglets -->
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="test-tab active" onclick="switchTestTab('themes')" id="tab-themes">🎨 Thèmes Live</button>
+      <button class="test-tab" onclick="switchTestTab('frames')" id="tab-frames">🖼️ Cadres Avatar</button>
+      <button class="test-tab" onclick="switchTestTab('quests')" id="tab-quests">🏅 Quêtes</button>
+      <button class="test-tab" onclick="switchTestTab('users')" id="tab-users">👤 Par Joueur</button>
+    </div>
+
+    <!-- Onglet Thèmes -->
+    <div id="panel-themes" class="test-panel">
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Aperçu visuel de chaque thème. Clique sur <strong>Tester</strong> pour l'appliquer sur ta session, <strong>Activer</strong> pour l'équiper vraiment.</p>
+      <div id="themesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem"></div>
+    </div>
+
+    <!-- Onglet Cadres -->
+    <div id="panel-frames" class="test-panel" style="display:none">
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Aperçu des cadres d'avatar débloquables via les quêtes.</p>
+      <div id="framesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem"></div>
+    </div>
+
+    <!-- Onglet Quêtes -->
+    <div id="panel-quests" class="test-panel" style="display:none">
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Complète une quête sur ton propre compte pour tester le cosmétique qu'elle débloque.</p>
+      <div id="questsTestGrid" style="display:flex;flex-direction:column;gap:0.75rem"></div>
+      <button onclick="resetMyCosmetics()" style="margin-top:1rem;width:100%;padding:0.75rem;border-radius:10px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-weight:700;cursor:pointer;font-family:inherit">
+        🗑️ Réinitialiser mes cosmétiques de test
+      </button>
+    </div>
+
+    <!-- Onglet Par Joueur -->
+    <div id="panel-users" class="test-panel" style="display:none">
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Débloquer un cosmétique sur n'importe quel joueur.</p>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem">
+        <select id="cosUserSelect" style="flex:1;min-width:150px;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit">
+          <option value="">Sélectionner un joueur…</option>
+        </select>
+        <select id="cosCosmeticSelect" style="flex:1;min-width:150px;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit">
+          <option value="">Sélectionner un cosmétique…</option>
+        </select>
+        <button onclick="unlockForUser()" style="padding:0.6rem 1.2rem;border-radius:8px;background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);color:#cd7f32;font-weight:700;cursor:pointer;font-family:inherit">Débloquer</button>
+      </div>
+      <div id="userCosmeticsStatus" style="font-size:0.85rem;color:var(--text-muted)"></div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.test-tab {
+  padding:0.45rem 1rem;border-radius:8px;border:1px solid var(--border-normal);
+  background:var(--bg-secondary);color:var(--text-secondary);font-weight:600;
+  font-size:0.82rem;cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.test-tab.active, .test-tab:hover {
+  background:rgba(205,127,50,0.15);border-color:rgba(205,127,50,0.4);color:#cd7f32;
+}
+.theme-preview-card {
+  border-radius:12px;overflow:hidden;border:2px solid transparent;
+  cursor:pointer;transition:all .2s;
+}
+.theme-preview-card:hover { transform:translateY(-3px); border-color:rgba(205,127,50,0.5); }
+.theme-preview-card.active-theme { border-color:#ffd700; box-shadow:0 0 20px rgba(255,215,0,0.3); }
+.theme-preview-swatch {
+  height:80px;display:flex;align-items:center;justify-content:center;
+  font-size:2rem;position:relative;overflow:hidden;
+}
+.theme-preview-swatch::after {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.5));
+}
+.theme-preview-info {
+  padding:8px 12px;background:var(--bg-tertiary);
+}
+.theme-preview-actions {
+  display:flex;gap:6px;margin-top:8px;
+}
+.frame-demo-wrap {
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:1.5rem;background:var(--bg-tertiary);border-radius:12px;
+}
+.frame-demo-av {
+  width:70px;height:70px;border-radius:50%;
+  background:linear-gradient(135deg,#cd7f32,#b8732f);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;font-weight:800;color:white;
+}
+</style>
+
+<!-- SECTION BADGES — Imran uniquement -->
+<div id="badgesZone" class="card fade-up" style="animation-delay:.19s;margin-bottom:1.5rem;display:none;border-color:rgba(100,160,255,0.25)">
+  <div class="card-header" style="border-bottom-color:rgba(100,160,255,0.15)">
+    <h3 style="color:#6aa3ff">🏅 Gestion des Badges</h3>
+    <span style="font-size:0.75rem;padding:2px 10px;border-radius:99px;background:rgba(100,160,255,0.12);color:#6aa3ff;font-weight:700">Imran uniquement</span>
+  </div>
+  <div class="card-body">
+
+    <!-- Onglets -->
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="badge-tab active" onclick="switchBadgeTab('create')" id="btab-create">➕ Créer</button>
+      <button class="badge-tab" onclick="switchBadgeTab('list')"   id="btab-list">📋 Catalogue</button>
+      <button class="badge-tab" onclick="switchBadgeTab('award')"  id="btab-award">🎖️ Attribuer</button>
+      <button class="badge-tab" onclick="switchBadgeTab('view')"   id="btab-view">👤 Par joueur</button>
+    </div>
+
+    <!-- ── Créer un badge ─────────────────────────── -->
+    <div id="bpanel-create" class="badge-panel">
+      <div style="display:flex;flex-direction:column;gap:0.9rem;max-width:480px">
+
+        <div>
+          <div class="badge-label">Nom du badge *</div>
+          <input id="badgeName" type="text" maxlength="80" placeholder="ex: Meilleur défenseur" class="badge-input">
+        </div>
+
+        <div>
+          <div class="badge-label">Description (optionnelle)</div>
+          <input id="badgeDesc" type="text" maxlength="200" placeholder="ex: Accordé pour une défense exceptionnelle" class="badge-input">
+        </div>
+
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px">
+            <div class="badge-label">Icône (emoji <em>ou</em> image)</div>
+            <input id="badgeIcon" type="text" maxlength="8" placeholder="🏅" value="🏅" class="badge-input" oninput="clearBadgeImage(); updateBadgePreview()">
+          </div>
+          <div style="flex:1;min-width:140px">
+            <div class="badge-label">Couleur du badge</div>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input id="badgeColor" type="color" value="#cd7f32" style="width:44px;height:38px;border:none;background:none;cursor:pointer;padding:0" oninput="updateBadgePreview()">
+              <input id="badgeColorHex" type="text" value="#cd7f32" maxlength="7" class="badge-input" style="flex:1" oninput="syncColorPicker()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload image (remplace l'emoji) -->
+        <div>
+          <div class="badge-label">Image du badge <span style="color:var(--text-muted);font-weight:400">(optionnel — remplace l'emoji)</span></div>
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+            <label style="cursor:pointer;padding:0.45rem 1rem;border-radius:8px;border:1px dashed var(--border-subtle);background:var(--bg-tertiary);color:var(--text-secondary);font-size:0.82rem;transition:all .2s" onmouseover="this.style.borderColor='#cd7f32'" onmouseout="this.style.borderColor='var(--border-subtle)'">
+              📁 Choisir une image
+              <input id="badgeImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handleBadgeImageSelect(this)">
+            </label>
+            <span id="badgeImageFileName" style="font-size:0.78rem;color:var(--text-muted)">Aucune image sélectionnée</span>
+            <button id="badgeImageClearBtn" onclick="clearBadgeImage()" style="display:none;padding:3px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:0.78rem;cursor:pointer">✕ Retirer</button>
+          </div>
+          <div id="badgeImageUploadStatus" style="font-size:0.78rem;margin-top:4px"></div>
+        </div>
+
+        <!-- Aperçu -->
+        <div style="background:var(--bg-tertiary);border-radius:10px;padding:1rem;border:1px solid var(--border-subtle)">
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px">Aperçu</div>
+          <div id="badgePreview" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;font-size:0.82rem;font-weight:700">
+            🏅 Nouveau badge
+          </div>
+        </div>
+
+        <button onclick="createBadge()" class="btn btn-primary" style="align-self:flex-start;padding:0.6rem 1.5rem">
+          ➕ Créer ce badge
+        </button>
+        <div id="badgeCreateResult" style="font-size:0.85rem"></div>
+      </div>
+    </div>
+
+    <!-- ── Catalogue ──────────────────────────────── -->
+    <div id="bpanel-list" class="badge-panel" style="display:none">
+      <div style="margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.85rem;color:var(--text-muted)">Badges créés — cliquer sur 🗑️ pour supprimer</span>
+        <button onclick="loadBadgeCatalogue()" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-muted);font-size:0.78rem;cursor:pointer;font-family:inherit">🔄 Actualiser</button>
+      </div>
+      <div id="badgeCatalogueList" style="display:flex;flex-direction:column;gap:0.6rem">
+        <div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Chargement…</div>
+      </div>
+    </div>
+
+    <!-- ── Attribuer ──────────────────────────────── -->
+    <div id="bpanel-award" class="badge-panel" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:0.9rem;max-width:480px">
+        <div>
+          <div class="badge-label">Joueur</div>
+          <select id="awardPlayerSelect" class="badge-input" style="cursor:pointer">
+            <option value="">Sélectionner un joueur…</option>
+          </select>
+        </div>
+        <div>
+          <div class="badge-label">Badge à attribuer</div>
+          <select id="awardBadgeSelect" class="badge-input" style="cursor:pointer">
+            <option value="">Sélectionner un badge…</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:0.75rem">
+          <button onclick="awardBadge()" class="btn btn-primary" style="flex:1">🎖️ Attribuer</button>
+          <button onclick="revokeBadge()" style="flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(231,76,60,0.35);background:rgba(231,76,60,0.08);color:#e74c3c;font-weight:700;cursor:pointer;font-family:inherit">✕ Retirer</button>
+        </div>
+        <div id="awardResult" style="font-size:0.85rem"></div>
+      </div>
+    </div>
+
+    <!-- ── Vue par joueur ────────────────────────── -->
+    <div id="bpanel-view" class="badge-panel" style="display:none">
+      <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+        <select id="viewPlayerSelect" class="badge-input" style="flex:1;cursor:pointer" onchange="loadPlayerBadges()">
+          <option value="">Sélectionner un joueur…</option>
+        </select>
+      </div>
+      <div id="playerBadgesList" style="display:flex;flex-wrap:wrap;gap:0.5rem"></div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.badge-tab {
+  padding:0.4rem 0.9rem;border-radius:8px;border:1px solid var(--border-normal);
+  background:var(--bg-secondary);color:var(--text-secondary);font-weight:600;
+  font-size:0.82rem;cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.badge-tab.active, .badge-tab:hover {
+  background:rgba(100,160,255,0.12);border-color:rgba(100,160,255,0.35);color:#6aa3ff;
+}
+.badge-label {
+  font-size:0.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.3rem;
+}
+.badge-input {
+  width:100%;padding:0.65rem 0.875rem;border-radius:8px;
+  border:1px solid var(--border-normal);background:var(--bg-tertiary);
+  color:var(--text-primary);font-size:0.9rem;font-family:inherit;
+  outline:none;transition:border-color .15s;box-sizing:border-box;
+}
+.badge-input:focus { border-color:#6aa3ff; }
+.badge-chip {
+  display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+  border-radius:99px;font-size:0.78rem;font-weight:700;border:1px solid;
+}
+</style>
+
+<!-- ZONE DANGER — Classe 1 uniquement (Imran) -->
+<div id="dangerZone" class="card fade-up" style="animation-delay:.2s;margin-bottom:1.5rem;border-color:rgba(231,76,60,0.3);display:none">
+  <div class="card-header" style="border-bottom-color:rgba(231,76,60,0.2)">
+    <h3 style="color:#e74c3c">🔥 Zone Danger</h3>
+  </div>
+  <div class="card-body">
+    <h4 style="color:var(--text-primary);margin-top:0;margin-bottom:0.5rem">Reset de la base de données</h4>
+    <p style="color:var(--text-tertiary);margin-bottom:0.75rem;font-size:0.9375rem">
+      ⚠️ Supprime TOUTES les données (utilisateurs, scores, réservations) et recrée uniquement les comptes de base.
+    </p>
+    <p style="color:#e74c3c;font-weight:700;margin-bottom:1.5rem;font-size:0.9375rem">
+      Cette action est IRRÉVERSIBLE !
+    </p>
+    <button
+      class="btn btn-full"
+      style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.4);font-weight:700"
+      onclick="resetDatabase()">
+      🗑️ RESET COMPLET DE LA BASE
+    </button>
+    <div id="resetResult" style="display:none;margin-top:1rem;padding:1rem;border-radius:10px;text-align:center"></div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:1rem;margin-bottom:2rem">
+  <a href="/dashboard" class="btn btn-ghost">← Retour au Dashboard</a>
+</div>
+
+  </div>
+</div>
+
+<!-- Toast container pour notifications -->
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
+<script>
+let socket;
+try { socket = io({
+    reconnection: true,
+    reconnectionDelay: 1000,       // Attendre 1s avant 1ère tentative
+    reconnectionDelayMax: 10000,   // Max 10s entre tentatives
+    reconnectionAttempts: Infinity, // Toujours réessayer
+    timeout: 20000,                // 20s avant d'abandonner une connexion
+    transports: ['websocket', 'polling'],  // WebSocket d'abord, polling en fallback
+  }); } catch(e) { console.warn("Socket.IO non disponible:", e); socket = { emit: () => {}, on: () => {} }; }
+
+function toggleMenu() {
+  const isOpen = document.getElementById('mobileMenu').classList.contains('open');
+  document.getElementById('burger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  const overlay = document.getElementById('menuOverlay');
+  if (overlay) overlay.classList.toggle('open');
+  document.body.style.overflow = !isOpen ? 'hidden' : '';
+}
+
+function logout() {
+  fetch('/api/logout', {method:'POST'}).then(() => location.href = '/');
+}
+
+function showToast(message, type = 'inf') {
+  const toastWrap = document.getElementById('toast-wrap');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toastWrap.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3200);
+}
+
+// ── Init nav ──
+let isSuperAdmin = false;
+fetch('/current_user').then(r => {
+  if (!r.ok) { location.href = '/login'; return null; }
+  return r.json();
+}).then(d => {
+  if (!d || !d.username) { location.href = '/login'; return; }
+  if (!d.is_admin) { location.href = '/dashboard'; return; }
+  ProfileUtils.updateNav(d);
+  isSuperAdmin = d.is_super_admin || false;
+  currentAdminUser = d.username;
+  const dangerZone = document.getElementById('dangerZone');
+  if (dangerZone) dangerZone.style.display = isSuperAdmin ? 'block' : 'none';
+  const cosZone = document.getElementById('cosmeticsTestZone');
+  if (cosZone) cosZone.style.display = isSuperAdmin ? 'block' : 'none';
+  const badgesZone = document.getElementById('badgesZone');
+  if (badgesZone) badgesZone.style.display = isSuperAdmin ? 'block' : 'none';
+  if (isSuperAdmin) { loadCatalog(); loadBadgeCatalogue(); }
+});
+
+// ── Servos ──
+function unlockServo(num) {
+  const btnId = `btnServo${num}`;
+  const btn = document.getElementById(btnId);
+  const result = document.getElementById('servoResult');
+  const status = document.getElementById('servoStatus');
+
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  status.textContent = `Servo ${num} en cours...`;
+
+  result.style.display = 'block';
+  result.style.background = 'rgba(52,152,219,0.1)';
+  result.style.border = '1px solid rgba(52,152,219,0.4)';
+  result.style.color = 'var(--text-primary)';
+  result.textContent = `Déverrouillage Servo ${num} en cours... (5 secondes)`;
+
+  socket.emit(`unlock_servo${num}`);
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    status.textContent = 'Prêt';
+
+    result.style.background = 'rgba(39,174,96,0.1)';
+    result.style.border = '1px solid rgba(39,174,96,0.4)';
+    result.textContent = `✓ Servo ${num} reverrouillé automatiquement`;
+
+    setTimeout(() => { result.style.display = 'none'; }, 3000);
+  }, 5000);
+}
+
+// ── Erreurs socket ──
+socket.on('error', (data) => {
+  const result = document.getElementById('servoResult');
+  result.style.display = 'block';
+  result.style.background = 'rgba(231,76,60,0.1)';
+  result.style.border = '1px solid rgba(231,76,60,0.4)';
+  result.style.color = '#e74c3c';
+  result.textContent = '✕ Erreur : ' + data.message;
+  setTimeout(() => { result.style.display = 'none'; }, 5000);
+});
+
+socket.on('servo1_unlock', () => {
+  document.getElementById('servoStatus').textContent = 'Servo 1 ouvert ✓';
+});
+socket.on('servo1_lock', () => {
+  document.getElementById('servoStatus').textContent = 'Servo 1 reverrouillé';
+  setTimeout(() => { document.getElementById('servoStatus').textContent = 'Prêt'; }, 2000);
+});
+socket.on('servo2_unlock', () => {
+  document.getElementById('servoStatus').textContent = 'Servo 2 ouvert ✓';
+});
+socket.on('servo2_lock', () => {
+  document.getElementById('servoStatus').textContent = 'Servo 2 reverrouillé';
+  setTimeout(() => { document.getElementById('servoStatus').textContent = 'Prêt'; }, 2000);
+});
+
+// ── Liste utilisateurs AVEC BOUTON SUPPRESSION ──
+const ROLE_LABELS = { 0: { label: 'Joueur', color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.05)' }, 1: { label: '⭐ Responsable+', color: '#ffd700', bg: 'rgba(255,215,0,0.12)' }, 2: { label: '🛡️ Responsable', color: '#cd7f32', bg: 'rgba(205,127,50,0.12)' } };
+
+async function setUserRole(username, role) {
+  if (!isSuperAdmin) { showToast('Réservé au super admin', 'err'); return; }
+  try {
+    const res = await fetch('/api/set_user_role', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username, role }) });
+    const data = await res.json();
+    if (data.success) { showToast(`✓ Rôle de ${username} mis à jour`, 'ok'); setTimeout(loadUsers, 400); }
+    else showToast('✕ ' + data.message, 'err');
+  } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+async function loadUsers() {
+  try {
+    const users = await fetch('/users_list').then(r => r.json());
+    const container = document.getElementById('usersList');
+    document.getElementById('userCount').textContent = `${users.length} comptes`;
+
+    if (!users.length) {
+      container.innerHTML = '<p style="color:var(--text-tertiary);text-align:center">Aucun utilisateur</p>';
+      return;
+    }
+
+    container.innerHTML = users.map(u => {
+      const username = u.username || u;
+      const nickname = u.nickname || '';
+      const elo = u.elo || 1000;
+      const GUEST_RE = /^Joueur\d+$/i;
+      const isGuest = GUEST_RE.test(username);
+      // Avatar
+      let avHtml = '';
+      if (u.avatar_url) avHtml = `<img src="${u.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`;
+      else if (u.avatar_preset) avHtml = `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:1.2rem">${u.avatar_preset}</div>`;
+      else avHtml = `<div style="width:36px;height:36px;border-radius:50%;background:var(--gradient-bronze);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem;color:white">${username[0].toUpperCase()}</div>`;
+
+      // Role selector (super admin only, can't change guests)
+      let roleSel = '';
+      if (isSuperAdmin && !isGuest) {
+        const r = u.role || 0;
+        roleSel = `<select onchange="setUserRole('${username}', parseInt(this.value))" style="font-size:0.75rem;padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer">
+          <option value="0"${r===0?' selected':''}>Joueur</option>
+          <option value="2"${r===2?' selected':''}>Responsable</option>
+          <option value="1"${r===1?' selected':''}>Responsable+</option>
+        </select>`;
+      }
+
+      return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle);gap:0.5rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0">
+          ${avHtml}
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nickname || username}</div>
+            ${nickname ? `<div style="font-size:0.7rem;color:var(--text-muted)">${username}</div>` : ''}
+            <div style="font-size:0.7rem;color:var(--text-muted)">ELO ${elo}${isGuest ? ' · Guest' : ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+          ${roleSel}
+          <a href="/stats/${username}" class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.78rem;text-decoration:none">📊 Stats</a>
+          ${!isGuest ? `<button onclick="deleteUser('${username}')" class="btn" style="padding:0.4rem 0.8rem;font-size:0.78rem;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);font-weight:600">🗑️</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    // Peupler le select cosmétiques de la section test
+    const cosUserSel = document.getElementById('cosUserSelect');
+    if (cosUserSel) {
+      cosUserSel.innerHTML = '<option value="">Sélectionner un joueur…</option>' +
+        users.filter(u => !/^Joueur\d+$/i.test(u.username)).map(u =>
+          `<option value="${u.username}">${u.nickname ? u.nickname + ' (' + u.username + ')' : u.username}</option>`
+        ).join('');
+    }
+    const cosCosmeticSel = document.getElementById('cosCosmeticSelect');
+    if (cosCosmeticSel && catalogData) {
+      cosCosmeticSel.innerHTML = '<option value="">Sélectionner un cosmétique…</option>' +
+        Object.entries(catalogData.catalog).map(([k,v]) =>
+          `<option value="${k}">${v.icon || ''} ${v.label}</option>`
+        ).join('');
+    }
+  } catch(e) {
+    console.error('Erreur chargement users:', e);
+  }
+}
+
+// ── SUPPRESSION D'UTILISATEUR ──
+async function deleteUser(username) {
+  // Comptes protégés
+  const protectedAccounts = ['alice', 'bob', 'charlie', 'diana'];
+  if (protectedAccounts.includes(username)) {
+    showToast(`⚠️ Le compte "${username}" est protégé et ne peut pas être supprimé`, 'err');
+    return;
+  }
+
+  // Confirmation
+  const confirmed = confirm(
+    `⚠️ ATTENTION ⚠️\n\n` +
+    `Voulez-vous vraiment supprimer le compte "${username}" ?\n\n` +
+    `Cette action supprimera :\n` +
+    `- Le compte utilisateur\n` +
+    `- Tous ses scores\n` +
+    `- Toutes ses réservations\n\n` +
+    `Cette action est IRRÉVERSIBLE !`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch('/api/delete_user', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(`✓ Compte "${username}" supprimé avec succès`, 'ok');
+      // Recharger la liste
+      setTimeout(() => loadUsers(), 500);
+    } else {
+      showToast(`✕ Erreur : ${data.message}`, 'err');
+    }
+  } catch (e) {
+    showToast('✕ Erreur de connexion au serveur', 'err');
+    console.error('Erreur suppression:', e);
+  }
+}
+
+// ── État du jeu ──
+async function loadGameState() {
+  try {
+    const data = await fetch('/debug/game').then(r => r.json());
+    const game = data.current_game;
+    const el = document.getElementById('gameState');
+
+    if (game.active) {
+      el.innerHTML = `
+        <div style="color:#22c55e;font-weight:700;margin-bottom:0.5rem">● Partie en cours</div>
+        <div>Équipe 1 : ${game.team1_players?.join(', ') || '—'} → <strong style="color:var(--bronze)">${game.team1_score} buts</strong></div>
+        <div>Équipe 2 : ${game.team2_players?.join(', ') || '—'} → <strong style="color:var(--bronze)">${game.team2_score} buts</strong></div>
+        <div style="margin-top:0.5rem;color:var(--text-muted)">Lancée par : ${game.started_by || '—'}</div>
+        <div style="color:var(--text-muted)">Depuis : ${game.started_at ? new Date(game.started_at).toLocaleTimeString('fr-FR') : '—'}</div>
+      `;
+    } else {
+      el.innerHTML = '<div style="color:var(--text-tertiary)">⭕ Aucune partie en cours</div>';
+    }
+  } catch(e) {
+    document.getElementById('gameState').textContent = 'Erreur de chargement';
+  }
+}
+
+function forceStopGame() {
+  if (confirm('Forcer l\'arrêt de la partie en cours ?')) {
+    socket.emit('stop_game');
+    setTimeout(loadGameState, 500);
+  }
+}
+
+// ── Reset DB ──
+async function resetDatabase() {
+  const confirmed = confirm(
+    '⚠️ ATTENTION ⚠️\n\n' +
+    'Vous allez SUPPRIMER TOUTES LES DONNÉES :\n' +
+    '- Tous les utilisateurs\n' +
+    '- Tous les scores\n' +
+    '- Toutes les réservations\n\n' +
+    'Cette action est IRRÉVERSIBLE !\n\nÊtes-vous sûr ?'
+  );
+  if (!confirmed) return;
+
+  const doubleCheck = confirm('Dernière confirmation : voulez-vous VRAIMENT tout supprimer ?');
+  if (!doubleCheck) return;
+
+  const result = document.getElementById('resetResult');
+  result.style.display = 'block';
+  result.style.background = 'rgba(255,191,0,0.1)';
+  result.style.border = '1px solid rgba(255,191,0,0.3)';
+  result.style.color = 'var(--text-primary)';
+  result.textContent = '⏳ Reset en cours...';
+
+  try {
+    const res = await fetch('/admin/reset_database', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'}
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      result.style.background = 'rgba(39,174,96,0.1)';
+      result.style.border = '1px solid rgba(39,174,96,0.4)';
+      result.textContent = '✓ Base réinitialisée ! Redirection...';
+      setTimeout(() => location.href = '/dashboard', 2000);
+    } else {
+      result.style.background = 'rgba(231,76,60,0.1)';
+      result.style.border = '1px solid rgba(231,76,60,0.4)';
+      result.style.color = '#e74c3c';
+      result.textContent = '✕ Erreur : ' + data.message;
+    }
+  } catch(e) {
+    result.style.background = 'rgba(231,76,60,0.1)';
+    result.style.border = '1px solid rgba(231,76,60,0.4)';
+    result.style.color = '#e74c3c';
+    result.textContent = '✕ Erreur réseau : ' + e.message;
+  }
+}
+
+// ── Init ──
+loadUsers();
+loadGameState();
+
+// ── Badges ────────────────────────────────────────────────────────────────
+let allBadges = [];
+
+function switchBadgeTab(tab) {
+  ['create','list','award','view'].forEach(t => {
+    document.getElementById('bpanel-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('btab-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'list')  loadBadgeCatalogue();
+  if (tab === 'award') populateBadgeAwardSelects();
+  if (tab === 'view')  populateBadgeViewSelect();
+}
+
+// ── Badge : état local image ─────────────────────────────────────────────
+// L'image est lue en base64 LOCALEMENT (FileReader), jamais pré-uploadée.
+// createBadge() envoie tout en un seul appel JSON → plus de double upload.
+let _badgeImageB64 = ''; // data-URI base64, vide si emoji uniquement
+
+function updateBadgePreview() {
+  const icon  = _badgeImageB64 ? '' : (document.getElementById('badgeIcon').value || '🏅');
+  const name  = document.getElementById('badgeName').value || 'Nouveau badge';
+  const color = document.getElementById('badgeColor').value || '#cd7f32';
+  document.getElementById('badgeColorHex').value = color;
+  const preview = document.getElementById('badgePreview');
+  preview.style.background = color + '22';
+  preview.style.border     = '1px solid ' + color + '66';
+  preview.style.color      = color;
+  if (_badgeImageB64) {
+    preview.innerHTML = `<img src="${_badgeImageB64}" style="width:22px;height:22px;border-radius:4px;object-fit:cover;vertical-align:middle"> ${name}`;
+  } else {
+    preview.textContent = icon + ' ' + name;
+  }
+}
+
+function syncColorPicker() {
+  const hex = document.getElementById('badgeColorHex').value;
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    document.getElementById('badgeColor').value = hex;
+    updateBadgePreview();
+  }
+}
+
+function handleBadgeImageSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('badgeImageUploadStatus');
+  const nameEl   = document.getElementById('badgeImageFileName');
+  const clearBtn = document.getElementById('badgeImageClearBtn');
+
+  const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+  if (!allowed.includes(file.type)) {
+    statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Format non supporté (JPEG, PNG, WebP, GIF)</span>';
+    input.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Image trop grande (max 10 Mo)</span>';
+    input.value = '';
+    return;
+  }
+
+  nameEl.textContent = file.name;
+  statusEl.innerHTML = '<span style="color:var(--text-muted)">Traitement…</span>';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    // Redimensionner à 128×128 via Canvas pour un payload léger
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      // Crop centré
+      const size = Math.min(img.width, img.height);
+      const sx   = (img.width  - size) / 2;
+      const sy   = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 128, 128);
+      _badgeImageB64 = canvas.toDataURL('image/jpeg', 0.85);
+      statusEl.innerHTML = '<span style="color:#2ecc71">✓ Image prête</span>';
+      clearBtn.style.display = 'inline-block';
+      document.getElementById('badgeIcon').value = '';
+      updateBadgePreview();
+    };
+    img.onerror = () => {
+      statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Impossible de lire l\'image</span>';
+      input.value = '';
+    };
+    img.src = e.target.result;
+  };
+  reader.onerror = () => {
+    statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Impossible de lire le fichier</span>';
+    input.value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearBadgeImage() {
+  _badgeImageB64 = '';
+  const input = document.getElementById('badgeImageFile');
+  if (input) input.value = '';
+  document.getElementById('badgeImageFileName').textContent = 'Aucune image sélectionnée';
+  document.getElementById('badgeImageUploadStatus').innerHTML = '';
+  document.getElementById('badgeImageClearBtn').style.display = 'none';
+  if (!document.getElementById('badgeIcon').value) {
+    document.getElementById('badgeIcon').value = '🏅';
+  }
+  updateBadgePreview();
+}
+
+async function createBadge() {
+  const name  = document.getElementById('badgeName').value.trim();
+  const desc  = document.getElementById('badgeDesc').value.trim();
+  const icon  = document.getElementById('badgeIcon').value.trim() || '🏅';
+  const color = document.getElementById('badgeColor').value || '#cd7f32';
+  const result = document.getElementById('badgeCreateResult');
+
+  if (!name) {
+    result.innerHTML = '<span style="color:#e74c3c">⚠️ Le nom est requis</span>';
+    return;
+  }
+
+  result.innerHTML = '<span style="color:var(--text-muted)">Création…</span>';
+
+  // Un seul appel JSON — image déjà en base64 localement, pas de pré-upload
+  const payload = { name, description: desc, icon, color };
+  if (_badgeImageB64) payload.image_b64 = _badgeImageB64;
+
+  try {
+    const r   = await fetch('/api/badges/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const res = await r.json();
+
+    if (res.success) {
+      result.innerHTML = `<span style="color:#2ecc71">✓ Badge "${res.name}" créé</span>`;
+      document.getElementById('badgeName').value  = '';
+      document.getElementById('badgeDesc').value  = '';
+      document.getElementById('badgeIcon').value  = '🏅';
+      document.getElementById('badgeColor').value = '#cd7f32';
+      document.getElementById('badgeColorHex').value = '#cd7f32';
+      clearBadgeImage();
+      updateBadgePreview();
+      allBadges = [];
+    } else {
+      result.innerHTML = `<span style="color:#e74c3c">✕ ${res.message || 'Erreur inconnue'}</span>`;
+    }
+  } catch (e) {
+    result.innerHTML = `<span style="color:#e74c3c">✕ Erreur réseau : ${e.message}</span>`;
+  }
+}
+
+async function loadBadgeCatalogue() {
+  const el = document.getElementById('badgeCatalogueList');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:0.75rem">Chargement…</div>';
+  try {
+    const badges = await fetch('/api/badges').then(r => r.json());
+    allBadges = badges;
+    if (!badges.length) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Aucun badge créé pour l\'instant</div>';
+      return;
+    }
+    el.innerHTML = badges.map(b => `
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle)">
+        <span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color};flex-shrink:0;display:inline-flex;align-items:center;gap:5px">
+          ${b.image_url ? `<img src="${b.image_url}" style="width:20px;height:20px;border-radius:3px;object-fit:cover">` : b.icon} ${b.name}
+        </span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.description || '—'}</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:1px">Créé le ${b.created_at ? b.created_at.slice(0,10) : '?'}</div>
+        </div>
+        <button onclick="deleteBadge(${b.id}, '${b.name.replace(/'/g,"\\'")}', this)"
+          style="padding:4px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:0.78rem;cursor:pointer;font-family:inherit;flex-shrink:0">
+          🗑️
+        </button>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div style="color:#e74c3c;font-size:0.85rem">Erreur chargement</div>'; }
+}
+
+async function deleteBadge(id, name, btn) {
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    const res = await fetch(`/api/badges/${id}`, { method: 'DELETE' }).then(r => r.json());
+    if (res.success) {
+      showToast(`✓ Badge "${name}" supprimé`, 'ok');
+      loadBadgeCatalogue();
+      allBadges = [];
+    } else {
+      showToast('✕ ' + (res.message || 'Erreur'), 'err');
+      btn.disabled = false; btn.textContent = '🗑️';
+    }
+  } catch(e) { showToast('Erreur réseau', 'err'); btn.disabled = false; btn.textContent = '🗑️'; }
+}
+
+async function ensureBadgesLoaded() {
+  if (!allBadges.length) {
+    allBadges = await fetch('/api/badges').then(r => r.json()).catch(() => []);
+  }
+}
+
+function populateBadgeAwardSelects() {
+  ensureBadgesLoaded().then(() => {
+    const badgeSel = document.getElementById('awardBadgeSelect');
+    if (badgeSel) {
+      badgeSel.innerHTML = '<option value="">Sélectionner un badge…</option>' +
+        allBadges.map(b => `<option value="${b.id}">${b.image_url ? '🖼️' : b.icon} ${b.name}</option>`).join('');
+    }
+    // Joueurs : déjà dans le select users si loadUsers() a tourné
+    const awardSel = document.getElementById('awardPlayerSelect');
+    const viewSel  = document.getElementById('awardPlayerSelect');
+    if (awardSel && awardSel.options.length <= 1) _populatePlayerSelect('awardPlayerSelect');
+  });
+}
+
+function populateBadgeViewSelect() {
+  _populatePlayerSelect('viewPlayerSelect');
+}
+
+function _populatePlayerSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  // Récupérer depuis la liste users déjà chargée dans le DOM
+  const existingSel = document.getElementById('cosUserSelect');
+  if (existingSel && existingSel.options.length > 1) {
+    sel.innerHTML = existingSel.innerHTML;
+  } else {
+    fetch('/users_list').then(r => r.json()).then(users => {
+      sel.innerHTML = '<option value="">Sélectionner un joueur…</option>' +
+        users.filter(u => !/^Joueur\d+$/i.test(u.username)).map(u =>
+          `<option value="${u.username}">${u.nickname ? u.nickname + ' (' + u.username + ')' : u.username}</option>`
+        ).join('');
+    });
+  }
+}
+
+async function awardBadge() {
+  const username = document.getElementById('awardPlayerSelect').value;
+  const badge_id = parseInt(document.getElementById('awardBadgeSelect').value);
+  const result   = document.getElementById('awardResult');
+  if (!username || !badge_id) { result.innerHTML = '<span style="color:#e74c3c">⚠️ Sélectionne un joueur et un badge</span>'; return; }
+  try {
+    const res = await fetch('/api/badges/award', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, badge_id })
+    }).then(r => r.json());
+    result.innerHTML = res.success
+      ? `<span style="color:#2ecc71">✓ ${res.message}</span>`
+      : `<span style="color:#e74c3c">✕ ${res.message}</span>`;
+  } catch(e) { result.innerHTML = '<span style="color:#e74c3c">Erreur réseau</span>'; }
+}
+
+async function revokeBadge() {
+  const username = document.getElementById('awardPlayerSelect').value;
+  const badge_id = parseInt(document.getElementById('awardBadgeSelect').value);
+  const result   = document.getElementById('awardResult');
+  if (!username || !badge_id) { result.innerHTML = '<span style="color:#e74c3c">⚠️ Sélectionne un joueur et un badge</span>'; return; }
+  try {
+    const res = await fetch('/api/badges/revoke', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, badge_id })
+    }).then(r => r.json());
+    result.innerHTML = res.success
+      ? `<span style="color:#2ecc71">✓ Badge retiré</span>`
+      : `<span style="color:#e74c3c">✕ ${res.message}</span>`;
+  } catch(e) { result.innerHTML = '<span style="color:#e74c3c">Erreur réseau</span>'; }
+}
+
+async function loadPlayerBadges() {
+  const username = document.getElementById('viewPlayerSelect').value;
+  const el = document.getElementById('playerBadgesList');
+  if (!username || !el) { if (el) el.innerHTML = ''; return; }
+  el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Chargement…</span>';
+  try {
+    const badges = await fetch(`/api/badges/user/${username}`).then(r => r.json());
+    if (!badges.length) {
+      el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Aucun badge attribué</span>';
+      return;
+    }
+    el.innerHTML = badges.map(b => `
+      <span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color}" title="${b.description || b.name}">
+        ${b.icon} ${b.name}
+      </span>`).join('');
+  } catch(e) { el.innerHTML = '<span style="color:#e74c3c;font-size:0.85rem">Erreur</span>'; }
+}
+
+// Initialiser l'aperçu badge au chargement
+updateBadgePreview();
+
+// ── Cosmétiques + Init ──────────────────────────────────────────────────────
+let catalogData = null;
+let currentTestTheme = null;
+
+async function loadCatalog() {
+  try {
+    const res = await fetch('/api/cosmetics_catalog').then(r => r.json());
+    catalogData = res;
+    renderThemesGrid();
+    renderFramesGrid();
+    renderQuestsTestGrid();
+    populateUserCosmeticSelects();
+  } catch(e) { console.error('Catalog load error:', e); }
+}
+
+function switchTestTab(tab) {
+  ['themes','frames','quests','users'].forEach(t => {
+    document.getElementById('panel-'+t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+  });
+}
+
+const THEME_SWATCHES = {
+  theme_fire:   { bg:'linear-gradient(135deg,#3d0a00,#7a1500)', score:'#ff6b00', label:'Fire 🔥' },
+  theme_night:  { bg:'linear-gradient(135deg,#0d0020,#1e0050)', score:'#9b59b6', label:'Nuit 🌙' },
+  theme_gold:   { bg:'linear-gradient(135deg,#2d2200,#5a4300)', score:'#ffd700', label:'Gold ✨' },
+  theme_royal:  { bg:'linear-gradient(135deg,#040b24,#0c1a5a)', score:'#4a90d9', label:'Royal 👑' },
+  theme_master: { bg:'linear-gradient(135deg,#0f0f0f,#1a1200)', score:'#ffd700', label:'Maître 🏆' },
+};
+
+function renderThemesGrid() {
+  const grid = document.getElementById('themesGrid');
+  if (!grid || !catalogData) return;
+  const themes = Object.entries(catalogData.catalog).filter(([k]) => k.startsWith('theme_'));
+  grid.innerHTML = [['default', {label:'Défaut', icon:'⬛'}], ...themes].map(([key, info]) => {
+    const sw = THEME_SWATCHES[key] || { bg:'linear-gradient(135deg,#1a1a1a,#333)', score:'#cd7f32', label: info.label };
+    return `
+      <div class="theme-preview-card" id="themeCard_${key}">
+        <div class="theme-preview-swatch" style="background:${sw.bg}">
+          <span style="font-size:2.2rem;position:relative;z-index:1">${info.icon || '🎨'}</span>
+        </div>
+        <div class="theme-preview-info">
+          <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">${sw.label || info.label}</div>
+          <div class="theme-preview-actions">
+            <button onclick="previewTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit">
+              👁 Tester
+            </button>
+            <button onclick="equipTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:rgba(205,127,50,0.1);color:#cd7f32;font-size:0.75rem;cursor:pointer;font-family:inherit">
+              ✅ Activer
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function previewTheme(themeKey) {
+  // Ouvrir live-score dans une modal iframe pour voir le thème
+  const modal = document.createElement('div');
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(6px)`;
+  const themeClass = themeKey !== 'default' ? themeKey.replace('theme_','theme-') : '';
+  const sw = THEME_SWATCHES[themeKey] || { bg:'#111', score:'#cd7f32' };
+  modal.innerHTML = `
+    <div style="width:min(600px,95vw);background:${sw.bg};border-radius:20px;overflow:hidden;border:2px solid rgba(205,127,50,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+      <div style="padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.4)">
+        <span style="font-weight:800;color:#fff">Aperçu : ${THEME_SWATCHES[themeKey]?.label || themeKey}</span>
+        <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">✕</button>
+      </div>
+      <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1.5rem">
+        <!-- Simulation score -->
+        <div style="display:flex;gap:2rem;align-items:center">
+          <div style="text-align:center">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.5);margin-bottom:4px">Équipe 1</div>
+            <div style="font-size:5rem;font-weight:900;color:${sw.score};text-shadow:0 0 20px ${sw.score}40;line-height:1">7</div>
+          </div>
+          <div style="font-size:1.5rem;font-weight:900;color:rgba(255,255,255,0.3)">–</div>
+          <div style="text-align:center">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.5);margin-bottom:4px">Équipe 2</div>
+            <div style="font-size:5rem;font-weight:900;color:${sw.score};text-shadow:0 0 20px ${sw.score}40;line-height:1">3</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.5rem 1.5rem;font-size:0.8rem;color:rgba(255,255,255,0.7)">● Partie en cours — LIVE</div>
+        <button onclick="equipTheme('${themeKey}');this.closest('[style]').remove();" style="padding:0.6rem 1.5rem;border-radius:10px;background:rgba(205,127,50,0.3);border:1px solid rgba(205,127,50,0.5);color:#ffd700;font-weight:700;cursor:pointer;font-family:inherit">
+          ✅ Activer ce thème
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+async function equipTheme(themeKey) {
+  try {
+    const res = await fetch('/api/equip_cosmetic', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: themeKey, slot: 'theme' })
+    }).then(r => r.json());
+    if (res.success) {
+      showToast(`✓ Thème "${themeKey}" activé`, 'ok');
+      // Mettre en évidence la carte active
+      document.querySelectorAll('.theme-preview-card').forEach(c => c.classList.remove('active-theme'));
+      const card = document.getElementById('themeCard_' + themeKey);
+      if (card) card.classList.add('active-theme');
+    } else {
+      showToast('✕ ' + (res.message || 'Erreur'), 'err');
+    }
+  } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+function renderFramesGrid() {
+  const grid = document.getElementById('framesGrid');
+  if (!grid || !catalogData) return;
+  const frames = Object.entries(catalogData.catalog).filter(([k]) => k.startsWith('frame_'));
+  const CSS_FRAMES = {
+    frame_bronze:  'box-shadow:0 0 0 3px #cd7f32,0 0 12px rgba(205,127,50,0.5)',
+    frame_flame:   'box-shadow:0 0 0 3px #ff6b00,0 0 16px rgba(255,107,0,0.7)',
+    frame_phoenix: 'box-shadow:0 0 0 3px #ff4500,0 0 0 6px rgba(255,69,0,0.3),0 0 20px rgba(255,69,0,0.5)',
+  };
+  grid.innerHTML = [['none', {label:'Aucun cadre', icon:'○'}], ...frames].map(([key, info]) => {
+    const css = CSS_FRAMES[key] || '';
+    return `
+      <div class="frame-demo-wrap">
+        <div class="frame-demo-av" style="${css}">🧑</div>
+        <div style="font-weight:700;font-size:0.85rem;text-align:center">${info.label || key}</div>
+        <button onclick="equipFrame('${key}')" style="padding:4px 14px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:rgba(205,127,50,0.1);color:#cd7f32;font-size:0.78rem;cursor:pointer;font-family:inherit;width:100%">
+          ✅ Activer
+        </button>
+      </div>`;
+  }).join('');
+}
+
+async function equipFrame(frameKey) {
+  try {
+    const res = await fetch('/api/equip_cosmetic', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: frameKey, slot: 'frame' })
+    }).then(r => r.json());
+    showToast(res.success ? `✓ Cadre "${frameKey}" activé` : '✕ ' + res.message, res.success ? 'ok' : 'err');
+  } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+function renderQuestsTestGrid() {
+  const grid = document.getElementById('questsTestGrid');
+  if (!grid || !catalogData) return;
+  grid.innerHTML = (catalogData.quests || []).map(q => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle);gap:0.75rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0">
+        <span style="font-size:1.4rem;flex-shrink:0">${q.icon}</span>
+        <div>
+          <div style="font-weight:700;font-size:0.88rem">${q.name}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">${q.description}</div>
+          <div style="font-size:0.72rem;color:#cd7f32;margin-top:2px">🎁 ${q.reward_label || '—'}</div>
+        </div>
+      </div>
+      <button onclick="testCompleteQuest('${q.key}')" style="padding:0.4rem 0.9rem;border-radius:8px;background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);color:#cd7f32;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap">
+        ✅ Compléter (test)
+      </button>
+    </div>`).join('');
+}
+
+async function testCompleteQuest(questKey) {
+  try {
+    const res = await fetch('/api/admin/complete_quest', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ quest_key: questKey })
+    }).then(r => r.json());
+    if (res.success) {
+      showToast(`✓ Quête "${questKey}" complétée — cosmétique débloqué : ${res.reward_label || res.reward_cosmetic}`, 'ok');
+    } else {
+      showToast('✕ ' + (res.message || 'Erreur'), 'err');
+    }
+  } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+async function resetMyCosmetics() {
+  try {
+    const res = await fetch('/api/admin/unlock_cosmetic', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: currentAdminUser, reset: true })
+    }).then(r => r.json());
+    showToast(res.success ? '✓ Cosmétiques réinitialisés' : '✕ ' + res.message, res.success ? 'ok' : 'err');
+  } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+function populateUserCosmeticSelects() {
+  // sera peuplé quand les users sont chargés
+}
+
+async function unlockForUser() {
+  const user     = document.getElementById('cosUserSelect').value;
+  const cosmetic = document.getElementById('cosCosmeticSelect').value;
+  if (!user || !cosmetic) { showToast('Sélectionne un joueur et un cosmétique', 'err'); return; }
+  try {
+    const res = await fetch('/api/admin/unlock_cosmetic', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: user, cosmetic })
+    }).then(r => r.json());
+    const status = document.getElementById('userCosmeticsStatus');
+    if (res.success) {
+      showToast(`✓ ${cosmetic} débloqué pour ${user}`, 'ok');
+      if (status) status.innerHTML = `<span style="color:#2ecc71">✓ ${res.message}</span>`;
+    } else {
+      showToast('✕ ' + res.message, 'err');
+      if (status) status.innerHTML = `<span style="color:#e74c3c">✕ ${res.message}</span>`;
+    }
+  } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+let currentAdminUser = null;
+</script>
+
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}

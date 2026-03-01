@@ -1,4 +1,8 @@
 import threading as _threading
+import re as _re
+import html as _html
+import base64 as _base64
+import uuid as _uuid
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, Response
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -23,7 +27,7 @@ logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdo
 logger = logging.getLogger(__name__)
 
 # ── Cloudinary (avatars) ──────────────────────────────────────
-# Configurez CLOUDINARY_URL dans Railway → Variables pour activer.
+# Configurez CLOUDINARY_URL dans Render → Environment pour activer.
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '')
 USE_CLOUDINARY = bool(CLOUDINARY_URL)
 if USE_CLOUDINARY:
@@ -44,7 +48,7 @@ if USE_CLOUDINARY:
         logger.warning("Package 'cloudinary' non installé — avatars stockés en DB (fallback). Ajoutez cloudinary dans requirements.txt")
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
-# ProxyFix : essentiel pour que Flask comprenne HTTPS derrière Render/Railway/Heroku
+# ProxyFix : essentiel pour que Flask comprenne HTTPS derrière Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_for=1)
 
 # ── Secrets ──────────────────────────────────────────────────
@@ -53,16 +57,14 @@ _secret_key = os.environ.get('SECRET_KEY')
 if not _secret_key:
     import secrets as _secrets
     _secret_key = _secrets.token_hex(32)
-    logger.warning("SECRET_KEY non definie — cle aleatoire generee (sessions invalidees au redemarrage). Definissez SECRET_KEY dans Railway !")
+    logger.warning("SECRET_KEY non definie — cle aleatoire generee (sessions invalidees au redemarrage). Definissez SECRET_KEY dans Render → Environment !")
 
 app.secret_key = _secret_key
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-# Render met RENDER=true, Railway met RAILWAY_ENVIRONMENT, Heroku met DYNO
+# Render met RENDER=true automatiquement
 _is_production = (
     os.environ.get('RENDER') is not None
-    or os.environ.get('RAILWAY_ENVIRONMENT') is not None
-    or os.environ.get('DYNO') is not None
     or os.environ.get('SESSION_COOKIE_SECURE', '').lower() == 'true'
 )
 app.config['SESSION_COOKIE_SECURE'] = _is_production
@@ -74,7 +76,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 Mo max request body
 
 # ── SocketIO ──────────────────────────────────────────────────
 
-# CORS : définir CORS_ORIGINS dans Railway avec ton domaine Railway (ex: https://monapp.railway.app)
+# CORS : définir CORS_ORIGINS dans Render avec ton domaine (ex: https://monapp.onrender.com)
 # Par défaut '*' pour compatibilité locale — à restreindre en prod via variable d'env
 _CORS_RAW = os.environ.get('CORS_ORIGINS', '').strip().rstrip('/')
 _ALLOWED_ORIGINS = _CORS_RAW if _CORS_RAW else '*'
@@ -766,7 +768,7 @@ def migrate_teams_to_text():
 def seed_accounts():
     """
     Crée les comptes initiaux du club.
-    Les mots de passe admin sont lus depuis les variables d'environnement Railway :
+    Les mots de passe admin sont lus depuis les variables d'environnement Render :
       SEED_PW_IMRAN, SEED_PW_APOUTOU, SEED_PW_HAMARA, SEED_PW_MDA
     Les comptes Joueur1/2/3 gardent le mot de passe 'guest' (comptes physiques partagés).
     """
@@ -784,7 +786,7 @@ def seed_accounts():
     if not [a for a in accounts if a[2] >= 1]:
         logger.warning(
             "⚠️  Aucun compte admin seed configuré ! "
-            "Définissez SEED_PW_IMRAN, SEED_PW_APOUTOU, etc. dans Railway → Variables."
+            "Définissez SEED_PW_IMRAN, SEED_PW_APOUTOU, etc. dans Render → Environment."
         )
     try:
         conn = get_db_connection()
@@ -971,7 +973,6 @@ def validate_username(u):
     if len(u) > 20:
         raise ValueError("Maximum 20 caracteres")
     # Regex strict ASCII uniquement — bloque les homoglyphes Unicode (ex: а cyrillique ≠ a latin)
-    import re as _re
     if not _re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_-]{1,19}$', u) and not _re.match(r'^[a-zA-Z0-9]{1,20}$', u):
         raise ValueError("Lettres ASCII, chiffres, - et _ uniquement")
     # Double vérification : aucun caractère non-ASCII
@@ -1129,11 +1130,8 @@ def debug_static():
 
 @app.route("/debug/live")
 def debug_live():
-    """Page de diagnostic live-score — admins uniquement en production."""
-    username = session.get('username')
-    if not is_admin(username):
-        return jsonify({"error": "Admin requis"}), 403
-    return render_template("debug-live.html")
+    """Page de diagnostic live-score — supprimée en production."""
+    return jsonify({"error": "Page de debug supprimée. Utilisez /debug/game pour l'état du jeu."}), 404
 
 @app.route("/debug/game")
 def debug_game():
@@ -1625,7 +1623,6 @@ def save_reservation():
             cur.execute("DELETE FROM reservations WHERE day = ? AND time = ?", (day, time_val))
 
         # Calculer start_time / end_time
-        import re as _re
         start_iso_val = None
         end_iso_val = None
         try:
@@ -2177,11 +2174,9 @@ def api_avatar(username):
     # Si c'est une data URL base64, servir l'image directement
     avatar_url = row.get("avatar_url") or ""
     if avatar_url.startswith("data:"):
-        import base64
         header, data = avatar_url.split(",", 1)
         mime = header.split(":")[1].split(";")[0]
-        img_bytes = base64.b64decode(data)
-        from flask import Response
+        img_bytes = _base64.b64decode(data)
         return Response(img_bytes, mimetype=mime, headers={"Cache-Control": "public, max-age=3600"})
     return jsonify({
         "avatar_url": avatar_url,
@@ -2248,7 +2243,6 @@ def api_update_profile():
     if not username:
         return jsonify({"error": "Non connecté"}), 401
     data = request.get_json()
-    import html as _html
     nickname = _html.escape((data.get("nickname") or "").strip())[:50]
     bio = _html.escape((data.get("bio") or "").strip())[:120]
     raw_preset = (data.get("avatar_preset") or "").strip()
@@ -2268,10 +2262,9 @@ def api_update_profile():
 def api_upload_avatar():
     """
     Upload d'avatar.
-    - Si CLOUDINARY_URL est défini dans Railway : upload vers Cloudinary (recommandé).
+    - Si CLOUDINARY_URL est défini dans Render : upload vers Cloudinary (recommandé).
     - Sinon : fallback base64 en DB PostgreSQL, limité à 700 Ko.
     """
-    import base64 as _base64
     username = session.get("username")
     if not username:
         return jsonify({"error": "Non connecté"}), 401
@@ -2337,7 +2330,7 @@ def api_upload_avatar():
         # ── Fallback base64 en DB (max ~500 Ko image réelle) ──
         MAX_LEN = 700_000
         if len(img_data) > MAX_LEN:
-            return jsonify({"error": "Image trop grande. Configurez CLOUDINARY_URL dans Railway pour lever cette limite."}), 413
+            return jsonify({"error": "Image trop grande. Configurez CLOUDINARY_URL dans Render → Environment pour lever cette limite."}), 413
         conn = get_db_connection()
         cur = conn.cursor()
         try:
@@ -2620,7 +2613,6 @@ def api_upload_badge_image():
     Accepte multipart/form-data avec le champ 'image'.
     Stocke dans Cloudinary si disponible, sinon base64 en DB retourné comme data-URI.
     """
-    import base64 as _base64
     caller = session.get("username")
     if not is_super_admin(caller):
         return jsonify({"success": False, "message": "Réservé à Imran"}), 403
@@ -2914,6 +2906,12 @@ def api_badges_all_users():
 
 arduino_last_goal_time = {}
 
+# Secret Arduino lu au démarrage (évite os.environ.get à chaque requête)
+_ARDUINO_SECRET = os.environ.get("ARDUINO_SECRET", "")
+if not _ARDUINO_SECRET:
+    logger.error("🚨 ARDUINO_SECRET non defini ! Definissez cette variable dans Render → Environment.")
+    logger.error("   Sans ce secret, l'endpoint Arduino est non protégé.")
+
 @app.route("/api/arduino/status", methods=["GET"])
 def api_arduino_status():
     """Etat complet pour l'ESP32 (sync au demarrage + poll)."""
@@ -2968,12 +2966,8 @@ def api_arduino_servo():
     return jsonify({"success": True, "servo": servo, "action": action})
 
 def _get_arduino_secret():
-    """Retourne le secret Arduino depuis l'environnement. Obligatoire en production."""
-    secret = os.environ.get("ARDUINO_SECRET", "")
-    if not secret:
-        logger.error("🚨 ARDUINO_SECRET non defini ! Definissez cette variable dans Railway.")
-        logger.error("   Sans ce secret, l'endpoint Arduino est non protégé.")
-    return secret
+    """Retourne le secret Arduino depuis l'environnement (lu une seule fois au démarrage)."""
+    return _ARDUINO_SECRET
 
 @app.route("/api/arduino/goal", methods=["POST"])
 def api_arduino_goal():
@@ -3259,7 +3253,6 @@ def handle_decline_lobby():
 @socketio.on('request_join_lobby')
 def handle_request_join_lobby():
     global active_lobby
-    import uuid as _uuid
     username = get_socket_user()
     if not username:
         return

@@ -40,7 +40,7 @@ templates/
   admin.html        ← panel admin (rôles, badges, reset DB)
   index.html        ← accueil public (avant login)
   login.html / register.html
-  debug-live.html   ← debug dev uniquement, jamais montré aux users
+  (debug-live.html supprimé — la route /debug/live retourne 404)
 ```
 
 ---
@@ -119,7 +119,7 @@ Ne pas changer. Render utilise le mode threading, pas eventlet/gevent.
 - `static/animations.js` — animations UI décoratives
 - `static/pwa.js` + `manifest.json` — installation mobile PWA
 - `railway.json` + `.railwayignore` + `Procfile` — inutiles sur Render
-- `templates/debug-live.html` — debug dev
+- `templates/debug-live.html` — supprimé (route retourne 404)
 - `tests/` — jamais exécuté en prod
 
 ---

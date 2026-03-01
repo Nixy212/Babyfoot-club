@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css') }}">
+
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BabyFoot">
+  <link rel="apple-touch-icon" href="/static/images/logo.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Connexion — Baby-Foot Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- CSS critique inline pour affichage immédiat sans attendre les fichiers externes -->
+  <style>
+    
+    .auth-wrap{width:100%;max-width:420px}
+    .auth-box{background:var(--bg-secondary);border:1px solid var(--border-normal);border-radius:var(--radius-lg);padding:2.5rem 2rem}
+    .auth-logo{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem}
+    .auth-logo img{width:40px;height:40px}
+    .auth-logo span{font-size:1.25rem;font-weight:700;color:var(--text-primary)}
+    .auth-title{font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.25rem}
+    .auth-sub{font-size:.9375rem;color:var(--text-secondary);margin-bottom:1.5rem}
+    .field{margin-bottom:1rem}
+    .label{display:block;font-size:.875rem;font-weight:600;color:var(--text-secondary);margin-bottom:.375rem}
+    input[type=text],input[type=password]{width:100%;padding:.625rem 1rem;background:var(--bg-elevated);border:1px solid var(--border-normal);border-radius:var(--radius-md);color:var(--text-primary);font-size:1rem;outline:0;transition:border-color .15s;-webkit-appearance:none}
+    input:focus{border-color:var(--border-accent);box-shadow:0 0 0 3px rgba(205,127,50,.12)}
+    input::placeholder{color:var(--text-tertiary)}
+    .auth-submit{width:100%;padding:.875rem;background:linear-gradient(135deg,#cd7f32,#b8732f);color:#fff;border:none;border-radius:var(--radius-md);font-size:1rem;font-weight:700;cursor:pointer;margin-top:.5rem;transition:opacity .15s,transform .15s;-webkit-appearance:none}
+    .auth-submit:active{opacity:.85;transform:scale(.98)}
+    .auth-submit:disabled{opacity:.6;cursor:not-allowed}
+    .alert{display:none;padding:.75rem 1rem;border-radius:var(--radius-md);font-size:.9375rem;margin-bottom:1rem;font-weight:500}
+    .alert.error{background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.25)}
+    .alert.success{background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.25)}
+    .auth-sep{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;font-size:.8125rem;color:var(--text-tertiary)}
+    .auth-sep::before,.auth-sep::after{content:'';flex:1;height:1px;background:var(--border-normal)}
+    .auth-switch{text-align:center;font-size:.9375rem;color:var(--text-secondary)}
+    .auth-switch a{color:var(--bronze);font-weight:600}
+    .spin{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    code{color:var(--bronze);background:rgba(205,127,50,.1);padding:.1rem .4rem;border-radius:4px;font-size:.875rem}
+  
+    /* ── Fond type lobby : grille + orbes ── */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    /* removed by design-v3 */
+    @media (max-width: 768px) {
+      /* removed by design-v3 */
+      /* removed by design-v3 */
+      /* removed by design-v3 */
+    }
+
+  </style>
+</head>
+<body class="no-fade">
+<div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+<div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+<div class="bg-orb bg-orb-3" aria-hidden="true"></div>
+
+
+<div class="auth-wrap" style="position:relative;z-index:1">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
+      <span>Baby-Foot Club</span>
+    </div>
+    <h1 class="auth-title">Connexion</h1>
+    <p class="auth-sub">Entrez vos identifiants pour accéder à votre espace</p>
+
+    <div class="auth-form">
+      <div id="alert" class="alert"></div>
+
+      <div class="field">
+        <label class="label" for="username">Nom d'utilisateur</label>
+        <input type="text" id="username" placeholder="votre_pseudo"
+               autocomplete="username" autocorrect="off" autocapitalize="none" spellcheck="false"
+               inputmode="text" enterkeyhint="next">
+      </div>
+      <div class="field">
+        <label class="label" for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••"
+               autocomplete="current-password" enterkeyhint="go">
+      </div>
+      <button class="auth-submit" id="loginBtn">Se connecter</button>
+    </div>
+
+    <div class="auth-sep">ou</div>
+    <div class="auth-switch">Pas encore de compte ? <a href="/register">S'inscrire</a></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="tw"></div>
+
+<script>
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'alert ' + type;
+    el.style.display = 'block';
+  }
+
+  async function login() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const btn = document.getElementById('loginBtn');
+    if (!u || !p) { showAlert('Veuillez remplir tous les champs', 'error'); return; }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>';
+    try {
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username: u, password: p})
+      });
+      const d = await r.json();
+      if (d.success) {
+        // Redirect immédiat — pas de délai artificiel
+        window.location.replace('/dashboard');
+      } else {
+        showAlert(d.message || 'Identifiants incorrects', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
+        document.getElementById('password').focus();
+        document.getElementById('password').select();
+      }
+    } catch(e) {
+      showAlert('Erreur réseau — réessayez', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Se connecter';
+    }
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', login);
+  document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  document.getElementById('username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
+</script>
+
+  <script src="/static/pwa.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% set active_page = "scores" %}
+{% block title %}Scores — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+</div>
+
+<div class="page">
+  <div class="container" style="max-width:1000px">
+    <div class="page-header fade-up">
+      <h1><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> Historique des parties</h1>
+      <p>Toutes les parties jouées dans le club — retrouvez vos résultats et ceux de vos adversaires</p>
+    </div>
+
+    <div class="section-block fade-up" style="animation-delay:.05s"><div class="section-block-header"><span class="section-block-title">🏆 Toutes les parties</span></div><div class="section-block-body" style="padding:1.25rem"><div class="scores-grid" id="scoresGrid">
+      <div style="padding:3rem;text-align:center">
+        <div class="loading-spinner" style="margin:0 auto 1rem"></div>
+        <p style="color:var(--text-tertiary)">Chargement des parties...</p>
+      </div>
+    </div>
+
+    </div></div></div>
+    <div style="text-align:center;margin-top:1.5rem">
+      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
+<script>
+function toggleMenu() {
+  const isOpen = document.getElementById('mobileMenu').classList.contains('open');
+  document.getElementById('burger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  const overlay = document.getElementById('menuOverlay');
+  if (overlay) overlay.classList.toggle('open');
+  document.body.style.overflow = !isOpen ? 'hidden' : '';
+}
+
+function logout() {
+  fetch('/api/logout', {method:'POST'}).then(() => location.href = '/');
+}
+
+// Parse les players qui peuvent être string JSON (SQLite) ou tableau (PostgreSQL)
+function parsePlayers(players) {
+  if (!players) return [];
+  if (Array.isArray(players)) return players;
+  try {
+    const parsed = JSON.parse(players);
+    return Array.isArray(parsed) ? parsed : [players];
+  } catch {
+    return [players];
+  }
+}
+
+fetch('/current_user').then(r => r.json()).then(d => {
+  if (d && d.username) {
+    ProfileUtils.updateNav(d);
+    // Lien admin dans menu mobile (si admin)
+    if (d && d.is_admin) {
+      const mm = document.getElementById('mobileMenu');
+      if (mm && !mm.querySelector('a[href="/admin"]')) {
+        const a = document.createElement('a');
+        a.href = '/admin'; a.textContent = '🛡️ Admin';
+        const firstLink = mm.querySelector('a');
+        if (firstLink) mm.insertBefore(a, firstLink);
+      }
+    }
+  }
+});
+
+async function loadScores() {
+  const container = document.getElementById('scoresGrid');
+  try {
+    const res = await fetch('/scores_all');
+    if (res.status === 401) {
+      window.location.href = '/login';
+      return;
+    }
+    const payload = await res.json();
+
+    // Support ancien format (tableau direct) et nouveau ({games, total})
+    const scores = Array.isArray(payload) ? payload : (payload.games || []);
+    const total  = Array.isArray(payload) ? payload.length : (payload.total || scores.length);
+
+    if (!scores || scores.length === 0) {
+      container.innerHTML = `
+        <div style="padding:3rem;text-align:center">
+          <div style="margin-bottom:1rem;opacity:0.3;display:flex;justify-content:center"><span data-bficon="gamepad" data-size="64" style="color:var(--text-tertiary)"></span></div>
+          <p style="color:var(--text-tertiary);margin-bottom:1.5rem">Aucune partie jouée pour le moment — soyez le premier à en créer une !</p>
+          <a href="/live-score" class="btn btn-primary">Démarrer une partie</a>
+        </div>
+      `;
+      return;
+    }
+
+    // scores est trié DESC (plus récent en premier)
+    // La partie la plus récente = numéro `total`, la plus ancienne = #1
+    container.innerHTML = scores.map((entry, index) => {
+      const matchNum = total - index;
+
+      let dateStr = '—', timeStr = '';
+      if (entry.date) {
+        try {
+          const date = new Date(entry.date);
+          if (!isNaN(date.getTime())) {
+            dateStr = date.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'});
+            timeStr = date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+          }
+        } catch(e) { dateStr = entry.date; }
+      }
+
+      const t1 = parsePlayers(entry.team1_players);
+      const t2 = parsePlayers(entry.team2_players);
+      const winnerTeam = entry.winner === 'team1' ? t1 : t2;
+      const loserTeam  = entry.winner === 'team1' ? t2 : t1;
+      const winScore   = entry.winner === 'team1' ? entry.team1_score : entry.team2_score;
+      const loseScore  = entry.winner === 'team1' ? entry.team2_score : entry.team1_score;
+
+      return `
+        <div class="score-card">
+          <div class="score-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:nowrap">
+            <div style="display:flex;align-items:center;gap:0.5rem;min-width:0">
+              <span style="font-family:'Space Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--bronze);background:rgba(205,127,50,0.12);padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0">#${matchNum}</span>
+              <span class="score-date" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.78rem">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>
+            </div>
+            <span style="font-size:0.72rem;color:var(--text-tertiary);flex-shrink:0">${entry.mode || '2v2'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.75rem;font-weight:700;color:#22c55e;margin-bottom:2px;white-space:nowrap">Vainqueurs</div>
+              <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${winnerTeam.join(' & ')}</div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:1.375rem;font-weight:900;color:var(--bronze);white-space:nowrap;flex-shrink:0">${winScore}–${loseScore}</div>
+            <div style="flex:1;min-width:0;text-align:right">
+              <div style="font-size:0.75rem;font-weight:700;color:#e74c3c;margin-bottom:2px;white-space:nowrap">Perdants</div>
+              <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${loserTeam.join(' & ')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Réinit icônes SVG pour le contenu injecté dynamiquement
+    if (window.initBFIcons) initBFIcons(container);
+
+  } catch(e) {
+    console.error(e);
+    container.innerHTML = `
+      <div style="padding:3rem;text-align:center">
+        <div style="margin-bottom:1rem;opacity:0.4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+        <p style="color:var(--text-tertiary)">Erreur de chargement des scores — ${e.message}</p>
+      </div>
+    `;
+  }
+}
+
+loadScores();
+</script>
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}

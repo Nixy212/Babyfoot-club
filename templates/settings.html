@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+{% block title %}Paramètres — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    .settings-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-normal);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .settings-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-tertiary);
+      padding: 1.25rem 1.5rem 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .settings-row {
+      padding: 1.25rem 1.5rem;
+    }
+    .pw-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .pw-input-wrap {
+      position: relative;
+    }
+    .pw-input-wrap input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-normal);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+    .pw-input-wrap input:focus {
+      border-color: var(--bronze);
+      box-shadow: 0 0 0 3px rgba(205,127,50,0.12);
+    }
+    .pw-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      margin-bottom: 0.3rem;
+    }
+    .pw-strength {
+      height: 3px;
+      border-radius: 99px;
+      background: var(--border-subtle);
+      overflow: hidden;
+      margin-top: 0.35rem;
+    }
+    .pw-strength-bar {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s, background 0.3s;
+      width: 0%;
+    }
+    .pw-strength-text {
+      font-size: 0.7rem;
+      margin-top: 0.2rem;
+      height: 0.85rem;
+      color: var(--text-muted);
+    }
+    .info-box {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      background: rgba(205,127,50,0.07);
+      border: 1px solid rgba(205,127,50,0.2);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .info-box.blue {
+      background: rgba(52,152,219,0.07);
+      border-color: rgba(52,152,219,0.2);
+    }
+    .toast-settings {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: center;
+      pointer-events: none;
+    }
+    .toast-s {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-normal);
+      border-radius: 10px;
+      padding: 0.65rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      animation: tsIn 0.25s ease;
+      white-space: nowrap;
+    }
+    .toast-s.ok  { border-color: rgba(39,174,96,.45); color: #2ecc71; }
+    .toast-s.err { border-color: rgba(231,76,60,.45); color: #e74c3c; }
+    @keyframes tsIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+
+    .avatar-big {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--gradient-bronze);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 0 4px rgba(205,127,50,0.15);
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .profile-name { font-size: 1.25rem; font-weight: 800; color: var(--text-primary); }
+    .profile-role { font-size: 0.8rem; color: var(--text-tertiary); margin-top: 2px; }
+
+    /* Avatar picker */
+    .avatar-section { display:flex; align-items:center; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .avatar-preview-wrap { position:relative; cursor:pointer; }
+    .avatar-preview-big {
+      width:80px; height:80px; border-radius:50%;
+      background:linear-gradient(135deg,#cd7f32,#b8732f);
+      display:flex; align-items:center; justify-content:center;
+      font-size:2rem; border:3px solid var(--border-accent);
+      overflow:hidden; position:relative;
+    }
+    .avatar-preview-big img { width:100%; height:100%; object-fit:cover; }
+    .avatar-preview-big .avatar-edit-overlay {
+      position:absolute; inset:0; background:rgba(0,0,0,0.5);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; transition:opacity .2s; font-size:1.2rem;
+    }
+    .avatar-preview-wrap:hover .avatar-edit-overlay { opacity:1; }
+    .avatar-presets { display:flex; gap:0.6rem; flex-wrap:wrap; }
+    .avatar-preset-btn {
+      width:44px; height:44px; border-radius:50%; border:2px solid transparent;
+      background:var(--bg-tertiary); font-size:1.3rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:all .15s; flex-shrink:0;
+    }
+    .avatar-preset-btn:hover { border-color:var(--border-accent); transform:scale(1.1); }
+    .avatar-preset-btn.selected { border-color:#cd7f32; background:rgba(205,127,50,0.15); }
+    /* ELO badge */
+    .elo-badge {
+      display:inline-flex; align-items:center; gap:0.5rem;
+      padding:0.6rem 1.2rem; border-radius:12px;
+      background:linear-gradient(135deg,rgba(205,127,50,0.15),rgba(205,127,50,0.05));
+      border:1px solid rgba(205,127,50,0.3);
+    }
+    .elo-value { font-size:1.8rem; font-weight:800; color:#cd7f32; line-height:1; }
+    .elo-info { display:flex; flex-direction:column; }
+    .elo-tier { font-size:0.9rem; font-weight:700; color:var(--text-primary); }
+    .elo-label { font-size:0.72rem; color:var(--text-muted); }
+    /* Input perso */
+    .perso-input {
+      width:100%; padding:0.75rem 1rem; border-radius:10px;
+      border:1px solid var(--border-normal); background:var(--bg-tertiary);
+      color:var(--text-primary); font-size:0.9rem; font-family:inherit;
+      transition:border-color .15s; box-sizing:border-box;
+    }
+    .perso-input:focus { outline:none; border-color:#cd7f32; }
+    .perso-label { font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.4rem; }
+    .char-count { font-size:0.72rem; color:var(--text-muted); text-align:right; margin-top:0.3rem; }
+  </style>
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+</div>
+
+<div class="page">
+  <div class="container" style="max-width:600px">
+    <div class="page-header fade-up">
+      <h1>⚙️ Paramètres</h1>
+      <p>Gérez votre compte et vos préférences</p>
+    </div>
+
+    <!-- Profil -->
+    <div class="settings-card fade-up" style="animation-delay:.03s">
+      <div class="profile-header">
+        <div class="avatar-big" id="profileAv">?</div>
+        <div>
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-role" id="profileRole" style="display:none">Joueur</div>
+          <!-- Badges reçus -->
+          <div id="profileBadges" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PERSONNALISATION ───────────────────────────────────── -->
+    <div class="settings-card fade-up" style="animation-delay:.06s">
+      <div class="settings-section-title">🎨 Personnaliser mon profil</div>
+      <div class="settings-row">
+
+        <!-- Avatar -->
+        <div class="perso-label" style="margin-bottom:0.75rem">Photo de profil</div>
+        <div class="avatar-section">
+          <div class="avatar-preview-wrap" onclick="document.getElementById('avatarFileInput').click()">
+            <div class="avatar-preview-big" id="avatarPreviewBig">
+              <span id="avatarPreviewEmoji">?</span>
+              <img id="avatarPreviewImg" src="" style="display:none">
+              <div class="avatar-edit-overlay">✏️</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem">Choisir un avatar</div>
+            <div class="avatar-presets" id="avatarPresets">
+              <button class="avatar-preset-btn" data-preset="⚽" onclick="selectPreset('⚽')">⚽</button>
+              <button class="avatar-preset-btn" data-preset="🏆" onclick="selectPreset('🏆')">🏆</button>
+              <button class="avatar-preset-btn" data-preset="🔥" onclick="selectPreset('🔥')">🔥</button>
+              <button class="avatar-preset-btn" data-preset="⚡" onclick="selectPreset('⚡')">⚡</button>
+              <button class="avatar-preset-btn" data-preset="👑" onclick="selectPreset('👑')">👑</button>
+              <button class="avatar-preset-btn" data-preset="💎" onclick="selectPreset('💎')">💎</button>
+              <button class="avatar-preset-btn" data-preset="🎯" onclick="selectPreset('🎯')">🎯</button>
+              <button class="avatar-preset-btn" data-preset="🦁" onclick="selectPreset('🦁')">🦁</button>
+            </div>
+            <div style="margin-top:0.6rem">
+              <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem" onclick="document.getElementById('avatarFileInput').click()">
+                📷 Uploader une photo
+              </button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*,.heic,.heif" style="display:none" onchange="handleAvatarUpload(this)">
+
+        <!-- Surnom -->
+        <div style="margin-bottom:1rem">
+          <div class="perso-label">Surnom affiché en jeu</div>
+          <input type="text" class="perso-input" id="nicknameInput" maxlength="30"
+                 placeholder="Ton surnom (laisser vide = username)"
+                 oninput="document.getElementById('nicknameCount').textContent=this.value.length+'/30'">
+          <div class="char-count" id="nicknameCount">0/30</div>
+        </div>
+
+        <!-- Citation -->
+        <div style="margin-bottom:1.5rem">
+          <div class="perso-label">Citation / statut</div>
+          <textarea class="perso-input" id="bioInput" maxlength="120" rows="2"
+                    placeholder="Ta devise de joueur..."
+                    oninput="document.getElementById('bioCount').textContent=this.value.length+'/120'"
+                    style="resize:none"></textarea>
+          <div class="char-count" id="bioCount">0/120</div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="saveProfile()" id="btnSaveProfile">
+          Sauvegarder le profil
+        </button>
+      </div>
+    </div>
+
+    <!-- ── ELO / NIVEAU ───────────────────────────────────────── -->
+    <div class="settings-card fade-up" style="animation-delay:.09s">
+      <div class="settings-section-title">📊 Mon niveau</div>
+      <div class="settings-row">
+        <!-- Badge niveau actuel -->
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
+          <div class="elo-badge">
+            <span id="eloIcon" style="font-size:2rem">🎮</span>
+            <div class="elo-info">
+              <span class="elo-value" id="eloValue">1000</span>
+              <span class="elo-tier" id="eloTier">Recrue</span>
+              <span class="elo-label">Points ELO</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:180px">
+            <div id="eloDesc" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;font-style:italic"></div>
+            <div style="background:var(--bg-tertiary);border-radius:8px;height:8px;overflow:hidden">
+              <div id="eloProgressBar" style="height:100%;border-radius:8px;background:linear-gradient(90deg,#cd7f32,#ffd700);transition:width .5s"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem">
+              <span id="eloMin"></span><span id="eloMax"></span>
+            </div>
+            <!-- Winstreak -->
+            <div id="streakBadge" style="display:none;margin-top:0.7rem">
+              <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.35);font-size:0.8rem;font-weight:800;color:#ff8c00">
+                🔥 Série en cours : <span id="streakCount">0</span> victoire(s) d'affilée !
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explication système ELO enrichi -->
+        <div style="background:var(--bg-tertiary);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.82rem;color:var(--text-muted);line-height:1.6">
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.5rem">💡 Système ELO v2 — Comment ça marche ?</div>
+          <div>Chaque joueur commence à <strong style="color:#cd7f32">1000 points</strong>. Le gain est dynamique :</div>
+          <ul style="margin:0.5rem 0 0.5rem 1rem;padding:0">
+            <li><strong style="color:#ffd700">K variable</strong> : tu progresses plus vite au bas du classement (+40K) qu'au sommet (+14K)</li>
+            <li><strong style="color:#ff8c00">Bonus winstreak</strong> : chaque victoire d'affilée rapporte +15%, jusqu'à ×2.0 (5+ victoires)</li>
+            <li><strong style="color:#9b59b6">Bonus upset</strong> : battre qqn 200+ ELO au-dessus de toi = ×1.5</li>
+            <li><strong style="color:#e74c3c">Domination</strong> : gagner 10-0 ou 10-1 = +20% de gain</li>
+            <li>Le plancher est à <strong style="color:#cd7f32">800 points</strong> — tu ne peux pas tomber en dessous</li>
+          </ul>
+        </div>
+
+        <!-- Tableau de tous les niveaux -->
+        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🏅 Tous les niveaux</div>
+        <div id="eloTiersGrid" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+      </div>
+    </div>
+
+    <!-- Changement de mot de passe -->
+    <!-- Section Quêtes & Cosmétiques -->
+    <div class="settings-card fade-up" style="animation-delay:.115s">
+      <div class="settings-section-title">🏅 Quêtes & Cosmétiques</div>
+      <div class="settings-row">
+
+        <!-- Cosmétiques actifs -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🎨 Thème actif</div>
+          <div id="themeSelectorGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:0.75rem;margin-bottom:1rem"></div>
+          <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🖼️ Cadre avatar actif</div>
+          <div id="frameSelectorGrid" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem"></div>
+        </div>
+
+        <!-- Liste des quêtes -->
+        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🏅 Toutes les quêtes</div>
+        <div id="questsFullList" style="display:flex;flex-direction:column;gap:0.5rem">
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.85rem">Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-card fade-up" style="animation-delay:.12s">
+      <div class="settings-section-title">🔒 Changer le mot de passe</div>
+      <div class="settings-row">
+        <div class="pw-group">
+          <div>
+            <div class="pw-label">Mot de passe actuel</div>
+            <div class="pw-input-wrap">
+              <input type="password" id="curPw" placeholder="Votre mot de passe actuel" autocomplete="current-password">
+            </div>
+          </div>
+          <div>
+            <div class="pw-label">Nouveau mot de passe</div>
+            <div class="pw-input-wrap">
+              <input type="password" id="newPw" placeholder="Min. 6 caractères" autocomplete="new-password" oninput="checkStrength(this.value)">
+            </div>
+            <div class="pw-strength"><div class="pw-strength-bar" id="strengthBar"></div></div>
+            <div class="pw-strength-text" id="strengthText"></div>
+          </div>
+          <div>
+            <div class="pw-label">Confirmer le nouveau mot de passe</div>
+            <div class="pw-input-wrap">
+              <input type="password" id="confirmPw" placeholder="Répétez le nouveau mot de passe" autocomplete="new-password">
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="changePassword()" id="btnChangePw">
+          Mettre à jour le mot de passe
+        </button>
+      </div>
+    </div>
+
+    <!-- Google / Email (info) -->
+    <div class="settings-card fade-up" style="animation-delay:.09s">
+      <div class="settings-section-title">📧 Mot de passe oublié ?</div>
+      <div class="settings-row">
+        <div class="info-box blue">
+          Contactez un membre du club pour réinitialiser votre mot de passe.
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem;margin-bottom:2rem">
+      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast-settings" id="toastWrap"></div>
+
+<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
+
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}

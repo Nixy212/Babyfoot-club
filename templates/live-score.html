@@ -1,0 +1,937 @@
+{% extends "base.html" %}
+{% set active_page = "live" %}
+{% block title %}Partie Live — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Zones d'état ─────────────────────────────────────────── */
+    .state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .badge-live { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+    .badge-live::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #e74c3c; animation: blink 1.2s ease-in-out infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .badge-spectating { background: rgba(52,152,219,0.12); color: #3498db; border: 1px solid rgba(52,152,219,0.25); }
+    .badge-setup { background: rgba(205,127,50,0.12); color: #cd7f32; border: 1px solid rgba(205,127,50,0.25); }
+
+    /* ── Carte infos rôle ─────────────────────────────────────── */
+    .role-info {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+      margin-bottom: 1.5rem;
+    }
+    .role-info i { color: var(--bronze); flex-shrink: 0; }
+
+    /* ── Page no game ─────────────────────────────────────────── */
+    .no-game-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .no-game-option {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-normal);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    .no-game-option:hover { background: var(--bg-hover); border-color: var(--border-accent); transform: translateY(-3px); }
+    .no-game-option-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .no-game-option-label { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .no-game-option-sub { font-size: 0.8rem; color: var(--text-muted); }
+    @media (max-width: 500px) { .no-game-options { grid-template-columns: 1fr; } }
+
+    /* ── Thèmes cosmétiques ──────────────────────────────────── */
+    body.theme-fire {
+      --bg-primary:    #0d0200;
+      --bg-secondary:  #1a0400;
+      --bg-tertiary:   #2d0800;
+      --bg-elevated:   #3d1000;
+      --border-subtle: rgba(255,80,0,0.15);
+      --border-normal: rgba(255,80,0,0.25);
+      --bronze:        #ff6b00;
+      background: radial-gradient(ellipse at top, #3d0a00 0%, #0d0200 70%) fixed;
+    }
+    body.theme-fire .score-number { text-shadow: 0 0 20px rgba(255,100,0,0.6); }
+    body.theme-fire .nav { background: rgba(30,4,0,0.9) !important; }
+
+    body.theme-night {
+      --bg-primary:    #050010;
+      --bg-secondary:  #0d0020;
+      --bg-tertiary:   #160030;
+      --bg-elevated:   #200045;
+      --border-subtle: rgba(140,70,255,0.15);
+      --border-normal: rgba(140,70,255,0.25);
+      --bronze:        #9b59b6;
+      background: radial-gradient(ellipse at top, #1a0040 0%, #050010 70%) fixed;
+    }
+    body.theme-night .score-number { text-shadow: 0 0 20px rgba(150,80,255,0.6); }
+    body.theme-night .nav { background: rgba(8,0,20,0.9) !important; }
+
+    body.theme-gold {
+      --bg-primary:    #0d0a00;
+      --bg-secondary:  #1a1400;
+      --bg-tertiary:   #2d2200;
+      --bg-elevated:   #3d2e00;
+      --border-subtle: rgba(255,215,0,0.15);
+      --border-normal: rgba(255,215,0,0.25);
+      --bronze:        #ffd700;
+      background: radial-gradient(ellipse at top, #2d2000 0%, #0d0a00 70%) fixed;
+    }
+    body.theme-gold .score-number { text-shadow: 0 0 20px rgba(255,215,0,0.6); }
+    body.theme-gold .nav { background: rgba(20,16,0,0.9) !important; }
+
+    body.theme-royal {
+      --bg-primary:    #020512;
+      --bg-secondary:  #040b24;
+      --bg-tertiary:   #071240;
+      --bg-elevated:   #0c1a5a;
+      --border-subtle: rgba(30,80,200,0.2);
+      --border-normal: rgba(30,80,200,0.35);
+      --bronze:        #4a90d9;
+      background: radial-gradient(ellipse at top, #0c1a5a 0%, #020512 70%) fixed;
+    }
+    body.theme-royal .score-number { text-shadow: 0 0 20px rgba(74,144,217,0.7); }
+    body.theme-royal .nav { background: rgba(4,8,24,0.9) !important; }
+
+    body.theme-master {
+      --bg-primary:    #080808;
+      --bg-secondary:  #0f0f0f;
+      --bg-tertiary:   #181818;
+      --bg-elevated:   #222222;
+      --border-subtle: rgba(205,127,50,0.25);
+      --border-normal: rgba(205,127,50,0.45);
+      --bronze:        #ffd700;
+      background: radial-gradient(ellipse at top, #1a1200 0%, #080808 70%) fixed;
+    }
+    body.theme-master .score-number { text-shadow: 0 0 30px rgba(255,215,0,0.8); }
+    body.theme-master .nav { background: rgba(8,6,0,0.95) !important; }
+    body.theme-master .score-card { border-color: rgba(205,127,50,0.6) !important; box-shadow: 0 0 40px rgba(205,127,50,0.15) !important; }
+
+    /* ── Cadres avatar ───────────────────────────────────────── */
+    .frame-bronze  { box-shadow: 0 0 0 3px #cd7f32, 0 0 12px rgba(205,127,50,0.5) !important; }
+    .frame-flame   { box-shadow: 0 0 0 3px #ff6b00, 0 0 16px rgba(255,107,0,0.6) !important; animation: framePulseFlame 2s ease infinite; }
+    .frame-phoenix { box-shadow: 0 0 0 3px #ff4500, 0 0 0 6px rgba(255,69,0,0.3), 0 0 20px rgba(255,69,0,0.4) !important; animation: framePulsePhoenix 3s ease infinite; }
+    @keyframes framePulseFlame   { 0%,100%{box-shadow:0 0 0 3px #ff6b00,0 0 12px rgba(255,107,0,0.5)} 50%{box-shadow:0 0 0 3px #ff9500,0 0 24px rgba(255,107,0,0.8)} }
+    @keyframes framePulsePhoenix { 0%,100%{box-shadow:0 0 0 3px #ff4500,0 0 0 6px rgba(255,69,0,0.3),0 0 16px rgba(255,69,0,0.4)} 50%{box-shadow:0 0 0 3px #ff6500,0 0 0 8px rgba(255,69,0,0.5),0 0 32px rgba(255,100,0,0.6)} }
+
+    /* ── Popup quête débloquée ───────────────────────────────── */
+    .quest-unlock-toast {
+      position:fixed; bottom:5rem; left:50%; transform:translateX(-50%);
+      z-index:10001; pointer-events:none;
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      width:90%; max-width:320px;
+    }
+    .quest-unlock-item {
+      background:linear-gradient(135deg,rgba(20,10,0,0.97),rgba(30,20,0,0.97));
+      border:1px solid rgba(205,127,50,0.6);
+      border-radius:14px; padding:12px 18px;
+      display:flex; align-items:center; gap:12px;
+      box-shadow:0 4px 30px rgba(0,0,0,0.5), 0 0 20px rgba(205,127,50,0.15);
+      animation:questUnlockIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+      width:100%;
+    }
+    @keyframes questUnlockIn { from{opacity:0;transform:translateY(20px) scale(0.85)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .quest-unlock-icon { font-size:1.8rem; flex-shrink:0; }
+    .quest-unlock-text { flex:1; }
+    .quest-unlock-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:rgba(205,127,50,0.8); margin-bottom:2px; }
+    .quest-unlock-name  { font-size:0.9rem; font-weight:800; color:#fff; }
+    .quest-unlock-reward{ font-size:0.75rem; color:rgba(255,215,0,0.85); margin-top:2px; }
+  </style>
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='animations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='confetti.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<script>
+// Variables globales accessibles partout
+let socket;
+let currentUser = null;
+let isAdmin = false;
+let canControl = false;
+let lastGame = null;
+
+// Init socket — avec fallback si CDN pas encore chargé
+function initSocket() {
+  try {
+    if (typeof io === 'undefined') throw new Error('io not loaded');
+    socket = io({
+      reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 10000,
+      reconnectionAttempts: Infinity, timeout: 20000,
+      transports: ['websocket', 'polling'],
+    });
+    if (window.initReconnectIndicator) initReconnectIndicator(socket);
+  } catch(e) {
+    socket = { emit: () => {}, on: () => {}, once: () => {}, connected: false };
+  }
+  // Enregistrer tous les événements maintenant que socket existe
+  registerSocketEvents();
+}
+
+function toggleMenu() {
+  const isOpen = document.getElementById('mobileMenu').classList.contains('open');
+  document.getElementById('burger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  const overlay = document.getElementById('menuOverlay');
+  if (overlay) overlay.classList.toggle('open');
+  document.body.style.overflow = !isOpen ? 'hidden' : '';
+}
+function logout() { fetch('/api/logout', {method:'POST'}).then(() => location.href = '/'); }
+
+function showArea(name) {
+  // Cacher l'indicateur de chargement
+  const loader = document.getElementById('loadingIndicator');
+  if (loader) loader.style.display = 'none';
+  ['setupArea','spectatorArea','gameArea','noGameArea'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  if (name) document.getElementById(name).style.display = 'block';
+}
+
+function parsePlayers(players) {
+  if (!players) return [];
+  if (Array.isArray(players)) return players;
+  try { return JSON.parse(players); } catch { return [players]; }
+}
+
+async function loadUsers() {
+  try {
+    const rawUsers = await fetch('/users_list').then(r => r.json());
+    // users_list retourne des objets {username, nickname, ...}
+    const GUEST_RE = /^Joueur\d+$/i;
+    ['t1p1','t1p2','t2p1','t2p2'].forEach(id => {
+      const sel = document.getElementById(id);
+      // Vider sauf la première option
+      while (sel.options.length > 1) sel.remove(1);
+      rawUsers.forEach(u => {
+        const username = typeof u === 'string' ? u : u.username;
+        const nickname = (typeof u === 'object' && u.nickname) ? u.nickname.trim() : '';
+        if (GUEST_RE.test(username)) return; // exclure les guests physiques des selects
+        const opt = document.createElement('option');
+        opt.value = username;
+        opt.textContent = nickname ? `${nickname} (${username})` : username;
+        sel.appendChild(opt);
+      });
+      // Ajouter les guests comme option séparée
+      const sep = document.createElement('option'); sep.disabled = true; sep.textContent = '── Joueurs physiques ──'; sel.appendChild(sep);
+      rawUsers.forEach(u => {
+        const username = typeof u === 'string' ? u : u.username;
+        if (!GUEST_RE.test(username)) return;
+        const opt = document.createElement('option');
+        opt.value = username; opt.textContent = username;
+        sel.appendChild(opt);
+      });
+    });
+  } catch(e) { console.error('loadUsers error:', e); }
+}
+
+async function fetchWithTimeout(url, ms = 8000) {
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(tid);
+    return r;
+  } catch(e) {
+    clearTimeout(tid);
+    throw e;
+  }
+}
+
+async function checkActiveGame() {
+  try {
+    // Charger les profils (avatars + badges) avant tout rendu
+    await ensureProfiles();
+    const res = await fetchWithTimeout('/api/has_active_game', 8000);
+    if (!res.ok) {
+      if (res.status === 401) { location.href = '/login'; return; }
+      throw new Error('Erreur serveur ' + res.status);
+    }
+    const data = await res.json();
+    const userIsAdmin = data.is_admin || isAdmin;
+    const hasResa = data.has_reservation;
+    const canSetup = userIsAdmin || hasResa;
+
+    if (data.has_active_game) {
+      const game = data.game_data;
+      const t1 = parsePlayers(game.team1_players);
+      const t2 = parsePlayers(game.team2_players);
+      const isInGame = t1.includes(currentUser) || t2.includes(currentUser);
+      canControl = userIsAdmin || game.started_by === currentUser || isInGame;
+      const canScore = userIsAdmin;
+      lastGame = {...game, team1_players: t1, team2_players: t2};
+
+      if (canControl) {
+        showArea('gameArea');
+        document.getElementById('pageSub').textContent = 'Partie en cours — marquez les buts en temps réel';
+        updateGameUI(lastGame);
+        const s1 = document.getElementById('btnScore1');
+        const s2 = document.getElementById('btnScore2');
+        if (s1) s1.style.display = canScore ? '' : 'none';
+        if (s2) s2.style.display = canScore ? '' : 'none';
+      } else {
+        showArea('spectatorArea');
+        document.getElementById('pageSub').textContent = 'Partie en direct — score mis à jour automatiquement';
+        updateSpectatorUI(lastGame);
+      }
+    } else {
+      if (canSetup) {
+        showArea('setupArea');
+        document.getElementById('pageSub').textContent = hasResa
+          ? 'Réservation active — configurez et lancez la partie'
+          : 'Configurez la partie ci-dessous';
+        await loadUsers();
+        // Si admin et partie zombie en mémoire → afficher le bouton reset
+        if (userIsAdmin) {
+          const z = document.getElementById('adminResetZone');
+          if (z) z.style.display = 'block';
+        }
+      } else {
+        showArea('noGameArea');
+        document.getElementById('pageSub').textContent = 'Aucune partie en cours';
+      }
+    }
+  } catch(e) {
+    console.error('checkActiveGame error:', e);
+    const loader = document.getElementById('loadingIndicator');
+    if (loader) {
+      const isTimeout = e.name === 'AbortError';
+      loader.innerHTML = `
+        <div style="color:var(--text-tertiary);padding:1rem;text-align:center">
+          <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+          <div style="margin-bottom:1rem">${isTimeout ? 'Le serveur met trop de temps à répondre.' : 'Impossible de charger la partie.'}</div>
+          <button onclick="location.reload()" style="padding:0.5rem 1.25rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;font-family:inherit;font-size:0.9rem">
+            🔄 Réessayer
+          </button>
+          <br><a href="/dashboard" style="display:inline-block;margin-top:1rem;color:var(--text-muted);font-size:0.85rem">← Dashboard</a>
+        </div>`;
+      loader.style.display = 'block';
+    }
+  }
+}
+
+// Profils chargés en mémoire
+let _profilesCache = {};
+async function ensureProfiles() {
+  if (Object.keys(_profilesCache).length === 0 && window.ProfileUtils) {
+    try { _profilesCache = await ProfileUtils.fetchAllProfiles(); } catch(e) {}
+  }
+}
+function renderTeamPlayers(elId, players) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const parts = players.map(u => {
+    const p = _profilesCache[u] || { username: u };
+    const name = (p.nickname && p.nickname.trim()) ? p.nickname.trim() : u;
+
+    // Avatar
+    let avHtml = '';
+    if (p.has_avatar || p.avatar_url) {
+      avHtml = `<img src="/api/avatar/${encodeURIComponent(u)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px" onerror="this.style.display='none'">`;
+    } else if (p.avatar_preset) {
+      avHtml = `<span style="font-size:1rem;vertical-align:middle;margin-right:4px">${p.avatar_preset}</span>`;
+    } else {
+      avHtml = `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.08);font-size:0.7rem;font-weight:700;vertical-align:middle;margin-right:5px">${u[0].toUpperCase()}</span>`;
+    }
+
+    // Badges (max 3)
+    const badges = Array.isArray(p.badges) ? p.badges : [];
+    const badgesHtml = badges.length
+      ? `<span style="display:inline-flex;gap:3px;vertical-align:middle;margin-left:5px">${
+          badges.slice(0, 3).map(b =>
+            `<span title="${b.name}" style="display:inline-flex;align-items:center;padding:1px 5px;border-radius:99px;font-size:0.58rem;font-weight:700;background:${b.color}22;border:1px solid ${b.color}55;color:${b.color}">${
+              b.image_url
+                ? `<img src="${b.image_url}" style="width:11px;height:11px;border-radius:2px;object-fit:cover">`
+                : b.icon
+            }</span>`
+          ).join('')
+        }</span>`
+      : '';
+
+    return `<span title="${u}" style="display:inline-flex;align-items:center">${avHtml}<span>${name}</span>${badgesHtml}</span>`;
+  });
+  el.innerHTML = parts.join('<span style="opacity:.5;margin:0 6px">&</span>');
+}
+
+function updateGameUI(game) {
+  const old1 = parseInt(document.getElementById('score1').textContent) || 0;
+  const old2 = parseInt(document.getElementById('score2').textContent) || 0;
+  document.getElementById('score1').textContent = game.team1_score;
+  document.getElementById('score2').textContent = game.team2_score;
+  renderTeamPlayers('team1Players', game.team1_players);
+  renderTeamPlayers('team2Players', game.team2_players);
+  ['score1','score2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  });
+  if (game.team1_score > old1 || game.team2_score > old2) {
+    if (typeof launchConfetti === 'function') launchConfetti(2000, window.matchMedia('(max-width:768px)').matches ? 20 : 50);
+  }
+}
+
+function updateSpectatorUI(game) {
+  const old1 = parseInt(document.getElementById('specScore1').textContent) || 0;
+  const old2 = parseInt(document.getElementById('specScore2').textContent) || 0;
+  document.getElementById('specScore1').textContent = game.team1_score;
+  document.getElementById('specScore2').textContent = game.team2_score;
+  renderTeamPlayers('specTeam1', game.team1_players);
+  renderTeamPlayers('specTeam2', game.team2_players);
+  ['specScore1','specScore2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  });
+  if (game.team1_score > old1 || game.team2_score > old2) {
+    if (typeof launchConfetti === 'function') launchConfetti(2000, window.matchMedia('(max-width:768px)').matches ? 20 : 50);
+  }
+}
+
+function startGame() {
+  const t1 = [document.getElementById('t1p1').value, document.getElementById('t1p2').value].filter(Boolean);
+  const t2 = [document.getElementById('t2p1').value, document.getElementById('t2p2').value].filter(Boolean);
+  if (t1.length === 0 || t2.length === 0) { showToast('Il faut au moins 1 joueur par équipe', 'err'); return; }
+  const all = [...t1, ...t2];
+  if (new Set(all).size !== all.length) { showToast('Un joueur ne peut pas être dans les deux équipes', 'err'); return; }
+  if (!socket || !socket.connected) { showToast('⚡ Connexion perdue, reconnexion en cours...', 'warn'); return; }
+  socket.emit('start_game', {team1: t1, team2: t2});
+}
+
+function showToast(msg, type = 'info') {
+  let wrap = document.getElementById('ls-toast-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'ls-toast-wrap';
+    wrap.style.cssText = 'position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:0.5rem;align-items:center;pointer-events:none';
+    document.body.appendChild(wrap);
+  }
+  const t = document.createElement('div');
+  const bg = type === 'warn' ? 'rgba(231,152,0,0.95)' : type === 'err' ? 'rgba(231,76,60,0.95)' : 'rgba(39,174,96,0.95)';
+  t.style.cssText = `background:${bg};color:white;padding:0.6rem 1.1rem;border-radius:8px;font-size:0.875rem;font-weight:600;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.4)`;
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function addPoint(team) {
+  if (!currentUser) { showToast('⏳ Chargement en cours, réessaie dans un instant', 'warn'); return; }
+  if (!isAdmin) { showToast('⛔ Seuls les admins peuvent marquer des points depuis l\'interface', 'err'); return; }
+  if (!socket || !socket.connected) { showToast('⚡ Reconnexion en cours...', 'warn'); return; }
+  const btnEl = document.getElementById(team === 'team1' ? 'btnScore1' : 'btnScore2');
+  if (btnEl) { btnEl.disabled = true; setTimeout(() => btnEl.disabled = false, 800); }
+  socket.emit('update_score', {team});
+}
+
+function stopGame() {
+  if (!socket || !socket.connected) { showToast('⚡ Connexion perdue, impossible d\'arrêter', 'warn'); return; }
+  if (confirm('Arrêter la partie et enregistrer les scores définitivement ?')) socket.emit('stop_game');
+}
+
+function unlockServo() { socket.emit('unlock_servo1'); setTimeout(() => socket.emit('unlock_servo2'), 100); }
+
+function forceResetGame() {
+  if (!confirm('Forcer le reset de la partie en cours ? Les scores ne seront pas sauvegardés.')) return;
+  socket.emit('stop_game');
+  setTimeout(() => location.reload(), 800);
+}
+
+let winnerOverlayTimer = null;
+let myRematchVote = null;
+let declinedPlayer = null;
+
+function voteRematch(vote) {
+  if (myRematchVote) return; // déjà voté
+  myRematchVote = vote;
+  socket.emit('vote_rematch', {vote});
+  // Cacher les boutons, montrer confirmation
+  document.getElementById('myVoteButtons').style.display = 'none';
+  document.getElementById('myVoteConfirm').style.display = 'block';
+  document.getElementById('myVoteConfirm').textContent = vote === 'yes' ? '✓ Vote OUI enregistré — en attente des autres...' : "✕ Vote NON enregistré — en attente de l'hôte...";
+}
+
+function hostReplacePlayer() {
+  document.getElementById('hostDecisionPopup').style.display = 'none';
+  // Ouvrir la recherche d'un joueur (rediriger vers lobby ou afficher un champ)
+  showToast('Invitez un joueur via le lobby pour le remplacer', 'info');
+}
+
+function hostQuitRematch() {
+  document.getElementById('hostDecisionPopup').style.display = 'none';
+  socket.emit('host_quit_rematch');
+}
+
+function showRematchPopup() {
+  myRematchVote = null;
+  document.getElementById('voteYesCount').textContent = '0';
+  document.getElementById('voteNoCount').textContent = '0';
+  document.getElementById('voteStatus').textContent = '';
+  document.getElementById('myVoteButtons').style.display = 'flex';
+  document.getElementById('myVoteConfirm').style.display = 'none';
+  document.getElementById('rematchPopup').style.display = 'flex';
+}
+
+function showWinner(game) {
+  const t1 = parsePlayers(game.team1_players);
+  const t2 = parsePlayers(game.team2_players);
+  const winners = game.winner === 'team1' ? t1 : t2;
+  const ws = game.winner === 'team1' ? game.team1_score : game.team2_score;
+  const ls = game.winner === 'team1' ? game.team2_score : game.team1_score;
+  document.getElementById('winnerTitle').textContent = `${winners.join(' & ')} gagnent !`;
+  document.getElementById('winnerSub').textContent = `Score final : ${ws} – ${ls}`;
+  // Réinitialiser le bloc ELO (sera rempli par elo_updated)
+  const eloEl = document.getElementById('eloPopupContent');
+  if (eloEl) { eloEl.style.display = 'none'; eloEl.innerHTML = ''; }
+  document.getElementById('winnerOverlay').style.display = 'flex';
+  const isMobile = window.matchMedia('(max-width:768px)').matches;
+  if (typeof launchConfetti === 'function') {
+    launchConfetti(10000, isMobile ? 80 : 300);
+    setTimeout(() => launchConfetti(1000, isMobile ? 30 : 80), 800);
+    setTimeout(() => launchConfetti(1000, isMobile ? 30 : 80), 2000);
+  }
+  winnerOverlayTimer = setTimeout(() => { document.getElementById('winnerOverlay').style.display = 'none'; }, 8000);
+}
+
+// ── Socket events — enregistrés DANS initSocket() après création ───────────
+function registerSocketEvents() {
+  socket.on('game_recovery', async (game) => {
+    await ensureProfiles();
+    const t1 = parsePlayers(game.team1_players), t2 = parsePlayers(game.team2_players);
+    const parsed = {...game, team1_players: t1, team2_players: t2};
+    lastGame = parsed;
+    canControl = isAdmin || game.started_by === currentUser;
+    if (canControl) { showArea('gameArea'); updateGameUI(parsed); }
+    else { showArea('spectatorArea'); updateSpectatorUI(parsed); }
+  });
+
+  socket.on('game_started', async (game) => {
+    await ensureProfiles();
+    document.getElementById('winnerOverlay').style.display = 'none';
+    document.getElementById('rematchPopup').style.display = 'none';
+    hideResaExpiry();
+    resaExpiryWarned2min = false; resaExpiryWarned0min = false;
+    if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
+    if (game && game.team1_players) {
+      const t1 = parsePlayers(game.team1_players), t2 = parsePlayers(game.team2_players);
+      lastGame = {...game, team1_players: t1, team2_players: t2};
+    }
+    checkActiveGame();
+  });
+
+  socket.on('score_updated', (game) => {
+    const t1 = parsePlayers(game.team1_players), t2 = parsePlayers(game.team2_players);
+    const parsed = {...game, team1_players: t1, team2_players: t2};
+    if (canControl) updateGameUI(parsed); else updateSpectatorUI(parsed);
+  });
+
+  socket.on('game_ended', (game) => {
+    const t1 = parsePlayers(game.team1_players), t2 = parsePlayers(game.team2_players);
+    const parsed = {...game, team1_players: t1, team2_players: t2};
+    lastGame = parsed;
+    if (canControl) updateGameUI(parsed); else updateSpectatorUI(parsed);
+    const isParticipant = t1.includes(currentUser) || t2.includes(currentUser) || canControl || isAdmin;
+    if (isParticipant) showWinner(parsed);
+    else { showToast('🏆 Partie terminée !', 'info'); setTimeout(() => showArea('noGameArea'), 3000); }
+  });
+
+  socket.on('game_stopped', () => { location.href = '/dashboard'; });
+  socket.on('game_reset', () => { checkActiveGame(); });
+
+  socket.on('rematch_prompt', () => {
+    if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
+    document.getElementById('winnerOverlay').style.display = 'none';
+    const t1 = parsePlayers(lastGame ? lastGame.team1_players : []);
+    const t2 = parsePlayers(lastGame ? lastGame.team2_players : []);
+    const isInGame = t1.includes(currentUser) || t2.includes(currentUser) || canControl || isAdmin;
+    if (isInGame) showRematchPopup();
+    else { showToast('Partie terminée — retour dashboard...', 'info'); setTimeout(() => location.href = '/dashboard', 2000); }
+  });
+
+  socket.on('rematch_vote_update', (data) => {
+    document.getElementById('voteYesCount').textContent = data.yes;
+    document.getElementById('voteNoCount').textContent = data.no;
+    const remaining = data.total - data.yes - data.no;
+    document.getElementById('voteStatus').textContent = remaining > 0 ? `En attente de ${remaining} joueur${remaining > 1 ? 's' : ''}...` : '';
+    if (data.no_player) showToast(`${data.no_player} a voté NON`, 'err');
+  });
+
+  socket.on('host_replace_or_quit', (data) => {
+    const isHost = currentUser === data.host || isAdmin;
+    if (!isHost) return;
+    document.getElementById('hostDecisionMsg').textContent = `${data.declined_player} ne veut pas rejouer. Que faire ?`;
+    document.getElementById('hostDecisionPopup').style.display = 'flex';
+  });
+
+  socket.on('rematch_cancelled', () => {
+    document.getElementById('rematchPopup').style.display = 'none';
+    document.getElementById('hostDecisionPopup').style.display = 'none';
+    document.getElementById('winnerOverlay').style.display = 'none';
+    if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
+    showToast('Pas de revanche — retour dashboard...', 'info');
+    setTimeout(() => location.href = '/dashboard', 1500);
+  });
+
+  socket.on('error', (data) => { showToast('Erreur : ' + (data.message || '?'), 'err'); });
+
+  socket.on('elo_updated', (data) => {
+    if (!data || !data.changes) return;
+    const me = data.changes.find(c => c.player === currentUser);
+    if (!me) return;
+
+    // Injecter le bloc ELO enrichi dans le popup victoire
+    const eloEl = document.getElementById('eloPopupContent');
+    if (eloEl) {
+      const delta      = me.delta;
+      const sign       = delta >= 0 ? '+' : '';
+      const isWin      = me.is_winner;
+      const streak     = me.winstreak || 0;
+      const tierUp     = me.tier_up;
+      const tierDown   = me.tier_down;
+      const newTier    = me.new_tier || '';
+      const newTierIcon= me.new_tier_icon || '';
+      const newElo     = me.new_elo || 1000;
+      const strMult    = me.streak_mult || 1.0;
+      const scoreW     = me.score_w || 0;
+      const scoreL     = me.score_l || 0;
+
+      // Calcul barre de progression vers palier suivant
+      const tiers = [
+        {min:800,max:949},{min:950,max:1099},{min:1100,max:1249},
+        {min:1250,max:1399},{min:1400,max:1549},{min:1550,max:1699},{min:1700,max:9999}
+      ];
+      let pct = 100;
+      for (const t of tiers) {
+        if (newElo >= t.min && newElo <= t.max && t.max < 9999) {
+          pct = Math.round(((newElo - t.min) / (t.max - t.min + 1)) * 100);
+          break;
+        }
+      }
+
+      // Bonus chips à afficher
+      let bonusHtml = '';
+      if (isWin && strMult > 1.0) {
+        bonusHtml += `<span class="elo-bonus-chip streak">🔥 ×${strMult.toFixed(2)} streak</span> `;
+      }
+      if (isWin && me.score_l <= 1 && me.score_w === 10) {
+        bonusHtml += `<span class="elo-bonus-chip domination">💥 Domination +20%</span> `;
+      }
+      if (isWin && delta > 0 && me.old_elo < (me.old_elo + delta - 10)) {
+        // upset approximé côté frontend (si delta élevé)
+      }
+
+      let html = `
+        <div style="border-top:1px solid var(--border-subtle);padding-top:1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+            <div>
+              <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:2px">ELO</div>
+              <div class="elo-popup-delta ${delta >= 0 ? 'positive' : 'negative'}">${sign}${delta} pts</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:2px">Nouveau total</div>
+              <div style="font-size:1.4rem;font-weight:900;color:var(--text-primary)">${newElo}</div>
+              <div style="font-size:0.8rem;color:var(--text-secondary)">${newTierIcon} ${newTier.replace(/ [^\s]+$/, '')}</div>
+            </div>
+          </div>`;
+
+      // Barre de progression (seulement si pas Maître)
+      if (pct < 100) {
+        html += `
+          <div style="margin-bottom:0.75rem">
+            <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-muted);margin-bottom:3px">
+              <span>Progression palier</span><span>${pct}%</span>
+            </div>
+            <div class="elo-progress-bar">
+              <div class="elo-progress-fill" id="eloFill" style="width:0%"></div>
+            </div>
+          </div>`;
+      }
+
+      // Bonus chips
+      if (bonusHtml) {
+        html += `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.75rem">${bonusHtml}</div>`;
+      }
+
+      // Winstreak
+      if (isWin && streak >= 2) {
+        html += `<div style="text-align:center;margin-bottom:0.75rem">
+          <span class="elo-popup-streak">🔥 Série de ${streak} victoires !</span>
+        </div>`;
+      }
+
+      // Tier up / down
+      if (tierUp) {
+        html += `<div class="elo-popup-tier-up" style="text-align:center;margin-bottom:0.5rem">
+          🎉 Nouveau palier ! <strong>${newTierIcon} ${newTier}</strong>
+        </div>`;
+      } else if (tierDown) {
+        html += `<div style="text-align:center;font-size:0.85rem;color:#e74c3c;margin-bottom:0.5rem">
+          📉 Palier perdu — <strong>${newTierIcon} ${newTier}</strong>
+        </div>`;
+      }
+
+      html += `</div>`;
+      eloEl.innerHTML = html;
+      eloEl.style.display = 'block';
+
+      // Animer la barre de progression
+      requestAnimationFrame(() => {
+        const fill = document.getElementById('eloFill');
+        if (fill) { setTimeout(() => { fill.style.width = pct + '%'; }, 100); }
+      });
+    }
+
+    // Toast discret en plus
+    const delta = me.delta;
+    const sign  = delta >= 0 ? '+' : '';
+    const color = delta >= 0 ? '#2ecc71' : '#e74c3c';
+    if (me.tier_up)       { showEloToast(`🎉 Palier supérieur ! ${me.new_tier_icon || ''} ${me.new_tier}`, color, true); }
+    else if (delta >= 20) { showEloToast(`🔥 Belle victoire ! ${sign}${delta} pts ELO`, color, false); }
+    else if (delta > 0)   { showEloToast(`✅ ${sign}${delta} pts ELO`, color, false); }
+    else if (me.tier_down){ showEloToast(`📉 Palier perdu ${sign}${delta} pts ELO`, '#e74c3c', false); }
+    else if (delta < 0)   { showEloToast(`${sign}${delta} pts ELO — revanche ?`, '#e67e22', false); }
+
+    // Quêtes complétées pendant la partie
+    if (me.quests_completed && me.quests_completed.length > 0) {
+      setTimeout(() => showQuestUnlockToasts(me.quests_completed), 1500);
+      // Afficher aussi dans le popup victoire
+      const eloEl = document.getElementById('eloPopupContent');
+      if (eloEl && eloEl.style.display !== 'none') {
+        const questsHtml = me.quests_completed.map(q => `
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;
+               background:linear-gradient(135deg,rgba(205,127,50,0.12),rgba(205,127,50,0.04));
+               border:1px solid rgba(205,127,50,0.3);margin-bottom:5px">
+            <span style="font-size:1.1rem">${q.icon || '🏆'}</span>
+            <div>
+              <div style="font-size:0.78rem;font-weight:800;color:#ffd700">${q.name}</div>
+              <div style="font-size:0.7rem;color:rgba(255,215,0,0.7)">🎁 ${q.reward_label}</div>
+            </div>
+          </div>`).join('');
+        const questSection = document.createElement('div');
+        questSection.innerHTML = `
+          <div style="border-top:1px solid var(--border-subtle);padding-top:0.75rem;margin-top:0.5rem">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px">🏅 Quêtes débloquées</div>
+            ${questsHtml}
+          </div>`;
+        eloEl.appendChild(questSection);
+      }
+    }
+  });
+}
+
+function showEloToast(msg, color, isBig) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);z-index:10000;
+    background:var(--bg-elevated);border:2px solid ${color};border-radius:20px;
+    padding:${isBig ? '2rem 2.5rem' : '1.25rem 2rem'};text-align:center;
+    box-shadow:0 8px 40px rgba(0,0,0,0.6);backdrop-filter:blur(12px);
+    font-size:${isBig ? '1.3rem' : '1rem'};font-weight:700;color:var(--text-primary);
+    opacity:0;transition:all 0.3s ease;max-width:90vw`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => {
+    t.style.opacity = '1';
+    t.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translate(-50%,-50%) scale(0.9)';
+    setTimeout(() => t.remove(), 400);
+  }, isBig ? 4000 : 3000);
+}
+
+// ── Surveillance expiration résa ───────────────────────────────────────────
+let resaExpiryWarned2min = false, resaExpiryWarned0min = false, resaExpiryInterval = null;
+function startResaExpiryWatch() {
+  if (resaExpiryInterval) clearInterval(resaExpiryInterval);
+  resaExpiryInterval = setInterval(checkResaExpiry, 30000);
+  checkResaExpiry();
+}
+async function checkResaExpiry() {
+  if (!lastGame || !lastGame.active) return;
+  const t1 = parsePlayers(lastGame ? lastGame.team1_players : []);
+  const t2 = parsePlayers(lastGame ? lastGame.team2_players : []);
+  if (!t1.includes(currentUser) && !t2.includes(currentUser)) return;
+  if (isAdmin) return; // Pas de popup pour les admins
+  try {
+    const res = await fetch('/api/babyfoot_status');
+    const status = await res.json();
+    const current = status.current;
+    if (!current) {
+      if (!resaExpiryWarned0min) {
+        resaExpiryWarned0min = true;
+        showResaExpiry('⚠️','Réservation expirée','Votre créneau est terminé — finissez ou arrêtez la partie','rgba(231,76,60,0.5)');
+        setTimeout(() => hideResaExpiry(), 10000);
+      }
+      return;
+    }
+    const msLeft = new Date(current.end_time) - new Date();
+    const minLeft = Math.floor(msLeft / 60000);
+    if (minLeft <= 2 && minLeft > 0 && !resaExpiryWarned2min) {
+      resaExpiryWarned2min = true;
+      showResaExpiry('⏰','Réservation bientôt terminée',`Il vous reste environ ${minLeft} minute${minLeft > 1 ? 's' : ''} — pensez à conclure !`,'rgba(231,152,0,0.5)');
+      setTimeout(() => hideResaExpiry(), 8000);
+    } else if (minLeft > 2) { resaExpiryWarned2min = false; resaExpiryWarned0min = false; }
+  } catch(e) {}
+}
+function showResaExpiry(icon, title, sub, borderColor) {
+  const popup = document.getElementById('resaExpiryPopup');
+  document.getElementById('resaExpiryIcon').textContent = icon;
+  document.getElementById('resaExpiryTitle').textContent = title;
+  document.getElementById('resaExpirySub').textContent = sub;
+  popup.querySelector('div').style.borderColor = borderColor;
+  popup.style.display = 'block';
+}
+function hideResaExpiry() { document.getElementById('resaExpiryPopup').style.display = 'none'; }
+
+// ── Chargement thème cosmétique ────────────────────────────────────────────
+async function loadPlayerTheme(username) {
+  try {
+    const data = await fetch('/api/my_cosmetics').then(r => r.json());
+    const theme = data.active_theme || 'default';
+    const frame = data.active_frame || 'none';
+    applyTheme(theme);
+    window._activeFrame = frame;
+  } catch(e) { /* silencieux */ }
+}
+
+function applyTheme(theme) {
+  const body = document.getElementById('liveScoreBody') || document.body;
+  const THEMES = ['theme-fire','theme-night','theme-gold','theme-royal','theme-master'];
+  THEMES.forEach(t => body.classList.remove(t));
+  if (theme && theme !== 'default') body.classList.add('theme-' + theme.replace('theme_', ''));
+}
+
+// ── Toast quête débloquée ──────────────────────────────────────────────────
+function showQuestUnlockToasts(quests) {
+  if (!quests || !quests.length) return;
+  // Créer le conteneur s'il n'existe pas
+  let container = document.getElementById('questToastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'questToastContainer';
+    container.className = 'quest-unlock-toast';
+    document.body.appendChild(container);
+  }
+  quests.forEach((q, i) => {
+    setTimeout(() => {
+      const item = document.createElement('div');
+      item.className = 'quest-unlock-item';
+      item.innerHTML = `
+        <div class="quest-unlock-icon">${q.icon || '🏆'}</div>
+        <div class="quest-unlock-text">
+          <div class="quest-unlock-title">Quête débloquée !</div>
+          <div class="quest-unlock-name">${q.name}</div>
+          <div class="quest-unlock-reward">🎁 ${q.reward_label || 'Cosmétique débloqué'}</div>
+        </div>
+      `;
+      container.appendChild(item);
+      setTimeout(() => {
+        item.style.transition = 'all 0.4s ease';
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(-10px)';
+        setTimeout(() => item.remove(), 400);
+      }, 4000);
+    }, i * 600);
+  });
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetchWithTimeout('/current_user', 8000);
+    if (!res.ok) { location.href = '/login'; return; }
+    const user = await res.json();
+    if (!user || !user.username) { location.href = '/login'; return; }
+    currentUser = user.username;
+    isAdmin = user.is_admin || false;
+    window._currentUsername = user.username;
+
+    // Mettre à jour la nav via ProfileUtils
+    if (window.ProfileUtils) ProfileUtils.updateNav(user);
+
+    if (isAdmin) {
+      const sb = document.getElementById('btnUnlockServo');
+      if (sb) sb.style.display = 'block';
+      const mm = document.getElementById('mobileMenu');
+      if (mm && !mm.querySelector('a[href="/admin"]')) {
+        const a = document.createElement('a');
+        a.href = '/admin'; a.textContent = '🛡️ Admin';
+        const firstLink = mm.querySelector('a');
+        if (firstLink) mm.insertBefore(a, firstLink);
+      }
+    }
+
+    await checkActiveGame();
+    startResaExpiryWatch();
+    // Charger et appliquer le thème cosmétique du joueur
+    loadPlayerTheme(currentUser);
+
+  } catch(e) {
+    console.error('Init error:', e);
+    const loader = document.getElementById('loadingIndicator');
+    if (loader) {
+      const isTimeout = e.name === 'AbortError';
+      loader.innerHTML = `
+        <div style="color:var(--text-tertiary);padding:1rem;text-align:center">
+          <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+          <div style="margin-bottom:1rem">${isTimeout ? 'Le serveur ne répond pas.' : 'Erreur : ' + (e.message || e)}</div>
+          <button onclick="location.reload()" style="padding:0.5rem 1.25rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;font-family:inherit;font-size:0.9rem">
+            🔄 Réessayer
+          </button>
+          <br><a href="/dashboard" style="display:inline-block;margin-top:1rem;color:var(--text-muted);font-size:0.85rem">← Dashboard</a>
+        </div>`;
+      loader.style.display = 'block';
+    }
+  }
+}
+// ── Démarrage robuste ──────────────────────────────────────────────────────
+let _initDone = false;
+
+function _safeInit() {
+  if (_initDone) return;
+  _initDone = true;
+
+  // Initialiser le socket en premier
+  initSocket();
+
+  // Lancer init() — ProfileUtils est synchrone (pas de defer), donc disponible
+  init();
+}
+
+// Stratégie 1 : page entièrement chargée (cas normal)
+window.addEventListener('load', _safeInit);
+
+// Stratégie 2 : déjà chargé au moment où ce script s'exécute
+if (document.readyState === 'complete') {
+  _safeInit();
+} else {
+  // Stratégie 3 : DOM prêt mais ressource externe bloquante (CDN, font...)
+  // On attend 1.5s après DOMContentLoaded puis on force si load n'est pas passé
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(_safeInit, 1500);
+  });
+}
+
+// Stratégie 4 : filet de sécurité absolu — 6s max peu importe ce qui bloque
+setTimeout(_safeInit, 6000);
+</script>
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{
+  "name": "Baby-Foot Club",
+  "short_name": "BabyFoot",
+  "description": "Réservez, jouez, suivez vos scores en temps réel",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0a",
+  "theme_color": "#cd7f32",
+  "icons": [
+    {
+      "src": "/static/images/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "sports"],
+  "lang": "fr"
+}

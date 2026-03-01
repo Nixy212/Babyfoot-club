@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+{% set active_page = "top" %}
+{% block title %}Classement — Baby-Foot Club{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Leaderboard mobile-first ── */
+    .lb-list {
+      overflow: hidden;
+    }
+
+    .lb-item {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.875rem 1rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.15s, transform 0.15s;
+      position: relative;
+    }
+    .lb-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+    .lb-item:last-child  { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+    .lb-item.is-me {
+      background: linear-gradient(90deg, rgba(205,127,50,0.18) 0%, rgba(205,127,50,0.05) 100%);
+      border-left: 3px solid var(--bronze);
+    }
+
+    /* Rang */
+    .lb-rank {
+      font-family: 'Space Mono', monospace;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: var(--text-tertiary);
+      min-width: 28px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .lb-rank.podium {
+      font-size: 1.5rem;
+      filter: drop-shadow(0 2px 6px rgba(205,127,50,0.4));
+    }
+
+    /* Avatar */
+    .lb-av {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--gradient-bronze);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+    .lb-av.av1 { background: linear-gradient(135deg, #ffd700, #ffb300); }
+    .lb-av.av2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); }
+    .lb-av.av3 { background: linear-gradient(135deg, #cd7f32, #b8732f); }
+
+    /* Infos */
+    .lb-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .lb-name {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lb-sub {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+      white-space: nowrap;
+    }
+
+    /* Score */
+    .lb-score {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .lb-score-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.375rem;
+      font-weight: 900;
+      color: var(--bronze);
+      line-height: 1;
+    }
+    .lb-score-label {
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 1px;
+    }
+
+    /* Podium top 3 — légère mise en avant */
+    .lb-item:nth-child(1) .lb-score-val { color: #ffd700; }
+    .lb-item:nth-child(2) .lb-score-val { color: #c0c0c0; }
+    .lb-item:nth-child(3) .lb-score-val { color: #cd7f32; }
+
+    @keyframes streakPulse {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.2); opacity: 0.85; }
+    }
+    /* Header tableau */
+    .lb-header {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .lb-header-rank { min-width: 28px; text-align: center; flex-shrink: 0; }
+    .lb-header-av   { width: 40px; flex-shrink: 0; }
+    .lb-header-info { flex: 1; }
+    .lb-header-score{ text-align: right; flex-shrink: 0; padding-right: 2px; }
+
+    /* Tags */
+    .tag-me {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 1px 7px;
+      border-radius: 20px;
+      background: rgba(205,127,50,0.18);
+      color: var(--bronze);
+      font-weight: 700;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    /* Online dot */
+    .online-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #2ecc71;
+      box-shadow: 0 0 0 2px rgba(46,204,113,0.25), 0 0 6px rgba(46,204,113,0.5);
+      flex-shrink: 0;
+      animation: pulse-green 2s ease-in-out infinite;
+    }
+    @keyframes pulse-green {
+      0%,100% { box-shadow: 0 0 0 2px rgba(46,204,113,0.25), 0 0 6px rgba(46,204,113,0.5); }
+      50%      { box-shadow: 0 0 0 4px rgba(46,204,113,0.15), 0 0 12px rgba(46,204,113,0.4); }
+    }
+    .lb-av-wrap { position: relative; flex-shrink: 0; }
+    .lb-av-wrap .online-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border: 2px solid var(--bg-secondary); }
+
+    /* Écran large : légère animation au hover */
+    @media (hover: hover) {
+      .lb-item:hover {
+        background: var(--bg-hover);
+        transform: translateX(6px);
+      }
+      .lb-item.is-me:hover {
+        background: linear-gradient(90deg, rgba(205,127,50,0.22) 0%, rgba(205,127,50,0.08) 100%);
+      }
+    }
+
+    /* Desktop : on peut se permettre un peu plus d'espace */
+    @media (min-width: 640px) {
+      .lb-item { padding: 1rem 1.5rem; gap: 1.25rem; }
+      .lb-header { padding: 0.6rem 1.5rem; gap: 1.25rem; }
+      .lb-av { width: 48px; height: 48px; font-size: 1.125rem; }
+      .lb-header-av { width: 48px; }
+      .lb-name { font-size: 1rem; }
+      .lb-score-val { font-size: 1.625rem; }
+    }
+  </style>
+<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<script>
+const PODIUM_ICONS = ['<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#cd7f32;color:#000;font-size:0.7rem;font-weight:900;flex-shrink:0">1</span>', '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#888;color:#fff;font-size:0.7rem;font-weight:900;flex-shrink:0">2</span>', '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#7a5c3a;color:#fff;font-size:0.7rem;font-weight:900;flex-shrink:0">3</span>'];
+
+function toggleMenu() {
+  const isOpen = document.getElementById('mobileMenu').classList.contains('open');
+  document.getElementById('burger').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+  const overlay = document.getElementById('menuOverlay');
+  if (overlay) overlay.classList.toggle('open');
+  document.body.style.overflow = !isOpen ? 'hidden' : '';
+}
+
+function logout() {
+  fetch('/api/logout', {method:'POST'}).then(() => location.href = '/');
+}
+
+function ratio(goals, games) {
+  if (!games) return '0.00';
+  return (goals / games).toFixed(2);
+}
+
+fetch('/current_user').then(r => r.json()).then(d => {
+  if (d && d.username) {
+    ProfileUtils.updateNav(d);
+    // Lien admin dans menu mobile (si admin)
+    if (d && d.is_admin) {
+      const mm = document.getElementById('mobileMenu');
+      if (mm && !mm.querySelector('a[href="/admin"]')) {
+        const a = document.createElement('a');
+        a.href = '/admin'; a.textContent = '🛡️ Admin';
+        const firstLink = mm.querySelector('a');
+        if (firstLink) mm.insertBefore(a, firstLink);
+      }
+    }
+    loadLeaderboard(d.username);
+  }
+});
+
+const ELO_TIERS = [
+  { name:'Recrue 🎮',   icon:'🎮', min:800,  max:949  },
+  { name:'Amateur 🌱',  icon:'🌱', min:950,  max:1099 },
+  { name:'Rival 🔥',    icon:'🔥', min:1100, max:1249 },
+  { name:'Confirmé ⚡', icon:'⚡', min:1250, max:1399 },
+  { name:'Expert 💎',   icon:'💎', min:1400, max:1549 },
+  { name:'Élite 👑',    icon:'👑', min:1550, max:1699 },
+  { name:'Maître 🏆',   icon:'🏆', min:1700, max:9999 },
+];
+function eloTier(elo) {
+  for (let i = ELO_TIERS.length - 1; i >= 0; i--) {
+    if (elo >= ELO_TIERS[i].min) return ELO_TIERS[i];
+  }
+  return ELO_TIERS[0];
+}
+
+async function loadLeaderboard(me) {
+  const el = document.getElementById('leaderboard');
+  try {
+    let [lb, onlineRes] = await Promise.all([
+      fetch('/leaderboard').then(r => r.json()),
+      fetch('/api/online_users').then(r => r.json())
+    ]);
+    const onlineSet = new Set((onlineRes.online || []));
+    // Filtre guest déjà fait côté serveur, mais sécurité supplémentaire
+    lb = (lb || []).filter(p => p && p.username);
+
+    if (!lb.length) {
+      el.innerHTML = `<div style="padding:3rem;text-align:center">
+        <p style="color:var(--text-tertiary)">Personne de classé pour l'instant — jouez une partie pour apparaître ici !</p>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = lb.map((p, i) => {
+      const rank = i + 1;
+      const isMe = p.username === me;
+      const isPodium = rank <= 3;
+      const avClass = rank === 1 ? 'av1' : rank === 2 ? 'av2' : rank === 3 ? 'av3' : '';
+      const games = p.total_games || 0;
+      const wins = p.wins || 0;
+      const elo = p.elo || 1000;
+      const tier = eloTier(elo);
+      const streak = p.winstreak || 0;
+      const badges = p.badges || [];
+      const isOnline = onlineSet.has(p.username);
+      function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      const name = escapeHtml((p.nickname && p.nickname.trim()) ? p.nickname.trim() : p.username);
+      const subName = (p.nickname && p.nickname.trim()) ? `<span style="font-size:0.7rem;color:var(--text-muted)">${escapeHtml(p.username)}</span>` : '';
+
+      // Avatar
+      let avContent;
+      if (p.avatar_url) {
+        avContent = `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`;
+      } else if (p.avatar_preset) {
+        avContent = p.avatar_preset;
+      } else {
+        avContent = p.username[0].toUpperCase();
+      }
+
+      return `
+        <div class="lb-item${isMe ? ' is-me' : ''}">
+          <div class="lb-rank${isPodium ? ' podium' : ''}">
+            ${isPodium ? PODIUM_ICONS[i] : '#' + rank}
+          </div>
+          <div class="lb-av-wrap">
+            <div class="lb-av ${avClass}" style="overflow:hidden;display:flex;align-items:center;justify-content:center">${avContent}</div>
+            ${isOnline ? '<span class="online-dot" title="En ligne"></span>' : ''}
+          </div>
+          <div class="lb-info">
+              <div class="lb-name">
+                ${name}${isMe ? '<span class="tag-me">vous</span>' : ''}
+                ${streak >= 3 ? `<span style="font-size:0.73rem;margin-left:5px;color:#ff8c00;font-weight:800;animation:streakPulse 1.5s ease infinite" title="${streak} victoires d'affilée">🔥${streak}</span>` : ''}
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
+                ${subName}
+                <span style="font-size:0.72rem;color:var(--text-muted)">${games} partie${games !== 1 ? 's' : ''} · ${wins} victoire${wins !== 1 ? 's' : ''}</span>
+              </div>
+              ${tier.max < 9999 ? `<div style="margin-top:5px;height:3px;border-radius:99px;background:rgba(255,255,255,0.07);overflow:hidden;max-width:100px"><div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#cd7f32,#ffd700);width:${Math.round(((elo-tier.min)/(tier.max-tier.min+1))*100)}%"></div></div>` : ''}
+              ${badges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
+                ${badges.slice(0,4).map(b=>`<span title="${b.name}" style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:0.68rem;font-weight:700;background:${b.color}22;border:1px solid ${b.color}55;color:${b.color}">${b.image_url ? `<img src="${b.image_url}" style="width:13px;height:13px;border-radius:2px;object-fit:cover">` : b.icon} ${b.name}</span>`).join('')}
+                ${badges.length > 4 ? `<span style="font-size:0.68rem;color:var(--text-muted);padding:2px 4px">+${badges.length-4}</span>` : ''}
+              </div>` : ''}
+            </div>
+          <div class="lb-score" style="text-align:right">
+            <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+              <span style="font-size:1rem">${tier.icon}</span>
+              <div class="lb-score-val">${elo}</div>
+            </div>
+            <div class="lb-score-label">${tier.name}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch(e) {
+    el.innerHTML = `<div style="padding:3rem;text-align:center">
+      <p style="color:var(--text-tertiary)">Impossible de charger le classement — réessayez dans quelques instants</p>
+    </div>`;
+  }
+}
+</script>
+
+<script src="{{ url_for('static', filename='icons.js') }}"></script>
+{% endblock %}
