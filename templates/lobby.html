@@ -140,14 +140,21 @@ try {
 // ─────────────────────────────────────────────────────────────────────────────
 // ÉTAT GLOBAL
 // ─────────────────────────────────────────────────────────────────────────────
-let ME       = null;   // username connecté
-let IS_ADMIN = false;
-let LOBBY    = null;   // état complet du lobby
-let ALL_USERS= [];     // vrais joueurs (sans guests, sans moi)
-let ONLINE   = new Set();
-let SELECTED = [];     // joueurs sélectionnés pour invitation
-let SWAP_ID  = null;
-let JOIN_REQS= {};
+let ME          = null;   // username connecté
+let IS_ADMIN    = false;
+let LOBBY       = null;   // état complet du lobby
+let ALL_USERS   = [];     // vrais joueurs (sans guests, sans moi)
+let ONLINE      = new Set();
+let SELECTED    = [];     // joueurs sélectionnés pour invitation
+let SWAP_ID     = null;
+let JOIN_REQS   = {};
+let _redirecting = false; // verrou anti double-redirect
+
+function saferedirect(url) {
+  if (_redirecting) return;
+  _redirecting = true;
+  location.href = url;
+}
 
 const GUESTS  = ['Joueur1', 'Joueur2', 'Joueur3'];
 const isGuest = u => GUESTS.includes(u);
@@ -246,12 +253,17 @@ function render() {
   document.getElementById('leaveBtn').textContent = amHost ? '✕ Fermer le lobby' : '✕ Quitter le lobby';
 
   // Bouton lancer
-  const canStart = amHost && accepted.length >= 2;
+  const team1Ok = (LOBBY.team1 || []).length > 0;
+  const team2Ok = (LOBBY.team2 || []).length > 0;
+  const canStart = amHost && accepted.length >= 2 && team1Ok && team2Ok;
   document.getElementById('startBtn').style.display    = canStart  ? 'block' : 'none';
   document.getElementById('startLocked').style.display = (amHost && !canStart) ? 'block' : 'none';
   if (amHost && !canStart) {
-    document.getElementById('startLockedMsg').textContent =
-      `⚠️ Il faut au moins 2 joueurs acceptés (${accepted.length}/2)`;
+    let msg = `⚠️ Il faut au moins 2 joueurs acceptés (${accepted.length}/2)`;
+    if (accepted.length >= 2 && (!team1Ok || !team2Ok)) {
+      msg = '⚠️ Chaque équipe doit avoir au moins un joueur';
+    }
+    document.getElementById('startLockedMsg').textContent = msg;
   }
 
   // Refus
@@ -546,23 +558,26 @@ function declineSwap() {
 // SOCKET EVENTS
 // ─────────────────────────────────────────────────────────────────────────────
 socket.on('lobby_update', data => {
+  if (_redirecting) return;
   const amHost     = data.host === ME;
   const amInvited  = (data.invited  || []).includes(ME);
   const amAccepted = (data.accepted || []).includes(ME);
   const amInTeam   = (data.team1    || []).includes(ME) || (data.team2 || []).includes(ME);
   if (!IS_ADMIN && !amHost && !amInvited && !amAccepted && !amInTeam) {
-    location.href = '/dashboard'; return;
+    saferedirect('/dashboard'); return;
   }
   LOBBY = data;
   render();
 });
 
 socket.on('lobby_host_changed', data => {
-  if (data.old_host === ME) {
+  if (_redirecting) return;
+  if (data.old_host === ME && data.new_host !== ME) {
     toast('Vous avez quitté le lobby', 'inf');
-    setTimeout(() => location.href = '/dashboard', 1200); return;
+    setTimeout(() => saferedirect('/dashboard'), 1200);
+    return;
   }
-  if (data.new_host === ME) toast('🎉 Vous êtes maintenant l\'hôte !', 'ok');
+  if (data.new_host === ME) toast("🎉 Vous êtes maintenant l'hôte !", 'ok');
   else toast(`${data.old_host} a quitté — ${data.new_host} est hôte`, 'inf');
   if (LOBBY) { LOBBY.host = data.new_host; render(); }
 });
@@ -582,15 +597,49 @@ socket.on('join_request', data => {
   }
 });
 
-socket.on('lobby_cancelled',     () => location.href = '/dashboard');
-socket.on('game_started',        () => location.href = '/live-score');
+// Résultat d'une demande à rejoindre (pour le demandeur)
+socket.on('join_request_result', data => {
+  if (_redirecting) return;
+  if (data.from !== ME) return;
+  if (data.accepted) {
+    toast('Votre demande a été acceptée !', 'ok');
+    fetch('/api/active_lobby').then(r => r.json()).then(d => {
+      if (!d.active) { saferedirect('/dashboard'); return; }
+      LOBBY = d;
+      render();
+      socket.emit('accept_lobby');
+    }).catch(() => saferedirect('/dashboard'));
+  } else {
+    toast('Votre demande a été refusée', 'err');
+  }
+});
+
+socket.on('lobby_cancelled', () => saferedirect('/dashboard'));
+socket.on('game_started',    () => saferedirect('/live-score'));
 socket.on('kicked_from_lobby', data => {
   if (data && data.kicked_user === ME) {
     toast('Vous avez été exclu du lobby', 'err');
-    setTimeout(() => location.href = '/dashboard', 1500);
+    setTimeout(() => saferedirect('/dashboard'), 1500);
   }
 });
 socket.on('error', data => toast('✕ ' + (data?.message || 'Erreur'), 'err'));
+
+// Rechargement au reconnect socket
+socket.on('connect', () => {
+  if (!ME || _redirecting) return;
+  fetch('/api/active_lobby').then(r => r.json()).then(d => {
+    if (!d.active) { saferedirect('/dashboard'); return; }
+    const amHost     = d.host === ME;
+    const amInvited  = (d.invited  || []).includes(ME);
+    const amAccepted = (d.accepted || []).includes(ME);
+    const amInTeam   = (d.team1    || []).includes(ME) || (d.team2 || []).includes(ME);
+    if (!IS_ADMIN && !amHost && !amInvited && !amAccepted && !amInTeam) {
+      saferedirect('/dashboard'); return;
+    }
+    LOBBY = d;
+    render();
+  }).catch(() => {});
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILS

@@ -461,13 +461,33 @@ socket.on('lobby_cancelled',()=>{activeLobbyState=null;myJoinRequestPending=fals
 socket.on('lobby_update',d=>{activeLobbyState=d;updateLobbyCardUI();});
 socket.on('game_started',()=>{isGameActive=true;checkActiveLobby();});
 socket.on('game_stopped',()=>{isGameActive=false;checkActiveLobby();});
-socket.on('join_request_result',d=>{myJoinRequestPending=false;if(d.accepted){showNotif('✓ Accepté par '+d.host+' — redirection…','success');setTimeout(()=>location.href='/lobby',800);}else{showNotif('✕ '+d.host+' a refusé votre demande','error');checkActiveLobby();}});
+socket.on('join_request_result',d=>{
+  myJoinRequestPending=false;
+  if(d.from && d.from!==currentUsername) return; // pas pour moi
+  if(d.accepted){
+    showNotif('✓ Accepté par '+d.host+' — redirection…','success');
+    // Courte attente pour que lobby_update arrive et mette à jour activeLobbyState
+    setTimeout(()=>location.href='/lobby',1000);
+  }else{
+    showNotif('✕ '+d.host+' a refusé votre demande','error');
+    checkActiveLobby();
+  }
+});
 socket.on('lobby_invitation',d=>{if(d.to!==currentUsername)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.innerHTML=`<div style="flex:1"><strong style="color:var(--bronze)">${d.from}</strong> vous invite à jouer</div><div class="notification-buttons"><button class="btn-accept" onclick="acceptLobby(this.closest('.notification'))">✓ Accepter</button><button class="btn-decline" onclick="declineLobby(this.closest('.notification'))">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),15000);});
 socket.on('join_request',d=>{if(d.host!==currentUsername&&!isAdmin)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.style.borderLeft='3px solid #3498db';n.innerHTML=`<div style="flex:1"><strong style="color:#3498db">${d.from}</strong> veut rejoindre votre lobby</div><div class="notification-buttons"><button class="btn-accept" style="background:linear-gradient(135deg,#2980b9,#3498db)" onclick="socket.emit('accept_join_request',{from:'${d.from}',request_id:'${d.request_id}'});this.closest('.notification').remove()">✓</button><button class="btn-decline" onclick="socket.emit('decline_join_request',{from:'${d.from}',request_id:'${d.request_id}'});this.closest('.notification').remove()">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),20000);});
 socket.on('error',d=>showNotif('✕ '+(d.message||'Erreur'),'error'));
 socket.on('elo_updated',d=>{if(!d?.changes)return;const me=d.changes.find(c=>c.player===currentUsername);if(!me)return;const sign=me.delta>=0?'+':'';showNotif(`${me.tier_up?'🎉 Niveau supérieur ! ':me.delta>=20?'🔥 Belle victoire ! ':''}${sign}${me.delta} pts ELO`,me.delta>=0?'success':'error');});
 
-function acceptLobby(el){socket.emit('accept_lobby');el?.remove();setTimeout(()=>location.href='/lobby',500);}
+function acceptLobby(el){
+  socket.emit('accept_lobby');
+  el?.remove();
+  // Attendre la confirmation via lobby_update avant de rediriger
+  const _timeout = setTimeout(() => location.href='/lobby', 2000);
+  socket.once('lobby_update', () => {
+    clearTimeout(_timeout);
+    location.href='/lobby';
+  });
+}
 function declineLobby(el){socket.emit('decline_lobby');el?.remove();}
 
 // ── Init ─────────────────────────────────────────────────────────────────────

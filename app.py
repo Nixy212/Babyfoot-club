@@ -3083,7 +3083,14 @@ def _remove_player_from_lobby(username):
 
     if username == active_lobby.get('host'):
         # L'hôte part → chercher un successeur parmi les joueurs acceptés
+        # Chercher dans toutes les listes (accepted peut être désynchronisé)
+        all_present = set()
+        for lst in ['accepted', 'team1', 'team2']:
+            all_present.update(active_lobby.get(lst, []))
         candidates = [u for u in active_lobby.get('accepted', []) if u != username]
+        if not candidates:
+            # Fallback: chercher dans team1/team2
+            candidates = [u for u in all_present if u != username]
         if not candidates:
             # Personne d'autre → annuler le lobby
             for u in list(active_lobby.get('invited', [])):
@@ -3274,7 +3281,9 @@ def handle_accept_lobby():
 def handle_decline_lobby():
     global active_lobby
     username = get_socket_user()
-    if username not in active_lobby['invited']:
+    if not username or not active_lobby.get('active'):
+        return
+    if username not in active_lobby.get('invited', []):
         return
     active_lobby['invited'].remove(username)
     if username not in active_lobby['declined']:
@@ -3296,7 +3305,9 @@ def handle_request_join_lobby():
         return
     already_in = (
         username in active_lobby.get('invited', []) or
-        username in active_lobby.get('accepted', [])
+        username in active_lobby.get('accepted', []) or
+        username in active_lobby.get('team1', []) or
+        username in active_lobby.get('team2', [])
     )
     if already_in:
         emit('error', {'message': 'Vous etes deja dans ce lobby'})
@@ -3400,7 +3411,9 @@ def handle_kick_from_lobby(data):
     global active_lobby
     username = get_socket_user()
     kicked_user = data.get('user')
-    if username != active_lobby['host'] and not is_admin(username):
+    if not username or not active_lobby.get('active'):
+        return
+    if username != active_lobby.get('host') and not is_admin(username):
         emit('error', {'message': "Seul l'hote ou un admin peut exclure"})
         return
     if kicked_user == active_lobby['host']:
@@ -3417,7 +3430,9 @@ def handle_kick_from_lobby(data):
 def handle_cancel_lobby():
     global active_lobby
     username = get_socket_user()
-    if username != active_lobby['host'] and not is_admin(username):
+    if not username or not active_lobby.get('active'):
+        return
+    if username != active_lobby.get('host') and not is_admin(username):
         emit('error', {'message': "Seul l'hote ou un admin peut annuler"})
         return
     for user in list(active_lobby.get('invited', [])):
