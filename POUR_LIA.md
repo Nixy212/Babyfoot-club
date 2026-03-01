@@ -34,7 +34,7 @@ requirements.txt      ← Dépendances Python.
 
 static/
   design-v3.css           ← TOUT le CSS (thème sombre, bronze/or). Un seul fichier.
-  sw.js                   ← Service Worker PWA. VERSION CACHE = babyfoot-v30.
+  sw.js                   ← Service Worker PWA. VERSION CACHE = babyfoot-v31.
   profile-utils.js        ← Chargement avatars/pseudos. Utilisé dans TOUS les templates.
   icons.js                ← Icônes SVG via data-bficon="nom". Ex: data-bficon="trophy"
   global-animations.js    ← Animations UI + logique de reconnexion WebSocket auto.
@@ -613,7 +613,7 @@ et exécute les commandes dans l'ordre. À 9 buts : balle adverse bloquée. À 1
 ### 🔴 Service Worker (cause principale des bugs visuels)
 ```js
 // static/sw.js — ligne 5
-const CACHE_NAME = 'babyfoot-v30';
+const CACHE_NAME = 'babyfoot-v31';
 ```
 **Après chaque modif de CSS ou JS : incrémenter ce numéro (v30 → v31 → v32...).**
 Sans ça, les navigateurs servent l'ancienne version du cache indéfiniment.
@@ -782,6 +782,8 @@ GET /debug/static   → Fichiers static présents ?
 - ✅ **Invitations expirées** → `cleanup_old_data()` nettoie >5 min
 - ✅ **ESP32 reboot** → `api_arduino_commands` détecte >30s sans poll et vide la queue
 - ✅ **SQL injection** → paramètres liés partout, jamais de concaténation de chaîne
+- ✅ **Pages vides (stats, top, reservation, live-score)** → HTML manquant reconstruit — les templates ne contenaient que du JS sans structure HTML, les IDs référencés par le JS n'existaient pas dans le DOM
+- ✅ **`</div>` parasite (scores, settings)** → balise fermante orpheline supprimée au début du `{% block body %}`
 
 ---
 
@@ -801,4 +803,4 @@ Les Joueur1/2/3 ont le mot de passe `guest` et sont exclus des classements ELO.
 
 ---
 
-*Ce document a été généré après analyse complète du code. Dernière mise à jour : projet nettoyé pour Render, Railway supprimé, imports centralisés, service worker v30.*
+*Ce document a été généré après analyse complète du code. Dernière mise à jour : HTML manquant reconstruit sur stats, top, reservation, live-score ; balises parasites supprimées dans scores et settings.*

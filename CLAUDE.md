@@ -73,14 +73,14 @@ Rôles utilisateurs :
 ## Règles importantes à respecter
 
 ### ⚠️ Service Worker — CRITIQUE
-Le fichier `static/sw.js` contient la version du cache : `babyfoot-v30`
+Le fichier `static/sw.js` contient la version du cache : `babyfoot-v31`
 
 **À chaque modification de CSS ou JS → incrémenter cette version.**
 Sans ça, les navigateurs servent l'ancienne version indéfiniment.
 
 ```js
 // sw.js ligne 5
-const CACHE_NAME = 'babyfoot-v30'; // → v31, v32, etc.
+const CACHE_NAME = 'babyfoot-v31'; // → v32, v33, etc.
 ```
 
 ### ⚠️ Gunicorn — Ne pas changer
@@ -133,6 +133,8 @@ Ne pas changer. Render utilise le mode threading, pas eventlet/gevent.
 | Données perdues | SQLite éphémère | DATABASE_URL PostgreSQL configurée |
 | WebSocket refusés | CORS mal configuré | CORS_ORIGINS = domaine exact Render |
 | App lente au démarrage | Cold start Render free tier | Normal — utiliser UptimeRobot pour ping |
+| Pages vides (stats, top, reservation, live-score) | HTML manquant dans `{% block body %}` — seul le JS était présent | HTML reconstruit pour chaque page avec tous les IDs attendus par le JS |
+| Pages cassées (scores, settings) | `</div>` orphelin au début du `{% block body %}` | Balise parasite supprimée |
 
 ---
 
