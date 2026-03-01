@@ -12,13 +12,13 @@
 <div class="page">
   <div class="container" style="max-width:960px">
 
-    <div class="page-header fade-up">
+    <div class="page-header">
       <h1><i class="fas fa-gamepad"></i> Lobby</h1>
       <p>Configurez votre partie et invitez vos adversaires</p>
     </div>
 
     <!-- Barre de statut -->
-    <div class="section-block section-block-accent fade-up" style="animation-delay:.04s">
+    <div class="section-block section-block-accent">
       <div class="section-block-body" style="padding:.875rem 1.375rem">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="display:flex;align-items:center;gap:.75rem;font-weight:600;color:var(--text-primary)">
@@ -33,13 +33,13 @@
     </div>
 
     <!-- Demandes à rejoindre (hôte seulement) -->
-    <div class="section-block section-block-blue fade-up" id="joinReqSection" style="display:none;animation-delay:.06s">
+    <div class="section-block section-block-blue" id="joinReqSection" style="display:none">
       <div class="section-block-header"><span class="section-block-title">👥 Demandes à rejoindre</span></div>
       <div class="section-block-body" id="joinReqList"></div>
     </div>
 
     <!-- Composition des équipes -->
-    <div class="section-block fade-up" style="animation-delay:.08s">
+    <div class="section-block">
       <div class="section-block-header"><span class="section-block-title">⚽ Composition des équipes</span></div>
       <div class="section-block-body">
         <div class="team-container" style="margin:0">
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Inviter des joueurs (hôte seulement) -->
-    <div class="section-block fade-up" id="inviteSection" style="display:none;animation-delay:.1s">
+    <div class="section-block" id="inviteSection" style="display:none">
       <div class="section-block-header"><span class="section-block-title">📨 Inviter des joueurs</span></div>
       <div class="section-block-body">
         <p style="color:var(--text-muted);font-size:.875rem;margin-bottom:1rem">
@@ -92,7 +92,7 @@
     </div>
 
     <!-- Actions -->
-    <div class="section-block fade-up" style="animation-delay:.12s">
+    <div class="section-block">
       <div class="section-block-body" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem">
         <button id="startBtn" class="btn btn-primary btn-lg" style="display:none;width:100%;max-width:400px" onclick="socket.emit('start_game_from_lobby')">
           🚀 Lancer la partie
@@ -138,18 +138,7 @@ try {
   socket = { emit:()=>{}, on:()=>{}, connected:false, once:()=>{} };
 }
 
-// ── Indicateur connexion socket (boutons désactivés pendant connexion) ───────
-function _setSocketReady(ready) {
-  const btns = document.querySelectorAll('.btn-add-ghost, #startBtn, #leaveBtn');
-  btns.forEach(b => {
-    if (ready) b.removeAttribute('data-socket-pending');
-    else b.setAttribute('data-socket-pending', '1');
-  });
-}
-// Au premier connect, marquer socket prêt
-socket.once && socket.once('connect', () => _setSocketReady(true));
-// Si déjà connecté (reconnect rapide)
-if (socket.connected) _setSocketReady(true);
+// Socket prêt automatiquement via Socket.IO queue interne
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ÉTAT GLOBAL
