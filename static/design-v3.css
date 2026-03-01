@@ -416,7 +416,7 @@ input::placeholder,textarea::placeholder{color:var(--c-t3);}
 
 /* ── SPINNERS & UTILS ──────────────────────────────────────────── */
 .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.15);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;}
-.fade-up{animation:fadeUp .4s var(--t3) both;}
+.fade-up{}
 .text-center{text-align:center;} .text-muted{color:var(--c-t2);}
 .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem;}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;}
