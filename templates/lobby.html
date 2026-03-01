@@ -134,8 +134,21 @@ try {
                 transports:['websocket','polling'] });
   if (window.initReconnectIndicator) initReconnectIndicator(socket);
 } catch(e) {
-  socket = { emit:()=>{}, on:()=>{} };
+  socket = { emit:()=>{}, on:()=>{}, connected:false, once:()=>{} };
 }
+
+// ── Indicateur connexion socket (boutons désactivés pendant connexion) ───────
+function _setSocketReady(ready) {
+  const btns = document.querySelectorAll('.btn-add-ghost, #startBtn, #leaveBtn');
+  btns.forEach(b => {
+    if (ready) b.removeAttribute('data-socket-pending');
+    else b.setAttribute('data-socket-pending', '1');
+  });
+}
+// Au premier connect, marquer socket prêt
+socket.once && socket.once('connect', () => _setSocketReady(true));
+// Si déjà connecté (reconnect rapide)
+if (socket.connected) _setSocketReady(true);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ÉTAT GLOBAL
@@ -382,8 +395,13 @@ function makePlayerCard(username, amHost, color) {
 }
 
 function addGuestToLobby(guestName) {
-  if (!socket || !socket.connected) {
-    toast('Connexion en cours, réessayez dans un instant...', 'inf');
+  if (!socket) return;
+  if (!socket.connected) {
+    // Socket en cours de connexion initiale — attendre qu'il soit connecté
+    toast('Connexion en cours...', 'inf');
+    socket.once('connect', () => {
+      socket.emit('invite_to_lobby', { user: guestName });
+    });
     return;
   }
   socket.emit('invite_to_lobby', { user: guestName });
@@ -477,8 +495,17 @@ function renderPlayerSelector() {
 function filterPlayers() { renderPlayerSelector(); }
 
 function inviteSelected() {
-  if (LOBBY.host !== ME && !IS_ADMIN) { toast('Seul l\'hôte peut inviter', 'err'); return; }
+  if (LOBBY.host !== ME && !IS_ADMIN) { toast("Seul l'hôte peut inviter", 'err'); return; }
   if (SELECTED.length === 0) { toast('Sélectionnez au moins un joueur', 'err'); return; }
+  if (!socket || !socket.connected) {
+    toast('Connexion en cours, réessayez...', 'inf');
+    socket.once('connect', () => {
+      SELECTED.forEach(u => socket.emit('invite_to_lobby', { user: u }));
+      SELECTED = [];
+      setTimeout(loadAllUsers, 500);
+    });
+    return;
+  }
   SELECTED.forEach(u => socket.emit('invite_to_lobby', { user: u }));
   SELECTED = [];
   setTimeout(loadAllUsers, 500);
