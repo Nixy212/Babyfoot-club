@@ -2,7 +2,7 @@
 // Met en cache les ressources statiques pour fonctionner
 // même avec une connexion faible ou intermittente.
 
-const CACHE_NAME = 'babyfoot-v33';
+const CACHE_NAME = 'babyfoot-v34';
 
 // Ressources mises en cache au premier chargement (shell de l'app)
 const STATIC_ASSETS = [
