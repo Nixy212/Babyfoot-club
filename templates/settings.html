@@ -393,7 +393,387 @@
 <div class="toast-settings" id="toastWrap"></div>
 
 <script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
-
-
 <script src="{{ url_for('static', filename='icons.js') }}"></script>
+
+<script>
+// ── État local ────────────────────────────────────────────────
+let currentUser = null;
+let currentAvatarPreset = null;
+let currentAvatarFile = null;
+let equippedTheme = null;
+let equippedFrame = null;
+
+const ELO_TIERS = [
+  { name:'Recrue',    icon:'🎮', min:800,  max:949  },
+  { name:'Amateur',   icon:'🌱', min:950,  max:1099 },
+  { name:'Rival',     icon:'🔥', min:1100, max:1249 },
+  { name:'Confirmé',  icon:'⚡', min:1250, max:1399 },
+  { name:'Expert',    icon:'💎', min:1400, max:1549 },
+  { name:'Élite',     icon:'👑', min:1550, max:1699 },
+  { name:'Maître',    icon:'🏆', min:1700, max:9999 },
+];
+function eloTier(elo) {
+  for (let i = ELO_TIERS.length - 1; i >= 0; i--) {
+    if (elo >= ELO_TIERS[i].min) return ELO_TIERS[i];
+  }
+  return ELO_TIERS[0];
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const wrap = document.getElementById('toastWrap');
+  if (!wrap) return;
+  const d = document.createElement('div');
+  d.className = 'toast-item';
+  d.style.cssText = `display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.1rem;border-radius:10px;font-size:.9rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:all;animation:tin .25s ease;white-space:nowrap;background:var(--bg-elevated);border:1px solid ${type==='ok'?'rgba(39,174,96,.4)':type==='err'?'rgba(231,76,60,.4)':'rgba(205,127,50,.4)'};color:${type==='ok'?'#2ecc71':type==='err'?'#e74c3c':'#cd7f32'}`;
+  d.textContent = msg;
+  wrap.appendChild(d);
+  setTimeout(() => d.remove(), 3500);
+}
+
+// ── Avatar ────────────────────────────────────────────────────
+function selectPreset(emoji) {
+  currentAvatarPreset = emoji;
+  currentAvatarFile = null;
+  document.querySelectorAll('.avatar-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === emoji));
+  const img = document.getElementById('avatarPreviewImg');
+  const em = document.getElementById('avatarPreviewEmoji');
+  if (img) img.style.display = 'none';
+  if (em) { em.textContent = emoji; em.style.display = 'block'; }
+}
+
+function handleAvatarUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Image trop grande (max 5 Mo)', 'err'); return; }
+  currentAvatarFile = file;
+  currentAvatarPreset = null;
+  document.querySelectorAll('.avatar-preset-btn').forEach(b => b.classList.remove('active'));
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('avatarPreviewImg');
+    const em = document.getElementById('avatarPreviewEmoji');
+    if (img) { img.src = e.target.result; img.style.display = 'block'; }
+    if (em) em.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Profil ────────────────────────────────────────────────────
+async function saveProfile() {
+  const btn = document.getElementById('btnSaveProfile');
+  btn.disabled = true; btn.textContent = '⏳ Sauvegarde...';
+
+  try {
+    // Upload avatar si fichier sélectionné
+    if (currentAvatarFile) {
+      const fd = new FormData();
+      fd.append('avatar', currentAvatarFile);
+      const r = await fetch('/api/upload_avatar', { method: 'POST', body: fd });
+      const d = await r.json();
+      if (!d.success) { toast(d.message || 'Erreur upload avatar', 'err'); btn.disabled=false; btn.textContent='Sauvegarder le profil'; return; }
+    }
+
+    // Mettre à jour profil (pseudo + bio + preset)
+    const body = {
+      nickname: document.getElementById('nicknameInput').value.trim(),
+      bio: document.getElementById('bioInput').value.trim(),
+    };
+    if (currentAvatarPreset) body.avatar_preset = currentAvatarPreset;
+
+    const r = await fetch('/api/profile', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success || d.ok) {
+      toast('Profil mis à jour ✓', 'ok');
+      await loadProfile();
+    } else {
+      toast(d.message || 'Erreur', 'err');
+    }
+  } catch(e) {
+    toast('Erreur réseau', 'err');
+  }
+  btn.disabled = false; btn.textContent = 'Sauvegarder le profil';
+}
+
+// ── Mot de passe ──────────────────────────────────────────────
+function checkStrength(pw) {
+  const bar = document.getElementById('strengthBar');
+  const txt = document.getElementById('strengthText');
+  if (!bar || !txt) return;
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    {w:'0%', c:'transparent', t:''},
+    {w:'25%', c:'#e74c3c', t:'Faible'},
+    {w:'50%', c:'#e67e22', t:'Moyen'},
+    {w:'75%', c:'#f1c40f', t:'Bien'},
+    {w:'100%', c:'#2ecc71', t:'Fort'},
+  ];
+  const l = levels[Math.min(score, 4)];
+  bar.style.width = l.w; bar.style.background = l.c;
+  txt.textContent = l.t; txt.style.color = l.c;
+}
+
+async function changePassword() {
+  const cur = document.getElementById('curPw').value;
+  const nw = document.getElementById('newPw').value;
+  const cf = document.getElementById('confirmPw').value;
+  if (!cur || !nw || !cf) { toast('Remplissez tous les champs', 'err'); return; }
+  if (nw !== cf) { toast('Les mots de passe ne correspondent pas', 'err'); return; }
+  if (nw.length < 6) { toast('Minimum 6 caractères', 'err'); return; }
+  const btn = document.getElementById('btnChangePw');
+  btn.disabled = true; btn.textContent = '⏳ Mise à jour...';
+  try {
+    const r = await fetch('/api/change_password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({current_password:cur, new_password:nw}) });
+    const d = await r.json();
+    if (d.success) {
+      toast('Mot de passe mis à jour ✓', 'ok');
+      document.getElementById('curPw').value = '';
+      document.getElementById('newPw').value = '';
+      document.getElementById('confirmPw').value = '';
+      checkStrength('');
+    } else {
+      toast(d.message || 'Erreur', 'err');
+    }
+  } catch(e) { toast('Erreur réseau', 'err'); }
+  btn.disabled = false; btn.textContent = 'Mettre à jour le mot de passe';
+}
+
+// ── Cosmétiques ───────────────────────────────────────────────
+async function equipCosmetic(type, key) {
+  try {
+    const r = await fetch('/api/equip_cosmetic', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type, key}) });
+    const d = await r.json();
+    if (d.success || d.ok) {
+      toast('Cosmétique équipé ✓', 'ok');
+      if (type === 'theme') equippedTheme = key;
+      if (type === 'frame') equippedFrame = key;
+      renderCosmeticSelectors();
+    } else {
+      toast(d.message || 'Erreur', 'err');
+    }
+  } catch(e) { toast('Erreur réseau', 'err'); }
+}
+
+function renderCosmeticSelectors() {
+  // Thèmes
+  const themeGrid = document.getElementById('themeSelectorGrid');
+  const frameGrid = document.getElementById('frameSelectorGrid');
+  if (!themeGrid || !frameGrid) return;
+
+  const THEMES = [
+    { key:'default', name:'Défaut', icon:'🌑', desc:'Thème sombre bronze' },
+    { key:'fire', name:'Fire 🔥', icon:'🔥', desc:'Rouge intense' },
+    { key:'night', name:'Night 🌌', icon:'🌌', desc:'Violet nocturne' },
+    { key:'gold', name:'Gold ✨', icon:'✨', desc:'Or brillant' },
+    { key:'royal', name:'Royal 💙', icon:'💙', desc:'Bleu royal' },
+    { key:'master', name:'Master 🏆', icon:'🏆', desc:'Noir & or' },
+  ];
+  const FRAMES = [
+    { key:'none', name:'Aucun', icon:'⚪' },
+    { key:'bronze', name:'Bronze', icon:'🟤' },
+    { key:'flame', name:'Flamme', icon:'🔥' },
+    { key:'phoenix', name:'Phénix', icon:'🦅' },
+  ];
+
+  themeGrid.innerHTML = THEMES.map(t => {
+    const isEquipped = equippedTheme === t.key || (!equippedTheme && t.key === 'default');
+    return `<button onclick="equipCosmetic('theme','${t.key}')" style="padding:.75rem .875rem;border-radius:10px;border:2px solid ${isEquipped ? 'var(--bronze)' : 'var(--border-normal)'};background:${isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};cursor:pointer;text-align:center;font-family:inherit;transition:all .15s">
+      <div style="font-size:1.4rem;margin-bottom:.3rem">${t.icon}</div>
+      <div>${t.name}</div>
+      ${isEquipped ? '<div style="font-size:.68rem;color:var(--bronze);margin-top:2px">✓ Actif</div>' : ''}
+    </button>`;
+  }).join('');
+
+  frameGrid.innerHTML = FRAMES.map(f => {
+    const isEquipped = equippedFrame === f.key || (!equippedFrame && f.key === 'none');
+    return `<button onclick="equipCosmetic('frame','${f.key}')" style="padding:.65rem 1rem;border-radius:10px;border:2px solid ${isEquipped ? 'var(--bronze)' : 'var(--border-normal)'};background:${isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.5rem;transition:all .15s">
+      <span style="font-size:1.1rem">${f.icon}</span>${f.name}${isEquipped ? ' <span style="font-size:.68rem;color:var(--bronze);margin-left:auto">✓</span>' : ''}
+    </button>`;
+  }).join('');
+}
+
+// ── Quêtes ────────────────────────────────────────────────────
+async function loadQuests() {
+  const el = document.getElementById('questsFullList');
+  if (!el) return;
+  try {
+    const res = await fetch('/api/my_quests');
+    if (!res.ok) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Impossible de charger les quêtes</p>'; return; }
+    const quests = await res.json();
+    if (!quests || quests.error) { el.innerHTML = ''; return; }
+    if (!quests.length) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Aucune quête disponible</p>'; return; }
+
+    el.innerHTML = quests.map(q => {
+      const pct = q.condition_value > 0 ? Math.min(100, Math.round(q.progress / q.condition_value * 100)) : 0;
+      const barColor = q.completed ? '#2ecc71' : pct >= 80 ? '#f1c40f' : '#cd7f32';
+      return `<div style="padding:.875rem 1rem;border-radius:10px;background:var(--bg-tertiary);border:1px solid ${q.completed ? 'rgba(39,174,96,.25)' : 'var(--border-subtle)'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${q.completed ? 0 : '8px'}">
+          <div style="display:flex;align-items:center;gap:.6rem">
+            <span style="font-size:1.2rem">${q.icon}</span>
+            <div>
+              <div style="font-weight:700;font-size:.9rem${q.completed ? ';text-decoration:line-through;opacity:.6' : ''}">${q.name}</div>
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">🎁 ${q.reward_label}</div>
+            </div>
+          </div>
+          ${q.completed
+            ? '<span style="color:#2ecc71;font-weight:800;font-size:.85rem">✓ Débloqué</span>'
+            : `<span style="font-size:.78rem;color:var(--text-muted)">${q.progress}/${q.condition_value}</span>`
+          }
+        </div>
+        ${!q.completed ? `<div style="height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;border-radius:99px;background:${barColor};width:${pct}%;transition:width .8s"></div></div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Erreur de chargement</p>';
+  }
+}
+
+// ── ELO ───────────────────────────────────────────────────────
+function renderElo(stats) {
+  const elo = stats.elo || 1000;
+  const tier = eloTier(elo);
+  const elVal = document.getElementById('eloValue');
+  const elTier = document.getElementById('eloTier');
+  const elIcon = document.getElementById('eloIcon');
+  const elDesc = document.getElementById('eloDesc');
+  const elBar = document.getElementById('eloProgressBar');
+  const elMin = document.getElementById('eloMin');
+  const elMax = document.getElementById('eloMax');
+  const elStreak = document.getElementById('streakBadge');
+  const elStreakCount = document.getElementById('streakCount');
+
+  if (elVal) elVal.textContent = elo;
+  if (elTier) elTier.textContent = tier.name;
+  if (elIcon) elIcon.textContent = tier.icon;
+  if (elDesc) elDesc.textContent = `${stats.wins || 0} victoires · ${stats.total_games || 0} parties`;
+
+  // Barre de progression dans le niveau
+  if (elBar && tier.max < 9999) {
+    const pct = Math.round(((elo - tier.min) / (tier.max - tier.min + 1)) * 100);
+    elBar.style.width = pct + '%';
+    if (elMin) elMin.textContent = tier.min;
+    if (elMax) elMax.textContent = tier.max;
+  } else if (elBar) {
+    elBar.style.width = '100%';
+    if (elMin) elMin.textContent = '1700+';
+    if (elMax) elMax.textContent = 'MAX';
+  }
+
+  // Winstreak
+  if (elStreak && elStreakCount && stats.winstreak >= 2) {
+    elStreakCount.textContent = stats.winstreak;
+    elStreak.style.display = 'block';
+  }
+
+  // Tableau des niveaux
+  const grid = document.getElementById('eloTiersGrid');
+  if (grid) {
+    grid.innerHTML = ELO_TIERS.map(t => {
+      const isMe = elo >= t.min && (t.max >= 9999 || elo <= t.max);
+      return `<div style="display:flex;align-items:center;gap:.875rem;padding:.625rem .875rem;border-radius:8px;background:${isMe ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};border:1px solid ${isMe ? 'rgba(205,127,50,.4)' : 'var(--border-subtle)'}">
+        <span style="font-size:1.25rem;flex-shrink:0">${t.icon}</span>
+        <div style="flex:1">
+          <div style="font-weight:${isMe ? '800' : '600'};font-size:.875rem;color:${isMe ? 'var(--bronze)' : 'var(--text-primary)'}">${t.name}</div>
+          <div style="font-size:.72rem;color:var(--text-muted)">${t.min} – ${t.max < 9999 ? t.max : '∞'} ELO</div>
+        </div>
+        ${isMe ? '<span style="font-size:.7rem;font-weight:700;color:var(--bronze);background:rgba(205,127,50,.15);padding:2px 8px;border-radius:99px">Vous</span>' : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── Chargement profil ─────────────────────────────────────────
+async function loadProfile() {
+  try {
+    const [userRes, profileRes] = await Promise.all([
+      fetch('/current_user'),
+      fetch('/api/profile'),
+    ]);
+    if (!userRes.ok) { location.href = '/login'; return; }
+    const user = await userRes.json();
+    const profile = profileRes.ok ? await profileRes.json() : {};
+    currentUser = user;
+
+    // Nav
+    if (window.ProfileUtils) ProfileUtils.updateNav(user);
+
+    // En-tête profil
+    const avEl = document.getElementById('profileAv');
+    const nameEl = document.getElementById('profileName');
+    const roleEl = document.getElementById('profileRole');
+    if (nameEl) nameEl.textContent = profile.nickname || user.username;
+    if (roleEl) {
+      const roles = {0:'Joueur', 1:'Super Admin', 2:'Admin'};
+      roleEl.textContent = roles[user.role] || 'Joueur';
+      roleEl.style.display = 'block';
+    }
+
+    // Avatar dans l'en-tête
+    if (avEl) {
+      if (profile.avatar_url) {
+        avEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      } else if (profile.avatar_preset) {
+        avEl.textContent = profile.avatar_preset;
+      } else {
+        avEl.textContent = user.username[0].toUpperCase();
+      }
+    }
+
+    // Badges
+    const badgesEl = document.getElementById('profileBadges');
+    if (badgesEl) {
+      try {
+        const br = await fetch(`/api/badges/user/${encodeURIComponent(user.username)}`);
+        const bd = br.ok ? await br.json() : [];
+        const badges = bd.badges || bd || [];
+        badgesEl.innerHTML = badges.slice(0,5).map(b =>
+          `<span title="${b.name}" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700;background:${b.color}22;border:1px solid ${b.color}55;color:${b.color}">${b.image_url ? `<img src="${b.image_url}" style="width:13px;height:13px;border-radius:2px;object-fit:cover">` : b.icon} ${b.name}</span>`
+        ).join('');
+      } catch(e) {}
+    }
+
+    // Formulaire personnalisation
+    const nickEl = document.getElementById('nicknameInput');
+    const bioEl = document.getElementById('bioInput');
+    const nickCount = document.getElementById('nicknameCount');
+    const bioCount = document.getElementById('bioCount');
+    if (nickEl) { nickEl.value = profile.nickname || ''; if (nickCount) nickCount.textContent = (profile.nickname||'').length + '/30'; }
+    if (bioEl) { bioEl.value = profile.bio || ''; if (bioCount) bioCount.textContent = (profile.bio||'').length + '/120'; }
+
+    // Avatar preview
+    const prevImg = document.getElementById('avatarPreviewImg');
+    const prevEmoji = document.getElementById('avatarPreviewEmoji');
+    if (profile.avatar_url && prevImg) {
+      prevImg.src = profile.avatar_url; prevImg.style.display = 'block';
+      if (prevEmoji) prevEmoji.style.display = 'none';
+    } else if (profile.avatar_preset && prevEmoji) {
+      prevEmoji.textContent = profile.avatar_preset; prevEmoji.style.display = 'block';
+      if (prevImg) prevImg.style.display = 'none';
+      currentAvatarPreset = profile.avatar_preset;
+      document.querySelectorAll('.avatar-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === profile.avatar_preset));
+    }
+
+    // Cosmétiques équipés
+    equippedTheme = profile.equipped_theme || null;
+    equippedFrame = profile.equipped_frame || null;
+    renderCosmeticSelectors();
+
+    // ELO
+    try {
+      const sr = await fetch(`/user_stats/${encodeURIComponent(user.username)}`);
+      if (sr.ok) renderElo(await sr.json());
+    } catch(e) {}
+
+  } catch(e) { console.error('loadProfile error:', e); }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+loadProfile();
+loadQuests();
+</script>
 {% endblock %}
