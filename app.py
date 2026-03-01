@@ -167,6 +167,11 @@ active_lobby = {
 # ── Verrou lobby (évite les race conditions invitation + join simultanés) ──
 _lobby_lock = _threading.Lock()
 
+# Délai de grâce lobby : username -> timestamp de déconnexion
+# Si un joueur se reconnecte dans les 8s, il n'est pas retiré du lobby
+_lobby_grace = {}
+_LOBBY_GRACE_SECONDS = 8
+
 team_swap_requests = {}
 rematch_votes = {"team1": [], "team2": []}
 rematch_no_votes = []         # Joueurs qui ont voté NON
@@ -3033,6 +3038,11 @@ def handle_connect():
     connected_users[request.sid] = username
     logger.info(f"WS connecte: {username} ({request.sid})")
 
+    # Annuler le délai de grâce si le joueur était en train de naviguer
+    if username in _lobby_grace:
+        _lobby_grace.pop(username, None)
+        logger.info(f"Lobby grace annulé pour {username} (reconnecté)")
+
     # Partie active → recuperation en cours de jeu
     if current_game.get('active'):
         join_room('game')
@@ -3109,17 +3119,32 @@ def handle_disconnect():
     username = connected_users.pop(request.sid, None)
     logger.info(f"WS deconnecte: {request.sid} ({username})")
     if username and active_lobby.get('active'):
-        with _lobby_lock:
-            result = _remove_player_from_lobby(username)
-        if result['action'] == 'cancelled':
-            socketio.emit('lobby_cancelled', {'reason': 'host_left', 'host': username}, namespace='/')
-            logger.info(f"Lobby annulé : hôte {username} déconnecté")
-        elif result['action'] == 'host_promoted':
-            socketio.emit('lobby_host_changed', {'new_host': result['new_host'], 'old_host': username}, namespace='/')
-            socketio.emit('lobby_update', active_lobby, namespace='/')
-            logger.info(f"Lobby : {username} déconnecté, nouvel hôte {result['new_host']}")
-        elif result['action'] == 'left':
-            socketio.emit('lobby_update', active_lobby, namespace='/')
+        # Délai de grâce : on attend avant de retirer le joueur du lobby
+        # (navigation entre pages = déconnexion + reconnexion rapide)
+        _lobby_grace[username] = _time.time()
+
+        def _delayed_lobby_remove(uname, disc_time):
+            _time.sleep(_LOBBY_GRACE_SECONDS)
+            # Si le joueur s'est reconnecté depuis, son entrée a été supprimée de _lobby_grace
+            if _lobby_grace.get(uname) != disc_time:
+                return
+            _lobby_grace.pop(uname, None)
+            if not active_lobby.get('active'):
+                return
+            with _lobby_lock:
+                result = _remove_player_from_lobby(uname)
+            if result['action'] == 'cancelled':
+                socketio.emit('lobby_cancelled', {'reason': 'host_left', 'host': uname}, namespace='/')
+                logger.info(f"Lobby annulé : hôte {uname} déconnecté (grâce expirée)")
+            elif result['action'] == 'host_promoted':
+                socketio.emit('lobby_host_changed', {'new_host': result['new_host'], 'old_host': uname}, namespace='/')
+                socketio.emit('lobby_update', active_lobby, namespace='/')
+                logger.info(f"Lobby : {uname} déconnecté, nouvel hôte {result['new_host']}")
+            elif result['action'] == 'left':
+                socketio.emit('lobby_update', active_lobby, namespace='/')
+
+        t = _threading.Thread(target=_delayed_lobby_remove, args=(username, _lobby_grace[username]), daemon=True)
+        t.start()
 
 @socketio.on('create_lobby')
 def handle_create_lobby(data):

@@ -156,6 +156,7 @@ Les cosmétiques (thèmes et cadres d'avatar) sont débloqués via les quêtes.
 | Pages cassées (scores, settings) | `</div>` orphelin au début du `{% block body %}` | Balise parasite supprimée |
 | "Slot invalide (theme/frame)" sur cosmétiques | L'équipement d'un cosmétatique verrouillé renvoyait une erreur sans indication visuelle | Les boutons verrouillés sont maintenant grisés + icône 🔒 + texte "Verrouillé", et le clic affiche un toast d'explication au lieu d'appeler l'API |
 | Slots vides lobby peu clairs | Les slots fantômes ne montraient pas comment inviter | Slots vides sans guest affichent bouton "Inviter" qui scroll vers la section invitation |
+| Équipes vides dans le lobby (bug racine) | Navigation dashboard→lobby déconnecte le WebSocket ; `handle_disconnect` retirait immédiatement l'hôte du lobby avant que la page lobby se reconnecte | Délai de grâce de 8s (`_lobby_grace`) : si le joueur se reconnecte dans ce délai, le retrait est annulé. Voir `_lobby_grace` et `_LOBBY_GRACE_SECONDS` dans `app.py` |
 
 ---
 
