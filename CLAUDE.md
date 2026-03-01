@@ -73,14 +73,14 @@ Rôles utilisateurs :
 ## Règles importantes à respecter
 
 ### ⚠️ Service Worker — CRITIQUE
-Le fichier `static/sw.js` contient la version du cache : `babyfoot-v32`
+Le fichier `static/sw.js` contient la version du cache : `babyfoot-v34`
 
 **À chaque modification de CSS ou JS → incrémenter cette version.**
 Sans ça, les navigateurs servent l'ancienne version indéfiniment.
 
 ```js
 // sw.js ligne 5
-const CACHE_NAME = 'babyfoot-v32'; // → v32, v33, etc.
+const CACHE_NAME = 'babyfoot-v34'; // → v34, v35, etc.
 ```
 
 ### ⚠️ Gunicorn — Ne pas changer
@@ -113,6 +113,25 @@ Ne pas changer. Render utilise le mode threading, pas eventlet/gevent.
 
 ---
 
+## Système de Cosmétiques
+
+Les cosmétiques (thèmes et cadres d'avatar) sont débloqués via les quêtes.
+
+### Clés des cosmétiques (`COSMETICS_CATALOG` dans `app.py`)
+- Thèmes : `theme_fire`, `theme_night`, `theme_gold`, `theme_royal`, `theme_master`
+- Cadres : `frame_bronze`, `frame_flame`, `frame_phoenix`
+- `default` (thème) et `none` (cadre) sont toujours disponibles sans déverrouillage
+
+### API endpoints
+- `GET /api/my_cosmetics` → `{ unlocked: [...], active_theme, active_frame, catalog }`
+- `POST /api/equip_cosmetic` → `{ type: "theme"|"frame", key: "..." }` — vérifie que le cosmétique est débloqué
+
+### Affichage dans `settings.html`
+- `unlockedCosmetics` est chargé via `/api/my_cosmetics` au chargement de la page
+- Les items verrouillés sont rendus grisés avec icône 🔒 et le clic affiche un toast sans appeler l'API
+
+---
+
 ## Ce qui est optionnel (peut être supprimé sans casser l'app)
 
 - `static/confetti.js` — effets visuels fin de partie
@@ -135,6 +154,8 @@ Ne pas changer. Render utilise le mode threading, pas eventlet/gevent.
 | App lente au démarrage | Cold start Render free tier | Normal — utiliser UptimeRobot pour ping |
 | Pages vides (stats, top, reservation, live-score) | HTML manquant dans `{% block body %}` — seul le JS était présent | HTML reconstruit pour chaque page avec tous les IDs attendus par le JS |
 | Pages cassées (scores, settings) | `</div>` orphelin au début du `{% block body %}` | Balise parasite supprimée |
+| "Slot invalide (theme/frame)" sur cosmétiques | L'équipement d'un cosmétatique verrouillé renvoyait une erreur sans indication visuelle | Les boutons verrouillés sont maintenant grisés + icône 🔒 + texte "Verrouillé", et le clic affiche un toast d'explication au lieu d'appeler l'API |
+| Slots vides lobby peu clairs | Les slots fantômes ne montraient pas comment inviter | Slots vides sans guest affichent bouton "Inviter" qui scroll vers la section invitation |
 
 ---
 
