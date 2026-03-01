@@ -104,7 +104,7 @@ Ne pas changer. Render utilise le mode threading, pas eventlet/gevent.
 | Feature | Fichiers concernés |
 |---|---|
 | Réservation créneaux | `reservation.html` + routes `/api/reserve_*` dans `app.py` |
-| Lobby temps réel | `lobby.html` + events Socket.IO `create_lobby`, `invite_to_lobby`, etc. |
+| Lobby temps réel | `lobby.html` + events Socket.IO `create_lobby`, `invite_to_lobby`, `move_player_to_team`, etc. |
 | Score live | `live-score.html` + event `update_score`, `game_ended` |
 | Calcul ELO | Fonction `calculate_elo()` dans `app.py` |
 | Quêtes/Cosmétiques | Tables `quests`, `user_quests` + fonction `check_quests()` dans `app.py` |
@@ -185,7 +185,23 @@ Python 3.11.9
 
 ---
 
-## 🐛 Bugs corrigés (session 2025-03-01)
+## 🐛 Bugs corrigés (sessions 2025 & 2026-03-01)
+
+### Lobby — Corrections complètes (2026-03-01)
+
+| Bug | Cause | Fix |
+|---|---|---|
+| Double redirect hôte | `lobby_host_changed` + `lobby_update` émis simultanément | Flag `_redirecting` + `saferedirect()` |
+| Guest mauvaise équipe | Ghost card ne transmettait pas l'équipe cible au serveur | Bouton "+ Ajouter" passe `team` ; serveur respecte `team_pref` |
+| Vrai joueur mauvaise équipe | `accept_lobby` ignorait la préférence hôte | `team_pref` stocké à l'invitation, appliqué à l'acceptation |
+| Pas de correction post-placement | Aucun moyen de bouger un joueur après placement | Bouton "← Éq.1 / → Éq.2" + event `move_player_to_team` |
+| Toast "CONNEXION EN COURS" | `addGuestToLobby` bloquait si socket pas encore connecté | Attend `socket.once('connect')` avant d'émettre |
+| Candidat successeur introuvable | `_remove_player_from_lobby` cherchait uniquement dans `accepted[]` | Cherche dans toutes les listes (team1, team2, accepted) |
+| Bouton "Lancer" trompeur | S'affichait si `accepted >= 2` même équipe vide | Vérifie `team1 > 0 ET team2 > 0` |
+| `join_request_result` ignoré | Aucun handler dans lobby.html | Rechargement lobby + `accept_lobby` auto |
+| Reconnexion socket non gérée | Pas de rechargement lobby au reconnect | `socket.on('connect')` recharge l'état depuis l'API |
+| Crashes sans guard | `decline/cancel/kick_lobby` sans vérif `active` | Guards ajoutés sur tous les handlers |
+| SyntaxError deploy | Docstring et `global` fusionnés sur une ligne | Ligne séparée |
 
 ### Bug 1 — Bouton "Créer Lobby" du dashboard inopérant
 **Cause** : `handleLobbyBtn()` utilisait `socket.emit('create_lobby')` qui exige une réservation active (`has_active_reservation`). Sans réservation, l'erreur socket était ignorée et l'utilisateur restait bloqué.

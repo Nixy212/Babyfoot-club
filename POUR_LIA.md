@@ -265,7 +265,8 @@ active_lobby = {
     "team1": [],            # joueurs dans équipe 1
     "team2": [],            # joueurs dans équipe 2
     "active": False,
-    "join_requests": {}     # request_id -> {from: username}
+    "join_requests": {},    # request_id -> {from: username}
+    "team_pref": {}         # username -> 'team1'|'team2' (préférence d'équipe définie par l'hôte à l'invitation)
 }
 
 connected_users = {}        # sid -> username (toutes les connexions WS actives)
@@ -548,7 +549,7 @@ et exécute les commandes dans l'ordre. À 9 buts : balle adverse bloquée. À 1
 | Événement | Payload | Description |
 |---|---|---|
 | `create_lobby` | `{invited: []}` | Créer un lobby (admin ou réservation active requis) |
-| `invite_to_lobby` | `{user}` | Inviter un joueur |
+| `invite_to_lobby` | `{user, team?: 'team1'\|'team2'}` | Inviter un joueur (optionnel: équipe cible) |
 | `leave_lobby` | — | Quitter le lobby |
 | `accept_lobby` | — | Accepter une invitation |
 | `decline_lobby` | — | Refuser une invitation |
@@ -556,6 +557,7 @@ et exécute les commandes dans l'ordre. À 9 buts : balle adverse bloquée. À 1
 | `accept_join_request` | `{from, request_id}` | Hôte accepte une demande |
 | `decline_join_request` | `{from, request_id}` | Hôte refuse une demande |
 | `kick_from_lobby` | `{user}` | Exclure un joueur |
+| `move_player_to_team` | `{user, team: 'team1'\|'team2'}` | Hôte déplace un joueur dans une équipe |
 | `cancel_lobby` | — | Annuler le lobby |
 | `request_team_swap` | `{with: username}` | Demander un échange d'équipe |
 | `accept_team_swap` | `{request_id}` | Accepter l'échange |
@@ -787,6 +789,19 @@ GET /debug/static   → Fichiers static présents ?
 - ✅ **Settings : cosmétiques/quêtes bloqués sur "Chargement..."** → JS entièrement manquant reconstruit (`selectPreset`, `handleAvatarUpload`, `saveProfile`, `changePassword`, `loadQuests`, `loadProfile`, `equipCosmetic`, `renderCosmeticSelectors`)
 - ✅ **Dashboard : boutons Servo au milieu du contenu** → déplacés tout en bas dans une zone admin discrète, style moins agressif
 - ✅ **Lobby : cases équipe trop grandes (220px) quand vides** → `min-height` réduit à 80px
+- ✅ **Double redirect hôte quittant le lobby** → `lobby_host_changed` + `lobby_update` émis simultanément faisaient boucler la redirection → flag `_redirecting` côté client, `saferedirect()` anti-doublon
+- ✅ **Candidat successeur introuvable** → `_remove_player_from_lobby` cherchait uniquement dans `accepted[]` ; si les joueurs étaient seulement dans `team1/team2`, le lobby était annulé à tort → cherche maintenant dans toutes les listes
+- ✅ **`request_join_lobby` doublons** → ne vérifiait pas `team1/team2`, permettant des demandes en double
+- ✅ **`decline_lobby` crash** → accès direct à `active_lobby['invited']` sans guard `active` → guard ajouté
+- ✅ **`cancel_lobby` / `kick_from_lobby` crash** → accès sans guard `active` → guards ajoutés
+- ✅ **Bouton "Lancer la partie" trompeur** → s'affichait si `accepted >= 2` même si une équipe était vide → vérifie maintenant `team1 > 0 ET team2 > 0`
+- ✅ **`join_request_result` non géré dans lobby.html** → le joueur dont la demande était acceptée restait bloqué → rechargement du lobby + `accept_lobby` automatique
+- ✅ **Reconnexion socket non gérée dans lobby.html** → si le socket se déconnectait, l'état du lobby n'était pas rechargé → handler `socket.on('connect')` ajouté
+- ✅ **Toast "CONNEXION EN COURS" sur clic "+ Ajouter"** → `addGuestToLobby` bloquait si `socket.connected = false` (connexion initiale asynchrone) → attend maintenant `socket.once('connect')` avant d'émettre
+- ✅ **Guest placé dans la mauvaise équipe** → la ghost card affichait Joueur1 en team1 mais le serveur le mettait en team2 (condition `t1 <= t2` fausse) → le bouton "+ Ajouter" transmet maintenant l'équipe cible ; le serveur respecte `team_pref`
+- ✅ **Vrais joueurs placés aléatoirement** → `accept_lobby` plaçait sans respecter la préférence de l'hôte → l'hôte choisit l'équipe cible à l'invitation, stocké dans `active_lobby['team_pref']`, appliqué à `accept_lobby`
+- ✅ **Pas de moyen de corriger la composition après placement** → ajout du bouton "← Éq.1 / → Éq.2" sur chaque carte joueur (visible hôte seulement) + event WebSocket `move_player_to_team`
+- ✅ **SyntaxError deploy (docstring + global sur même ligne)** → `\` dans le docstring de `handle_move_player_to_team` avait fusionné deux lignes → corrigé
 
 ---
 
@@ -806,4 +821,4 @@ Les Joueur1/2/3 ont le mot de passe `guest` et sont exclus des classements ELO.
 
 ---
 
-*Dernière mise à jour : JS settings.html reconstruit, servo dashboard déplacé en bas, lobby team-box compacté, SW v32.*
+*Dernière mise à jour : Lobby entièrement refixé (redirections, placement équipes, move_player_to_team, reconnect socket, join_request_result, guards crash), SW v32.*

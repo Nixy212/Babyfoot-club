@@ -3454,7 +3454,8 @@ def handle_kick_from_lobby(data):
 
 @socketio.on('move_player_to_team')
 def handle_move_player_to_team(data):
-    """L'hôte ou un admin déplace un joueur d'une équipe à l'autre."""    global active_lobby
+    """L'hôte ou un admin déplace un joueur d'une équipe à l'autre."""
+    global active_lobby
     username = get_socket_user()
     target_user = data.get('user')
     target_team = data.get('team')  # 'team1' ou 'team2'
