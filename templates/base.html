@@ -128,5 +128,6 @@ async function loadBaseUser() {
 document.addEventListener('DOMContentLoaded', () => loadBaseUser());
 </script>
 {% block extra_scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='particles-bg.js') }}"></script>
 </body>
 </html>
