@@ -369,6 +369,14 @@ function makePlayerCard(username, amHost, color) {
   return card;
 }
 
+function addGuestToLobby(guestName) {
+  if (!socket || !socket.connected) {
+    toast('Connexion en cours, réessayez dans un instant...', 'inf');
+    return;
+  }
+  socket.emit('invite_to_lobby', { user: guestName });
+}
+
 function makeGhostCard(guestName, amHost) {
   const el = document.createElement('div');
   el.className = 'player-ghost';
@@ -383,7 +391,7 @@ function makeGhostCard(guestName, amHost) {
       </div>
     </div>
     ${amHost
-      ? `<button class="btn-add-ghost" onclick="socket.emit('invite_to_lobby',{user:'${esc(guestName)}'})">+ Ajouter</button>`
+      ? `<button class="btn-add-ghost" onclick="addGuestToLobby('${esc(guestName)}')" style="cursor:pointer">+ Ajouter</button>`
       : '<span style="font-size:.75rem;color:var(--text-muted)">Slot libre</span>'}
   `;
   return el;

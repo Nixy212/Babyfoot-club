@@ -63,26 +63,31 @@ window.ProfileUtils = (() => {
     const navAv = document.getElementById('navAv');
     const navUsername = document.getElementById('navUsername');
     if (!navAv || !user) return;
-    if (navUsername) navUsername.textContent = displayName(user);
 
-    // Réinitialiser l'opacité (était à 0.5 pendant le chargement)
+    // Afficher le nom/nickname
+    if (navUsername) navUsername.textContent = displayName(user);
     navAv.style.opacity = '1';
 
-    // Afficher initiale ou preset immédiatement
-    if (user.avatar_preset) {
+    // Si l'utilisateur a une photo → afficher directement comme img
+    if ((user.has_avatar || user.avatar_url) && user.username) {
+      const src = '/api/avatar/' + encodeURIComponent(user.username) + '?t=' + Date.now();
+      navAv.innerHTML = '';
+      const img = document.createElement('img');
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      img.alt = '';
+      img.src = src;
+      img.onerror = function() {
+        // Fallback propre si l'image échoue
+        navAv.innerHTML = '';
+        navAv.textContent = user.avatar_preset || (user.username || '?')[0].toUpperCase();
+      };
+      navAv.appendChild(img);
+    } else if (user.avatar_preset) {
+      navAv.innerHTML = '';
       navAv.textContent = user.avatar_preset;
     } else {
+      navAv.innerHTML = '';
       navAv.textContent = (user.username || '?')[0].toUpperCase();
-    }
-
-    // Charger la photo en arrière-plan si elle existe (has_avatar ou avatar_url rétrocompat)
-    if ((user.has_avatar || user.avatar_url) && user.username) {
-      const img = document.createElement('img');
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
-      img.alt = '';
-      img.onload = function() { navAv.innerHTML = ''; navAv.style.opacity = '1'; navAv.appendChild(img); };
-      img.onerror = function() { /* garde l'initiale si echec */ };
-      img.src = '/api/avatar/' + encodeURIComponent(user.username);
     }
   }
 

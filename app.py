@@ -183,7 +183,8 @@ pending_invitations = {}      # username -> {from, timestamp}
 connected_users = {}
 
 def get_socket_user():
-    return connected_users.get(request.sid)
+    # Priorité : SID mappé (fiable), sinon session Flask (fallback reconnexion mobile)
+    return connected_users.get(request.sid) or session.get('username')
 
 # ── Rate limiting login (anti brute-force) ────────────────────
 

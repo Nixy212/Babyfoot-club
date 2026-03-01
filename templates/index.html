@@ -1,227 +1,338 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css') }}">
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby-Foot Club</title>
+  <meta name="theme-color" content="#0f111a">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BabyFoot">
   <link rel="apple-touch-icon" href="/static/images/logo.svg">
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" crossorigin="anonymous">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous"></noscript>
+  <title>Baby-Foot Club</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
   <style>
-    body { background: #0a0a0a; color: #f5f5f5; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%;margin:0}
 
-    /* ── Fond type lobby ── */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    @media (max-width: 768px) {
-      body { animation: none !important; }
-      /* removed by design-v3 */
-      /* removed by design-v3 */
-      /* removed by design-v3 */
-      body::before { background-size: 30px 30px; }
-      .hero-bg-animated, /* removed by design-v3 */
+    /* ── Nav ── */
+    .idx-nav{
+      position:fixed;top:0;left:0;right:0;height:64px;z-index:100;
+      display:flex;align-items:center;padding:0 1.25rem;gap:1rem;
+      background:rgba(15,17,26,.85);backdrop-filter:blur(20px) saturate(140%);
+      border-bottom:1px solid rgba(212,136,78,.1);
+    }
+    .idx-brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;flex-shrink:0}
+    .idx-brand img{width:32px;height:32px;filter:drop-shadow(0 0 8px rgba(212,136,78,.45))}
+    .idx-brand span{font-family:var(--ff-head);font-size:.88rem;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--c-t1)}
+    .idx-spacer{flex:1}
+    .idx-nav-links{display:flex;gap:.25rem;align-items:center}
+    .idx-nav-links a{font-family:var(--ff-sub);font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--c-t2);padding:.5rem .875rem;border-radius:8px;transition:color .15s,background .15s;text-decoration:none}
+    .idx-nav-links a:hover{color:var(--c-t1);background:rgba(255,255,255,.05)}
+    .idx-nav-links .btn-nav{background:linear-gradient(135deg,var(--c-accent),var(--c-gold));color:#fff;border-radius:8px;padding:.5rem 1rem;box-shadow:0 2px 12px rgba(212,136,78,.3)}
+    .idx-nav-links .btn-nav:hover{box-shadow:0 4px 20px rgba(212,136,78,.45);background:linear-gradient(135deg,var(--c-accent),var(--c-gold))}
+    /* Avatar nav (si connecté) */
+    .idx-nav-avatar{
+      width:36px;height:36px;border-radius:50%;
+      background:linear-gradient(135deg,var(--c-accent),var(--c-gold));
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--ff-head);font-size:.9rem;color:#fff;
+      overflow:hidden;cursor:pointer;text-decoration:none;
+      border:2px solid rgba(212,136,78,.3);
+    }
+    .idx-nav-avatar img{width:100%;height:100%;object-fit:cover}
+    @media(max-width:500px){
+      .idx-nav-links a:not(.btn-nav){display:none}
     }
 
-    /* Contenu au-dessus du fond */
-    .nav, .hero, .features, section, footer { position: relative; z-index: 1; }
+    /* ── Halos ambiance ── */
+    .halo{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(100px);}
+    .h1{width:70vw;height:70vw;max-width:400px;max-height:400px;
+        background:radial-gradient(circle,rgba(212,136,78,.14),transparent 70%);
+        top:-15vh;right:-15vw;animation:hd1 16s ease-in-out infinite alternate;}
+    .h2{width:55vw;height:55vw;max-width:320px;max-height:320px;
+        background:radial-gradient(circle,rgba(232,184,74,.10),transparent 70%);
+        bottom:-12vh;left:-10vw;animation:hd2 20s ease-in-out infinite alternate;}
+    .h3{width:40vw;height:40vw;max-width:240px;max-height:240px;
+        background:radial-gradient(circle,rgba(180,100,40,.08),transparent 70%);
+        top:40vh;left:20vw;animation:hd1 26s ease-in-out infinite alternate-reverse;}
+    @keyframes hd1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20px,-25px) scale(1.1)}}
+    @keyframes hd2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-15px,20px) scale(1.06)}}
 
-    .nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(205,127,50,0.15); }
-    .nav-inner { display: flex; align-items: center; padding: 0 1.25rem; height: 60px; gap: 1rem; }
-    .nav-brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: inherit; }
-    .nav-brand img { width: 32px; height: 32px; }
-    .brand-text { font-weight: 700; font-size: 1rem; }
+    /* ── Hero ── */
+    .idx-hero{
+      position:relative;z-index:2;
+      min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:100px 1.5rem 5rem;
+    }
+    .idx-badge{
+      display:inline-flex;align-items:center;gap:.5rem;
+      padding:5px 16px;border-radius:99px;
+      background:rgba(212,136,78,.08);border:1px solid rgba(212,136,78,.22);
+      font-family:var(--ff-sub);font-size:.72rem;font-weight:700;
+      letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent-h);
+      margin-bottom:1.75rem;
+    }
+    .idx-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--c-accent-h);animation:blink 2s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+    .idx-h1{
+      font-family:var(--ff-head);
+      font-size:clamp(2.8rem,11vw,5rem);
+      font-weight:400;letter-spacing:.04em;text-transform:uppercase;
+      color:var(--c-t1);line-height:1.05;margin:0 0 1.25rem;
+    }
+    .idx-h1 em{
+      font-style:normal;
+      background:linear-gradient(135deg,var(--c-accent) 0%,var(--c-gold) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .idx-desc{
+      font-size:1rem;color:var(--c-t2);max-width:380px;
+      line-height:1.7;margin:0 auto 2.5rem;
+    }
+    .idx-cta{display:flex;flex-direction:column;align-items:center;gap:1rem;width:100%;max-width:300px;margin:0 auto 3.5rem}
+    .btn-cta-main{
+      width:100%;padding:1rem 1.5rem;
+      background:linear-gradient(135deg,var(--c-accent),var(--c-gold));
+      border:none;border-radius:14px;color:#fff;
+      font-family:var(--ff-sub);font-size:.95rem;font-weight:700;
+      letter-spacing:.05em;text-transform:uppercase;cursor:pointer;
+      text-decoration:none;display:flex;align-items:center;justify-content:center;gap:.5rem;
+      box-shadow:0 4px 28px rgba(212,136,78,.38);
+      transition:box-shadow .2s,transform .2s;
+    }
+    .btn-cta-main:hover{box-shadow:0 6px 36px rgba(212,136,78,.55);transform:translateY(-2px)}
+    .btn-cta-sec{
+      width:100%;padding:.85rem 1.5rem;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.1);border-radius:14px;
+      color:var(--c-t1);font-family:var(--ff-sub);font-size:.9rem;font-weight:700;
+      letter-spacing:.05em;text-transform:uppercase;
+      text-decoration:none;display:flex;align-items:center;justify-content:center;
+      transition:background .2s,border-color .2s;
+    }
+    .btn-cta-sec:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18)}
+
+    /* Stats */
+    .idx-stats{
+      display:flex;align-items:center;gap:2rem;
+      padding:1.25rem 2rem;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:16px;
+    }
+    .idx-stat-val{font-family:var(--ff-head);font-size:1.6rem;color:var(--c-t1);line-height:1}
+    .idx-stat-lbl{font-size:.72rem;color:var(--c-t3);text-transform:uppercase;letter-spacing:.06em;margin-top:.2rem}
+    .idx-stat-div{width:1px;height:36px;background:rgba(255,255,255,.08)}
+
+    /* ── Features ── */
+    .idx-features{
+      position:relative;z-index:2;
+      padding:4rem 1.5rem 5rem;
+      text-align:center;
+    }
+    .idx-feat-title{
+      font-family:var(--ff-head);font-size:clamp(1.5rem,6vw,2.2rem);
+      font-weight:400;letter-spacing:.04em;text-transform:uppercase;
+      color:var(--c-t1);margin:0 0 .5rem;
+    }
+    .idx-feat-sub{font-size:.9rem;color:var(--c-t2);margin:0 0 2.5rem}
+    .idx-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:1.25rem;max-width:900px;margin:0 auto;
+    }
+    .idx-card{
+      background:rgba(21,24,32,.8);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:16px;padding:1.75rem 1.5rem;
+      text-align:left;
+      transition:border-color .2s,transform .2s;
+    }
+    .idx-card:hover{border-color:rgba(212,136,78,.25);transform:translateY(-3px)}
+    .idx-card-icon{font-size:1.75rem;margin-bottom:1rem}
+    .idx-card h3{font-family:var(--ff-sub);font-size:.95rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--c-t1);margin:0 0 .6rem}
+    .idx-card p{font-size:.875rem;color:var(--c-t2);line-height:1.6;margin:0}
+
+    /* ── Footer CTA ── */
+    .idx-footer{
+      position:relative;z-index:2;
+      padding:3rem 1.5rem 5rem;text-align:center;
+    }
+    .idx-footer h2{font-family:var(--ff-head);font-size:1.8rem;font-weight:400;letter-spacing:.04em;text-transform:uppercase;color:var(--c-t1);margin:0 0 .5rem}
+    .idx-footer p{font-size:.9rem;color:var(--c-t2);margin:0 0 2rem}
+    .idx-footer-btns{display:flex;flex-direction:column;gap:.875rem;max-width:280px;margin:0 auto}
+
+    /* Ligne déco */
+    .idx-divider{
+      position:relative;z-index:2;
+      height:1px;background:linear-gradient(90deg,transparent,rgba(212,136,78,.18),rgba(232,184,74,.18),transparent);
+      margin:0 1.5rem;
+    }
   </style>
 </head>
-<body class="no-fade">
+<body>
+<div class="halo h1"></div>
+<div class="halo h2"></div>
+<div class="halo h3"></div>
 
-<div class="bg-orb bg-orb-1" aria-hidden="true"></div>
-<div class="bg-orb bg-orb-2" aria-hidden="true"></div>
-<div class="bg-orb bg-orb-3" aria-hidden="true"></div>
-
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-brand">
-      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
-      <span class="brand-text">Baby-Foot Club</span>
-    </a>
-    <div class="nav-sep"></div>
-    <div class="nav-links">
-      <a href="/" class="nav-link active">Accueil</a>
-      <a href="#features" class="nav-link">Fonctionnalités</a>
-      <a href="/top" class="nav-link">Classement</a>
-      <a href="/scores" class="nav-link">Scores</a>
-    </div>
-    <div class="nav-right">
-      <a href="/login" class="btn btn-primary" style="font-size:0.875rem;padding:8px 18px">Se connecter</a>
-      <button class="burger" id="burger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
-    </div>
+<!-- Nav -->
+<nav class="idx-nav">
+  <a href="/" class="idx-brand">
+    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
+    <span>Baby-Foot Club</span>
+  </a>
+  <div class="idx-spacer"></div>
+  <div class="idx-nav-links" id="navLinks">
+    <a href="/login">Se connecter</a>
+    <a href="/register" class="btn-nav">S'inscrire</a>
   </div>
+  <!-- Avatar si connecté (caché par défaut, affiché par JS) -->
+  <a href="/dashboard" class="idx-nav-avatar" id="navAvatar" style="display:none">
+    <span id="navAvatarInner">?</span>
+  </a>
 </nav>
 
-<div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-menu-close" onclick="toggleMenu()">✕</button>
-  <a href="/">Accueil</a>
-  <a href="#features" onclick="toggleMenu()">Fonctionnalités</a>
-  <a href="/top"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M6 5h12v8a6 6 0 0 1-12 0z"/></svg> Classement</a>
-  <a href="/scores"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> Scores</a>
-  <a href="/login" style="background:rgba(205,127,50,0.15);border-color:rgba(205,127,50,0.4);color:var(--bronze);font-weight:700"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg> Se connecter</a>
-  <a href="/register"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Créer un compte</a>
-  <button id="pwa-install-trigger" onclick="triggerPwaInstall()" style="display:none;width:100%;text-align:left;background:linear-gradient(135deg,rgba(205,127,50,0.15),rgba(205,127,50,0.05));border:1px solid rgba(205,127,50,0.4);color:#cd7f32;font-weight:700;font-size:1rem;padding:0.9rem 1.25rem;border-radius:10px;cursor:pointer;margin-top:0.5rem;font-family:inherit;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 13h6M12 10v6"/></svg> Installer l'app</button>
-</div>
-
-<div class="hero">
-  <div class="hero-bg-animated">
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
-    <div class="glow-orb orb-3"></div>
+<!-- Hero -->
+<section class="idx-hero">
+  <div class="idx-badge">
+    <span class="dot"></span>
+    Club • Baby-Foot
   </div>
-  <div class="hero-inner">
-    <div class="hero-eyebrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 6.3 2.3L12 8 5.7 4.3A10 10 0 0 1 12 2z"/><path d="M21.7 6.3A10 10 0 0 1 22 12a10 10 0 0 1-3.3 7.4L16 12z"/><path d="M5.7 4.3 8 12l-5.7 3.7A10 10 0 0 1 2 12c0-2.2.7-4.2 1.9-5.9z"/><path d="m8 12 4 8 4-8"/></svg>&nbsp;Le baby-foot connecté</div>
-    <h1 class="hero-title">
-      Jouez.<br>
-      <em class="gradient-shine" style="padding-bottom:0.15em">Progressez.</em>
-    </h1>
-    <p class="hero-body">
-      Réservez votre créneau, suivez vos scores en direct et défiez vos camarades.
-      Simple, accessible depuis votre téléphone.
-    </p>
-    <div class="hero-cta">
-      <a href="/register" class="btn btn-primary btn-lg btn-shine">
-        <span>Créer un compte</span>
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-          <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </a>
-      <a href="#features" class="btn btn-secondary btn-lg"><span>Comment ça marche ?</span></a>
+  <h1 class="idx-h1">Jouez.<br><em>Progressez.</em><br>Dominez.</h1>
+  <p class="idx-desc">
+    Réservez votre créneau, créez un lobby, invitez vos adversaires — 
+    et suivez chaque but en temps réel depuis votre téléphone.
+  </p>
+  <div class="idx-cta">
+    <a href="/register" class="btn-cta-main">
+      <i class="fas fa-gamepad"></i> Créer un compte
+    </a>
+    <a href="/login" class="btn-cta-sec">
+      Se connecter
+    </a>
+  </div>
+  <div class="idx-stats">
+    <div class="idx-stat">
+      <div class="idx-stat-val" id="sGames">—</div>
+      <div class="idx-stat-lbl">Parties</div>
     </div>
-    <div class="hero-stats">
-      <div class="stat-box">
-        <div class="stat-value" id="stat-parties">—</div>
-        <div class="stat-label">Parties jouées</div>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-box">
-        <div class="stat-value" id="stat-joueurs">—</div>
-        <div class="stat-label">Joueurs actifs</div>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-box">
-        <div class="stat-value" id="stat-temps">—</div>
-        <div class="stat-label">Temps moyen</div>
-      </div>
+    <div class="idx-stat-div"></div>
+    <div class="idx-stat">
+      <div class="idx-stat-val" id="sPlayers">—</div>
+      <div class="idx-stat-lbl">Joueurs</div>
     </div>
-  </div>
-<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
-</div>
-
-<section class="features" id="features">
-  <div class="container" style="text-align:center;margin-bottom:var(--space-xl)">
-    <div class="section-eyebrow">Fonctionnalités</div>
-    <h2 class="section-title">Tout ce qu'il faut pour bien jouer</h2>
-    <p class="section-sub">En 3 étapes : réservez un créneau, formez vos équipes, et c'est parti !</p>
-  </div>
-  <div class="container">
-    <div class="feat-grid">
-      <div class="feat-cell">
-        <div class="feat-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="22" r="13"/><path d="M20 15v7l4 3"/><path d="M13 4h14"/><path d="M20 4v5"/></svg></div>
-        <h3>1. Réservez votre créneau</h3>
-        <p>Choisissez simplement votre heure et votre durée (5, 10 ou 15 min). Le baby-foot est bloqué pour vous — personne ne peut vous prendre votre créneau.</p>
-      </div>
-      <div class="feat-cell">
-        <div class="feat-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="30" height="18" rx="3"/><path d="M20 10v18"/><circle cx="12" cy="19" r="4"/><path d="M28 15h4M28 19h4M28 23h4" stroke-width="1.5"/></svg></div>
-        <h3>Scores en direct</h3>
-        <p>Chaque but s'affiche instantanément sur tous les appareils. Vos amis peuvent suivre la partie depuis leur téléphone, en temps réel.</p>
-      </div>
-      <div class="feat-cell">
-        <div class="feat-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="32" height="22" rx="3"/><line x1="13" y1="8" x2="13" y2="30"/><line x1="27" y1="8" x2="27" y2="30"/><circle cx="20" cy="19" r="3"/><path d="M28 14c0-4-6-6-8-2"/></svg></div>
-        <h3>Déverrouillage automatique</h3>
-        <p>La balle se déverrouille automatiquement au début de votre créneau via l'Arduino. Pas de clé, pas de code — juste votre téléphone.</p>
-      </div>
-      <div class="feat-cell">
-        <div class="feat-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="32" x2="34" y2="32"/><line x1="6" y1="8" x2="6" y2="32"/><polyline points="10,26 16,18 22,22 30,10"/><circle cx="30" cy="10" r="3"/></svg></div>
-        <h3>Suivez votre progression</h3>
-        <p>Après chaque partie, vos stats se mettent à jour. Buts marqués, victoires, moyenne de buts — tout est tracé pour vous.</p>
-      </div>
-      <div class="feat-cell">
-        <div class="feat-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="18" width="8" height="12" rx="1"/><rect x="16" y="10" width="8" height="20" rx="1"/><rect x="24" y="22" width="8" height="8" rx="1"/><path d="M6 30h28M6 34h28"/></svg></div>
-        <h3>Classement du club</h3>
-        <p>Voyez où vous en êtes parmi tous les joueurs. Le classement est mis à jour en temps réel après chaque partie — montrez qui domine le classement.</p>
-      </div>
-      <div class="feat-cell">
-        <div class="feat-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="12" r="4"/><path d="M4 28c0-5 3-8 6-8s6 3 6 8"/><circle cx="30" cy="12" r="4"/><path d="M24 28c0-5 3-8 6-8s6 3 6 8"/><line x1="20" y1="19" x2="20" y2="21"/><circle cx="20" cy="20" r="2.5"/></svg></div>
-        <h3>1v1 ou 2v2</h3>
-        <p>Jouez en duel ou en équipe selon vos envies. Invitez vos partenaires depuis le lobby et c'est parti.</p>
-      </div>
+    <div class="idx-stat-div"></div>
+    <div class="idx-stat">
+      <div class="idx-stat-val">15<span style="font-size:.8rem">min</span></div>
+      <div class="idx-stat-lbl">Durée moy.</div>
     </div>
   </div>
 </section>
 
-<section style="padding:4rem 0;text-align:center">
-  <div class="container">
-    <h2 style="font-size:2rem;font-weight:800;margin-bottom:1rem;color:var(--text-primary)">Vous êtes prêt à jouer ?</h2>
-    <p style="color:var(--text-tertiary);margin-bottom:0.5rem;font-size:1.1rem">Créez votre compte pour accéder à toutes les fonctionnalités.</p>
-    <p style="color:var(--text-tertiary);margin-bottom:2rem;font-size:0.9rem">Déjà un compte ? Connectez-vous ci-dessous.</p>
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-      <a href="/register" class="btn btn-primary btn-lg btn-shine"><span>Créer un compte</span></a>
-      <a href="/login" class="btn btn-secondary btn-lg"><span>Se connecter</span></a>
+<div class="idx-divider"></div>
+
+<!-- Features -->
+<section class="idx-features">
+  <h2 class="idx-feat-title">Comment ça marche ?</h2>
+  <p class="idx-feat-sub">En 3 étapes simples depuis votre téléphone</p>
+  <div class="idx-grid">
+    <div class="idx-card">
+      <div class="idx-card-icon">📅</div>
+      <h3>1. Réservez</h3>
+      <p>Choisissez votre créneau. Le baby-foot se déverrouille automatiquement à l'heure choisie.</p>
+    </div>
+    <div class="idx-card">
+      <div class="idx-card-icon">🎮</div>
+      <h3>2. Lobby</h3>
+      <p>Créez un lobby, invitez vos adversaires. Jouez en 1v1 ou en 2v2 avec des vrais joueurs ou des guests.</p>
+    </div>
+    <div class="idx-card">
+      <div class="idx-card-icon">⚡</div>
+      <h3>3. Scores live</h3>
+      <p>Chaque but s'affiche en temps réel sur tous les téléphones. Stats mises à jour après chaque partie.</p>
+    </div>
+    <div class="idx-card">
+      <div class="idx-card-icon">🏆</div>
+      <h3>Classement</h3>
+      <p>Suivez votre progression et comparez-vous à tous les joueurs du club en temps réel.</p>
     </div>
   </div>
 </section>
 
-<footer>© 2026 Baby-Foot Club — Tous droits réservés</footer>
+<div class="idx-divider"></div>
+
+<!-- Footer CTA -->
+<section class="idx-footer">
+  <h2>Prêt à jouer ?</h2>
+  <p>Créez votre compte gratuitement et rejoignez le club.</p>
+  <div class="idx-footer-btns">
+    <a href="/register" class="btn-cta-main"><i class="fas fa-user-plus"></i> Créer un compte</a>
+    <a href="/login" class="btn-cta-sec">Déjà un compte ? Se connecter</a>
+  </div>
+</section>
 
 <script>
-function toggleMenu() {
-  const isOpen = document.getElementById('mobileMenu').classList.contains('open');
-  document.getElementById('burger').classList.toggle('open');
-  document.getElementById('mobileMenu').classList.toggle('open');
-  const overlay = document.getElementById('menuOverlay');
-  if (overlay) overlay.classList.toggle('open');
-  document.body.style.overflow = !isOpen ? 'hidden' : '';
+async function initNav() {
+  try {
+    const r = await fetch('/current_user');
+    if (!r.ok) return;
+    const user = await r.json();
+    if (!user || !user.username) return;
+
+    // Utilisateur connecté : adapter la nav
+    const links = document.getElementById('navLinks');
+    links.innerHTML = `<a href="/dashboard" class="btn-nav">Mon espace</a>`;
+
+    // Avatar
+    const av = document.getElementById('navAvatar');
+    const inner = document.getElementById('navAvatarInner');
+    av.style.display = 'flex';
+    if (user.has_avatar || user.avatar_url) {
+      const img = document.createElement('img');
+      img.src = '/api/avatar/' + encodeURIComponent(user.username);
+      img.onerror = () => { inner.textContent = (user.username[0] || '?').toUpperCase(); };
+      inner.innerHTML = '';
+      inner.appendChild(img);
+    } else if (user.avatar_preset) {
+      inner.textContent = user.avatar_preset;
+    } else {
+      inner.textContent = (user.username[0] || '?').toUpperCase();
+    }
+
+    // Adapter le CTA du hero
+    const cta = document.querySelector('.idx-cta');
+    if (cta) {
+      cta.innerHTML = `
+        <a href="/dashboard" class="btn-cta-main">
+          <i class="fas fa-gamepad"></i> Aller au dashboard
+        </a>
+        <a href="/lobby" class="btn-cta-sec">Voir le lobby</a>
+      `;
+    }
+  } catch(e) {}
 }
 
-async function loadPublicStats() {
-  const cached = sessionStorage.getItem('public_stats');
-  if (cached) { try { applyStats(JSON.parse(cached)); return; } catch(e) {} }
+async function loadStats() {
   try {
-    const res = await fetch('/api/public_stats');
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    sessionStorage.setItem('public_stats', JSON.stringify(data));
-    applyStats(data);
+    const d = await fetch('/api/public_stats').then(r=>r.json());
+    const g = d.total_games ?? 0;
+    document.getElementById('sGames').textContent = g > 0 ? g + '+' : '0';
+    document.getElementById('sPlayers').textContent = d.active_players ?? '0';
   } catch(e) {
-    document.getElementById('stat-parties').textContent = '0';
-    document.getElementById('stat-joueurs').textContent = '0';
-    document.getElementById('stat-temps').textContent = '15min';
+    document.getElementById('sGames').textContent = '0';
+    document.getElementById('sPlayers').textContent = '0';
   }
 }
-function applyStats(data) {
-  const g = data.total_games ?? 0;
-  document.getElementById('stat-parties').textContent = g > 0 ? g + '+' : '0';
-  document.getElementById('stat-joueurs').textContent = data.active_players ?? '0';
-  document.getElementById('stat-temps').textContent = '15min';
-}
-loadPublicStats();
-</script>
 
-<script>
-if (window.matchMedia('(min-width: 769px) and (pointer: fine)').matches) {
-  ['animations.js', 'icons.js', 'global-animations.js'].forEach(function(src) {
-    var s = document.createElement('script'); s.src = '/static/' + src; s.async = true; document.body.appendChild(s);
-  });
-}
+initNav();
+loadStats();
 </script>
+<script src="/static/particles-bg.js" defer></script>
 <script src="/static/pwa.js" defer></script>
 </body>
 </html>

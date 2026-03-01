@@ -1,136 +1,107 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css') }}">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f111a">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BabyFoot">
   <link rel="apple-touch-icon" href="/static/images/logo.svg">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0a0a0a">
   <title>Inscription — Baby-Foot Club</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css') }}">
   <style>
-    
-    .auth-wrap{width:100%;max-width:420px}
-    .auth-box{background:var(--bg-secondary);border:1px solid var(--border-normal);border-radius:var(--radius-lg);padding:2.5rem 2rem}
-    .auth-logo{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem}
-    .auth-logo img{width:40px;height:40px}
-    .auth-logo span{font-size:1.25rem;font-weight:700}
-    .auth-title{font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.25rem}
-    .auth-sub{font-size:.9375rem;color:var(--text-secondary);margin-bottom:1.5rem}
-    .field{margin-bottom:1rem}
-    .label{display:block;font-size:.875rem;font-weight:600;color:var(--text-secondary);margin-bottom:.375rem}
-    input[type=text],input[type=password]{width:100%;padding:.625rem 1rem;background:var(--bg-elevated);border:1px solid var(--border-normal);border-radius:var(--radius-md);color:var(--text-primary);font-size:1rem;outline:0;transition:border-color .15s;-webkit-appearance:none}
-    input:focus{border-color:var(--border-accent);box-shadow:0 0 0 3px rgba(205,127,50,.12)}
-    input::placeholder{color:var(--text-tertiary)}
-    .auth-submit{width:100%;padding:.875rem;background:linear-gradient(135deg,#cd7f32,#b8732f);color:#fff;border:none;border-radius:var(--radius-md);font-size:1rem;font-weight:700;cursor:pointer;margin-top:.5rem;transition:opacity .15s,transform .15s;-webkit-appearance:none}
-    .auth-submit:active{opacity:.85;transform:scale(.98)}
-    .auth-submit:disabled{opacity:.6;cursor:not-allowed}
-    .alert{display:none;padding:.75rem 1rem;border-radius:var(--radius-md);font-size:.9375rem;margin-bottom:1rem;font-weight:500}
-    .alert.error{background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.25)}
-    .alert.success{background:rgba(46,204,113,.12);color:#2ecc71;border:1px solid rgba(46,204,113,.25)}
-    .auth-sep{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;font-size:.8125rem;color:var(--text-tertiary)}
-    .auth-sep::before,.auth-sep::after{content:'';flex:1;height:1px;background:var(--border-normal)}
-    .auth-switch{text-align:center;font-size:.9375rem;color:var(--text-secondary)}
-    .auth-switch a{color:var(--bronze);font-weight:600}
-    .spin{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+    html,body{height:100%;margin:0}
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;box-sizing:border-box;background:#0f111a;}
+    .halo{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(80px);}
+    .h1{width:55vw;height:55vw;max-width:320px;max-height:320px;background:radial-gradient(circle,rgba(212,136,78,.18),transparent 70%);top:-10vh;right:-10vw;animation:haloDrift1 14s ease-in-out infinite alternate;}
+    .h2{width:45vw;height:45vw;max-width:260px;max-height:260px;background:radial-gradient(circle,rgba(232,184,74,.14),transparent 70%);bottom:-8vh;left:-8vw;animation:haloDrift2 18s ease-in-out infinite alternate;}
+    .h3{width:35vw;height:35vw;max-width:200px;max-height:200px;background:radial-gradient(circle,rgba(212,136,78,.09),transparent 70%);top:50vh;left:30vw;animation:haloDrift1 22s ease-in-out infinite alternate-reverse;}
+    @keyframes haloDrift1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(15px,-20px) scale(1.08)}}
+    @keyframes haloDrift2{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-10px,18px) scale(1.05)}}
+    .auth-card{position:relative;z-index:2;width:100%;max-width:390px;background:rgba(18,21,30,.92);backdrop-filter:blur(32px) saturate(140%);border:1px solid rgba(212,136,78,.2);border-radius:24px;padding:2.5rem 2rem 2rem;box-shadow:0 0 0 1px rgba(212,136,78,.06),0 8px 48px rgba(0,0,0,.6);}
+    .auth-card::before{content:'';display:block;height:2px;width:60%;margin:0 auto 2rem;background:linear-gradient(90deg,transparent,rgba(212,136,78,.6),rgba(232,184,74,.6),transparent);border-radius:2px;}
+    .auth-brand{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:2rem;}
+    .auth-brand img{width:36px;height:36px;filter:drop-shadow(0 0 10px rgba(212,136,78,.55));}
+    .auth-brand span{font-family:var(--ff-head);font-size:.88rem;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--c-t2);}
+    .auth-title{font-family:var(--ff-head);font-size:1.9rem;font-weight:400;letter-spacing:.05em;text-transform:uppercase;color:var(--c-t1);margin:0 0 .35rem;text-align:center;}
+    .auth-sub{font-size:.875rem;color:var(--c-t3);margin:0 0 2rem;text-align:center;}
+    .f{margin-bottom:1.1rem}
+    .f label{display:block;font-family:var(--ff-sub);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-t2);margin-bottom:.45rem;}
+    .f input{width:100%;padding:.85rem 1rem;background:rgba(10,12,18,.8);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--c-t1);font-size:.975rem;outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box;-webkit-appearance:none;}
+    .f input:focus{border-color:rgba(212,136,78,.5);box-shadow:0 0 0 3px rgba(212,136,78,.1);}
+    .f input::placeholder{color:var(--c-t3)}
+    .f .hint{font-size:.72rem;color:var(--c-t3);margin-top:.35rem;}
+    .auth-btn{width:100%;padding:.95rem;margin-top:.5rem;background:linear-gradient(135deg,var(--c-accent) 0%,var(--c-gold) 100%);border:none;border-radius:12px;color:#fff;font-family:var(--ff-sub);font-size:.92rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 24px rgba(212,136,78,.35);transition:box-shadow .2s,transform .15s;}
+    .auth-btn:hover{box-shadow:0 6px 32px rgba(212,136,78,.5);transform:translateY(-1px)}
+    .auth-btn:active{opacity:.88;transform:scale(.98)}
+    .auth-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+    .auth-alert{display:none;padding:.7rem 1rem;border-radius:10px;font-size:.875rem;font-weight:600;margin-bottom:1.1rem;background:rgba(224,85,69,.1);color:var(--c-red);border:1px solid rgba(224,85,69,.22);}
+    .auth-sep{display:flex;align-items:center;gap:.75rem;margin:1.4rem 0;font-size:.78rem;color:var(--c-t3);}
+    .auth-sep::before,.auth-sep::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+    .auth-switch{text-align:center;font-size:.875rem;color:var(--c-t2)}
+    .auth-switch a{color:var(--c-accent-h);font-weight:700;text-decoration:none}
+    .auth-switch a:hover{text-decoration:underline}
+    .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .hint{font-size:.8125rem;color:var(--text-tertiary);margin-top:.375rem}
-  
-    /* ── Fond type lobby : grille + orbes ── */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    /* removed by design-v3 */
-    @media (max-width: 768px) {
-      /* removed by design-v3 */
-      /* removed by design-v3 */
-      /* removed by design-v3 */
-    }
-
   </style>
 </head>
-<body class="no-fade">
-<div class="bg-orb bg-orb-1" aria-hidden="true"></div>
-<div class="bg-orb bg-orb-2" aria-hidden="true"></div>
-<div class="bg-orb bg-orb-3" aria-hidden="true"></div>
+<body>
+<div class="halo h1"></div>
+<div class="halo h2"></div>
+<div class="halo h3"></div>
 
-
-<div class="auth-wrap" style="position:relative;z-index:1">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
-      <span>Baby-Foot Club</span>
-    </div>
-    <h1 class="auth-title">Créer un compte</h1>
-    <p class="auth-sub">Réservez, jouez, progressez</p>
-
-    <div class="auth-form">
-      <div id="alert" class="alert"></div>
-      <div class="field">
-        <label class="label" for="username">Nom d'utilisateur</label>
-        <input type="text" id="username" placeholder="pseudo_unique"
-               autocomplete="username" autocorrect="off" autocapitalize="none"
-               spellcheck="false" inputmode="text" enterkeyhint="next">
-        <div class="hint">3–20 caractères · lettres, chiffres, - et _ · Ce pseudo sera affiché dans le classement</div>
-      </div>
-      <div class="field">
-        <label class="label" for="password">Mot de passe</label>
-        <input type="password" id="password" placeholder="Minimum 6 caractères"
-               autocomplete="new-password" enterkeyhint="go">
-      </div>
-      <button class="auth-submit" id="regBtn">Créer mon compte</button>
-    </div>
-
-    <div class="auth-sep">ou</div>
-    <div class="auth-switch">Déjà un compte ? <a href="/login">Se connecter</a></div>
-    
+<div class="auth-card">
+  <div class="auth-brand">
+    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
+    <span>Baby-Foot Club</span>
   </div>
+  <h1 class="auth-title">Créer un compte</h1>
+  <p class="auth-sub">Réservez, jouez, progressez</p>
+
+  <div id="alert" class="auth-alert"></div>
+
+  <div class="f">
+    <label for="username">Nom d'utilisateur</label>
+    <input type="text" id="username" placeholder="pseudo_unique"
+      autocomplete="username" autocorrect="off" autocapitalize="none"
+      spellcheck="false" inputmode="text" enterkeyhint="next">
+    <div class="hint">3–20 caractères · lettres, chiffres, - et _</div>
+  </div>
+  <div class="f">
+    <label for="password">Mot de passe</label>
+    <input type="password" id="password" placeholder="Minimum 6 caractères"
+      autocomplete="new-password" enterkeyhint="go">
+  </div>
+
+  <button class="auth-btn" id="regBtn">Créer mon compte</button>
+
+  <div class="auth-sep">ou</div>
+  <div class="auth-switch">Déjà un compte ? <a href="/login">Se connecter</a></div>
 </div>
 
 <script>
-  function showAlert(msg, type) {
-    const el = document.getElementById('alert');
-    el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+  function showErr(msg){const e=document.getElementById('alert');e.textContent=msg;e.style.display='block';}
+  async function register(){
+    const u=document.getElementById('username').value.trim();
+    const p=document.getElementById('password').value;
+    const btn=document.getElementById('regBtn');
+    if(!u||!p){showErr('Veuillez remplir tous les champs');return;}
+    if(p.length<6){showErr('Mot de passe trop court (min 6 caractères)');return;}
+    btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+    try{
+      const d=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})}).then(r=>r.json());
+      if(d.success){window.location.replace('/dashboard');}
+      else{showErr(d.message||"Erreur d'inscription");btn.disabled=false;btn.textContent='Créer mon compte';}
+    }catch(e){showErr('Erreur réseau — réessayez');btn.disabled=false;btn.textContent='Créer mon compte';}
   }
-  async function register() {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value;
-    const btn = document.getElementById('regBtn');
-    if (!u || !p) { showAlert('Veuillez remplir tous les champs', 'error'); return; }
-    if (p.length < 6) { showAlert('Mot de passe trop court (min 6)', 'error'); return; }
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>';
-    try {
-      const r = await fetch('/api/register', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username: u, password: p})
-      });
-      const d = await r.json();
-      if (d.success) {
-        window.location.replace('/dashboard');
-      } else {
-        showAlert(d.message || "Erreur d'inscription", 'error');
-        btn.disabled = false; btn.textContent = 'Créer mon compte';
-      }
-    } catch(e) {
-      showAlert('Erreur réseau — réessayez', 'error');
-      btn.disabled = false; btn.textContent = 'Créer mon compte';
-    }
-  }
-  document.getElementById('regBtn').addEventListener('click', register);
-  document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
-  document.getElementById('username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
+  document.getElementById('regBtn').addEventListener('click',register);
+  document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')register();});
+  document.getElementById('username').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('password').focus();});
 </script>
-
-  <script src="/static/pwa.js" defer></script>
+<script src="/static/particles-bg.js" defer></script>
+<script src="/static/pwa.js" defer></script>
 </body>
 </html>
