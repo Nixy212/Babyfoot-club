@@ -199,3 +199,21 @@ Python 3.11.9
 
 ### Nota bene — L'hôte dans team1
 L'hôte est bien ajouté à `team1` côté serveur lors de la création du lobby (`reserve_and_lobby` et `handle_create_lobby`). Ce bug était un symptôme du Bug 1 : si le lobby n'était jamais créé (socket bloqué), `lobby.html` ne trouvait pas l'hôte dans le lobby et redirectait vers `/dashboard`.
+
+### Réécriture complète lobby.html (session 2025-03-01 v2)
+
+Le fichier `templates/lobby.html` a été entièrement réécrit.
+
+**Problèmes racines identifiés :**
+1. Logique d'affichage fragmentée en plusieurs fonctions avec états partagés → bugs de timing
+2. `renderTeam()` avec `return` prématuré empêchait l'affichage des ghost slots
+3. Calcul de l'offset des guests cassé quand `team1` était vide
+4. Variables globales (`allUsers`, `lobbyData`) non synchronisées entre appels async
+
+**Architecture nouvelle :**
+- Une seule fonction `render()` qui reconstruit tout l'UI depuis `LOBBY` (source de vérité unique)
+- `buildTeam(id, players, ghosts, addVirtualHost, color)` : logique claire et déterministe
+  - `hostVirtual` : si `team1=[]` mais hôte existe → affiche l'hôte + 1 ghost
+  - `free = GUESTS.filter(g => !placed)` puis `ghostsT1 = free.slice(0, t1Ghosts)`, `ghostsT2 = free.slice(t1Ghosts, ...)` → garantit 0 doublon
+- Nommage explicite : `ME`, `LOBBY`, `GUESTS`, `IS_ADMIN`
+- `socket.on('lobby_update')` → `LOBBY = data; render();` sans aucune logique supplémentaire
