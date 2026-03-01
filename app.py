@@ -3099,7 +3099,7 @@ def _remove_player_from_lobby(username):
             active_lobby = {
                 "host": None, "invited": [], "accepted": [],
                 "declined": [], "team1": [], "team2": [],
-                "active": False, "join_requests": {}
+                "active": False, "join_requests": {}, "team_pref": {}
             }
             result['action'] = 'cancelled'
             return result
@@ -3208,21 +3208,35 @@ def handle_invite_to_lobby(data):
     pending_invitations[invited_user] = {'from': active_lobby['host'], 'timestamp': _time.time()}
     if is_guest_player(invited_user):
         active_lobby['accepted'].append(invited_user)
-        # Placer dans l'équipe la moins remplie qui a encore de la place
+        # Placer dans l'équipe demandée (si précisée), sinon la moins remplie
+        target_team = data.get('team', '')
         t1, t2 = len(active_lobby['team1']), len(active_lobby['team2'])
-        if t1 <= t2 and t1 < 2:
+        placed = False
+        if target_team == 'team1' and t1 < 2:
             active_lobby['team1'].append(invited_user)
-        elif t2 < 2:
+            placed = True
+        elif target_team == 'team2' and t2 < 2:
             active_lobby['team2'].append(invited_user)
-        elif t1 < 2:
-            active_lobby['team1'].append(invited_user)
-        else:
-            active_lobby['accepted'].remove(invited_user)
-            emit('error', {'message': 'Equipes completes'})
-            return
+            placed = True
+        if not placed:
+            # Fallback : équipe la moins remplie avec de la place
+            if t1 <= t2 and t1 < 2:
+                active_lobby['team1'].append(invited_user)
+            elif t2 < 2:
+                active_lobby['team2'].append(invited_user)
+            elif t1 < 2:
+                active_lobby['team1'].append(invited_user)
+            else:
+                active_lobby['accepted'].remove(invited_user)
+                emit('error', {'message': 'Equipes completes'})
+                return
     else:
         active_lobby['invited'].append(invited_user)
-        socketio.emit('lobby_invitation', {'from': active_lobby['host'], 'to': invited_user}, namespace='/')
+        # Stocker la préférence d'équipe de l'hôte pour ce joueur
+        target_team = data.get('team', '')
+        if target_team in ('team1', 'team2'):
+            active_lobby.setdefault('team_pref', {})[invited_user] = target_team
+        socketio.emit('lobby_invitation', {'from': active_lobby['host'], 'to': invited_user, 'team': target_team}, namespace='/')
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 @socketio.on('leave_lobby')
@@ -3256,24 +3270,35 @@ def handle_accept_lobby():
         if username in active_lobby.get('team1', []) or username in active_lobby.get('team2', []):
             return
         if username not in active_lobby.get('invited', []):
-            # Peut venir d'une join_request acceptée → autoriser si dans accepted
             if username not in active_lobby.get('accepted', []):
                 return
-        # Retirer de invited si présent
         if username in active_lobby.get('invited', []):
             active_lobby['invited'].remove(username)
         if username not in active_lobby['accepted']:
             active_lobby['accepted'].append(username)
         t1, t2 = len(active_lobby['team1']), len(active_lobby['team2'])
-        if t1 < 2 and t1 <= t2:
+        # Respecter la préférence d'équipe de l'hôte si possible
+        pref = active_lobby.get('team_pref', {}).pop(username, '')
+        placed = False
+        if pref == 'team1' and t1 < 2:
             active_lobby['team1'].append(username)
-        elif t2 < 2:
+            placed = True
+        elif pref == 'team2' and t2 < 2:
             active_lobby['team2'].append(username)
-        else:
-            emit('error', {'message': 'Equipes completes'})
-            active_lobby['accepted'].remove(username)
-            active_lobby['invited'].append(username)
-            return
+            placed = True
+        if not placed:
+            # Fallback : équipe la moins remplie
+            if t1 <= t2 and t1 < 2:
+                active_lobby['team1'].append(username)
+            elif t2 < 2:
+                active_lobby['team2'].append(username)
+            elif t1 < 2:
+                active_lobby['team1'].append(username)
+            else:
+                emit('error', {'message': 'Equipes completes'})
+                active_lobby['accepted'].remove(username)
+                active_lobby['invited'].append(username)
+                return
         pending_invitations.pop(username, None)
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
@@ -3424,6 +3449,34 @@ def handle_kick_from_lobby(data):
             active_lobby[lst].remove(kicked_user)
     pending_invitations.pop(kicked_user, None)
     socketio.emit('kicked_from_lobby', {'kicked_user': kicked_user}, namespace='/')
+    socketio.emit('lobby_update', active_lobby, namespace='/')
+
+
+@socketio.on('move_player_to_team')
+def handle_move_player_to_team(data):
+    """L'hôte ou un admin déplace un joueur d'une équipe à l'autre."""    global active_lobby
+    username = get_socket_user()
+    target_user = data.get('user')
+    target_team = data.get('team')  # 'team1' ou 'team2'
+    if not username or not active_lobby.get('active'):
+        return
+    if username != active_lobby.get('host') and not is_admin(username):
+        emit('error', {'message': "Seul l'hôte ou un admin peut déplacer un joueur"})
+        return
+    if target_team not in ('team1', 'team2'):
+        return
+    other_team = 'team2' if target_team == 'team1' else 'team1'
+    with _lobby_lock:
+        # Vérifier que le joueur est dans l'autre équipe
+        if target_user not in active_lobby.get(other_team, []):
+            # Peut-être déjà dans la bonne équipe
+            return
+        # Vérifier que la team cible a de la place
+        if len(active_lobby.get(target_team, [])) >= 2:
+            emit('error', {'message': f'Équipe {target_team} déjà complète'})
+            return
+        active_lobby[other_team].remove(target_user)
+        active_lobby[target_team].append(target_user)
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 @socketio.on('cancel_lobby')
