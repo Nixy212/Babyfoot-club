@@ -101,6 +101,9 @@ if (typeof window.logout !== 'function') {
 
 // Chargement utilisateur commun à toutes les pages
 async function loadBaseUser() {
+  // Guard : évite double-chargement si une page l'appelle déjà
+  if (window._baseUserLoaded) return window._baseUserData || null;
+  window._baseUserLoaded = true;
   try {
     const res = await fetch('/current_user');
     if (!res.ok) return null;
@@ -108,6 +111,7 @@ async function loadBaseUser() {
     if (!user) return null;
     window._currentUsername = user.username;
     window._isAdmin = user.is_admin;
+    window._baseUserData = user;
     if (typeof ProfileUtils !== 'undefined') ProfileUtils.updateNav(user);
     if (user.is_admin) {
       const btn = document.getElementById('adminBtnMobile');
@@ -119,6 +123,9 @@ async function loadBaseUser() {
     return null;
   }
 }
+
+// Auto-appel sur toutes les pages (chaque page peut aussi l'appeler, le guard évite le doublon)
+document.addEventListener('DOMContentLoaded', () => loadBaseUser());
 </script>
 {% block extra_scripts %}{% endblock %}
 </body>

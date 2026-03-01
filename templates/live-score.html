@@ -210,12 +210,14 @@
           <button class="btn btn-primary" style="width:100%;margin-top:1.25rem;font-size:1rem;padding:.875rem" onclick="startGame()">
             ▶ Lancer la partie
           </button>
-          <!-- Zone reset admin (cachée par défaut) -->
-          <div id="adminResetZone" style="display:none;margin-top:1rem;padding:.875rem 1rem;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);border-radius:10px">
-            <div style="font-size:.82rem;color:#e74c3c;margin-bottom:.5rem">⚠️ Partie zombie détectée</div>
-            <button class="btn" style="background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3);font-size:.85rem" onclick="forceResetGame()">
-              🔄 Forcer le reset
-            </button>
+          <!-- Zone reset admin (cachée par défaut, discrète) -->
+          <div id="adminResetZone" style="display:none;margin-top:1rem;padding:.75rem 1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+              <div style="font-size:.78rem;color:var(--text-muted)">🔧 <strong style="color:var(--text-secondary)">Admin</strong> — Réinitialiser l'état de jeu si bloqué</div>
+              <button class="btn" style="font-size:.78rem;padding:.4rem .875rem;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="forceResetGame()">
+                🔄 Forcer le reset
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -285,10 +287,15 @@
 
     <!-- Zone Aucune partie -->
     <div id="noGameArea" style="display:none">
-      <div class="card fade-up" style="text-align:center;padding:3rem">
-        <div style="font-size:3rem;margin-bottom:1rem">🏓</div>
-        <h3 style="margin-bottom:.5rem">Aucune partie en cours</h3>
-        <p style="color:var(--text-tertiary);margin-bottom:1.5rem">Réservez un créneau pour accéder au baby-foot</p>
+      <div class="card fade-up" style="padding:2rem 1.5rem">
+        <!-- Bannière "accès conditionnel" -->
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.875rem 1.125rem;background:rgba(205,127,50,.07);border:1px solid rgba(205,127,50,.2);border-radius:12px;margin-bottom:1.5rem">
+          <span style="font-size:1.5rem">🔒</span>
+          <div>
+            <div style="font-weight:700;font-size:.9rem;color:var(--bronze)">Accès conditionnel</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px">Pour configurer une partie, vous devez avoir une réservation active ou être admin.</div>
+          </div>
+        </div>
         <div class="no-game-options">
           <a href="/reservation" class="no-game-option">
             <div class="no-game-option-icon">📅</div>
@@ -514,14 +521,21 @@ async function checkActiveGame() {
           ? 'Réservation active — configurez et lancez la partie'
           : 'Configurez la partie ci-dessous';
         await loadUsers();
-        // Si admin et partie zombie en mémoire → afficher le bouton reset
+        // Admin : afficher le bouton reset discret (pas d'alarme rouge)
         if (userIsAdmin) {
           const z = document.getElementById('adminResetZone');
           if (z) z.style.display = 'block';
         }
+        // Pas de réservation mais accès admin : info discrète
+        if (!hasResa && userIsAdmin) {
+          document.getElementById('pageSub').textContent = 'Mode admin — aucune réservation active';
+        }
       } else {
         showArea('noGameArea');
-        document.getElementById('pageSub').textContent = 'Aucune partie en cours';
+        // Feedback visuel selon la raison du blocage
+        const sub = document.getElementById('pageSub');
+        if (sub) sub.textContent = 'Aucune partie en cours — réservez un créneau pour jouer';
+        document.getElementById('noGameArea').dataset.reason = 'no_resa';
       }
     }
   } catch(e) {
