@@ -34,7 +34,7 @@ requirements.txt      ← Dépendances Python.
 
 static/
   design-v3.css           ← TOUT le CSS (thème sombre, bronze/or). Un seul fichier.
-  sw.js                   ← Service Worker PWA. VERSION CACHE = babyfoot-v31.
+  sw.js                   ← Service Worker PWA. VERSION CACHE = babyfoot-v32.
   profile-utils.js        ← Chargement avatars/pseudos. Utilisé dans TOUS les templates.
   icons.js                ← Icônes SVG via data-bficon="nom". Ex: data-bficon="trophy"
   global-animations.js    ← Animations UI + logique de reconnexion WebSocket auto.
@@ -613,7 +613,7 @@ et exécute les commandes dans l'ordre. À 9 buts : balle adverse bloquée. À 1
 ### 🔴 Service Worker (cause principale des bugs visuels)
 ```js
 // static/sw.js — ligne 5
-const CACHE_NAME = 'babyfoot-v31';
+const CACHE_NAME = 'babyfoot-v32';
 ```
 **Après chaque modif de CSS ou JS : incrémenter ce numéro (v30 → v31 → v32...).**
 Sans ça, les navigateurs servent l'ancienne version du cache indéfiniment.
@@ -784,6 +784,9 @@ GET /debug/static   → Fichiers static présents ?
 - ✅ **SQL injection** → paramètres liés partout, jamais de concaténation de chaîne
 - ✅ **Pages vides (stats, top, reservation, live-score)** → HTML manquant reconstruit — les templates ne contenaient que du JS sans structure HTML, les IDs référencés par le JS n'existaient pas dans le DOM
 - ✅ **`</div>` parasite (scores, settings)** → balise fermante orpheline supprimée au début du `{% block body %}`
+- ✅ **Settings : cosmétiques/quêtes bloqués sur "Chargement..."** → JS entièrement manquant reconstruit (`selectPreset`, `handleAvatarUpload`, `saveProfile`, `changePassword`, `loadQuests`, `loadProfile`, `equipCosmetic`, `renderCosmeticSelectors`)
+- ✅ **Dashboard : boutons Servo au milieu du contenu** → déplacés tout en bas dans une zone admin discrète, style moins agressif
+- ✅ **Lobby : cases équipe trop grandes (220px) quand vides** → `min-height` réduit à 80px
 
 ---
 
@@ -803,4 +806,4 @@ Les Joueur1/2/3 ont le mot de passe `guest` et sont exclus des classements ELO.
 
 ---
 
-*Ce document a été généré après analyse complète du code. Dernière mise à jour : HTML manquant reconstruit sur stats, top, reservation, live-score ; balises parasites supprimées dans scores et settings.*
+*Dernière mise à jour : JS settings.html reconstruit, servo dashboard déplacé en bas, lobby team-box compacté, SW v32.*
