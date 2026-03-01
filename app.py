@@ -3183,7 +3183,10 @@ def handle_invite_to_lobby(data):
     if username != active_lobby['host'] and not is_admin(username):
         emit('error', {'message': "Seul l'hote ou un admin peut inviter"})
         return
-    if len(active_lobby['accepted']) + len(active_lobby['invited']) >= 4:
+    # Compter uniquement les vrais joueurs (pas les guests) pour la limite du lobby
+    real_accepted = [u for u in active_lobby['accepted'] if not is_guest_player(u)]
+    real_invited  = [u for u in active_lobby['invited']  if not is_guest_player(u)]
+    if not is_guest_player(invited_user) and len(real_accepted) + len(real_invited) >= 4:
         emit('error', {'message': 'Lobby complet'})
         return
     already_in = (
@@ -3197,11 +3200,14 @@ def handle_invite_to_lobby(data):
     pending_invitations[invited_user] = {'from': active_lobby['host'], 'timestamp': _time.time()}
     if is_guest_player(invited_user):
         active_lobby['accepted'].append(invited_user)
-        # Équipes fixes : Joueur1→team2, Joueur2→team1, Joueur3→team2
-        guest_team_map = {'Joueur1': 'team2', 'Joueur2': 'team1', 'Joueur3': 'team2'}
-        target_team = guest_team_map.get(invited_user, 'team2')
-        if len(active_lobby[target_team]) < 2:
-            active_lobby[target_team].append(invited_user)
+        # Placer dans l'équipe la moins remplie qui a encore de la place
+        t1, t2 = len(active_lobby['team1']), len(active_lobby['team2'])
+        if t1 <= t2 and t1 < 2:
+            active_lobby['team1'].append(invited_user)
+        elif t2 < 2:
+            active_lobby['team2'].append(invited_user)
+        elif t1 < 2:
+            active_lobby['team1'].append(invited_user)
         else:
             active_lobby['accepted'].remove(invited_user)
             emit('error', {'message': 'Equipes completes'})
