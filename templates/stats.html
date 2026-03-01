@@ -7,6 +7,73 @@
 {% endblock %}
 
 {% block body %}
+<div class="page">
+  <div class="container" style="max-width:800px">
+
+    <div class="page-header fade-up">
+      <h1>📊 Statistiques</h1>
+      <p id="subttl">Chargement...</p>
+    </div>
+
+    <!-- Cartes stats -->
+    <div class="card fade-up" style="animation-delay:.04s">
+      <div class="card-header"><h3>📈 Vue d'ensemble</h3></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem">
+          <div class="stat-mini">
+            <div class="stat-mini-val" id="sg">—</div>
+            <div class="stat-mini-label">Parties jouées</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val" id="sp">—</div>
+            <div class="stat-mini-label">Buts marqués</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val" id="sr">—</div>
+            <div class="stat-mini-label">Ratio buts/partie</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val" id="sb">—</div>
+            <div class="stat-mini-label">Pour / Contre</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val" id="sa">—</div>
+            <div class="stat-mini-label">Score moyen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historique des parties -->
+    <div class="card fade-up" style="animation-delay:.08s">
+      <div class="card-header"><h3>🕹️ Historique récent</h3></div>
+      <div class="card-body" style="padding:0">
+        <div id="hist" style="min-height:80px">
+          <div style="padding:2rem;text-align:center">
+            <div class="loading-spinner" style="margin:0 auto 1rem"></div>
+            <p style="color:var(--text-tertiary)">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem">
+      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .stat-mini { padding:.75rem; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border-subtle); text-align:center; }
+  .stat-mini-val { font-size:1.75rem; font-weight:800; color:var(--bronze); }
+  .stat-mini-label { color:var(--text-tertiary); font-size:.8rem; margin-top:2px; }
+  .hist-row { display:flex; align-items:center; justify-content:space-between; padding:.875rem 1.25rem; border-bottom:1px solid var(--border-subtle); }
+  .hist-row:last-child { border-bottom:none; }
+  .hist-date { font-size:.82rem; color:var(--text-muted); }
+  .hist-score { font-family:'Space Mono',monospace; font-size:1.1rem; font-weight:800; color:var(--bronze); }
+</style>
+
 <!-- Mobile Menu -->
 
 

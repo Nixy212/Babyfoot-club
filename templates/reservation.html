@@ -131,8 +131,120 @@
 <div class="bg-orb bg-orb-2" aria-hidden="true"></div>
 <div class="bg-orb bg-orb-3" aria-hidden="true"></div>
 
+<div class="page">
+  <div class="container" style="max-width:700px">
 
+    <div class="page-header fade-up">
+      <h1>📅 Réservation</h1>
+      <p>Réservez votre créneau ou jouez maintenant</p>
+    </div>
 
+    <!-- Statut babyfoot -->
+    <div class="status-card status-free fade-up" id="statusCard" style="animation-delay:.03s">
+      <div class="status-dot"></div>
+      <div style="flex:1">
+        <div id="statusText" style="font-weight:700">Chargement...</div>
+        <div id="statusSub" style="font-size:.82rem;color:var(--text-muted);margin-top:2px"></div>
+      </div>
+      <div style="font-size:.78rem;color:var(--text-muted);white-space:nowrap" id="statusTime"></div>
+    </div>
+
+    <!-- Ma réservation en cours -->
+    <div class="my-resa fade-up" id="myResaCard" style="display:none;animation-delay:.04s">
+      <h3>✅ Ma réservation</h3>
+      <div id="myResaInfo" style="font-size:.9rem;color:var(--text-secondary);margin-bottom:1rem"></div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+        <button class="cbtn green" style="flex:1;min-width:120px" onclick="goToLobby(this)">👥 Créer un lobby</button>
+        <button class="cbtn" style="flex:1;min-width:120px;background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)" onclick="cancelMyResa()">🗑️ Annuler</button>
+      </div>
+    </div>
+
+    <!-- Jouer maintenant -->
+    <div class="play-now-card fade-up" id="playNowSection" style="animation-delay:.05s">
+      <h3>⚡ Jouer maintenant</h3>
+      <div id="nowPreview" style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">Calcul en cours...</div>
+      <div style="margin-bottom:.75rem">
+        <div class="pill-label">Durée</div>
+        <div class="pill-row">
+          <button class="dpill on" onclick="setDur('now',10,this)">10 min</button>
+          <button class="dpill" onclick="setDur('now',15,this)">15 min</button>
+          <button class="dpill" onclick="setDur('now',30,this)">30 min</button>
+          <button class="dpill" onclick="setDur('now',60,this)">1 h</button>
+        </div>
+      </div>
+      <div style="margin-bottom:1rem">
+        <div class="pill-label">Mode</div>
+        <div class="pill-row">
+          <button class="mpill on" id="mN1" onclick="setMode('now','1v1')">1 vs 1</button>
+          <button class="mpill" id="mN2" onclick="setMode('now','2v2')">2 vs 2</button>
+        </div>
+      </div>
+      <button class="cbtn green" id="btnNow" onclick="playNow()">▶ Jouer maintenant</button>
+    </div>
+
+    <!-- Planifier une réservation -->
+    <div class="plan-card fade-up" style="animation-delay:.06s">
+      <h3>📆 Planifier une réservation</h3>
+
+      <div class="day-tabs">
+        <button class="dtab on" id="tabT" onclick="setDay(0)">Aujourd'hui</button>
+        <button class="dtab" id="tabD" onclick="setDay(1)">Demain</button>
+      </div>
+
+      <div class="time-row">
+        <input type="time" id="planTime" onchange="onTime()" oninput="onTime()" step="300">
+        <span class="end-label" id="endLabel">→ fin : —</span>
+      </div>
+
+      <div class="conflict-box" id="conflict"></div>
+
+      <div style="margin-bottom:.75rem">
+        <div class="pill-label">Durée</div>
+        <div class="pill-row">
+          <button class="dpill on" onclick="setDur('plan',10,this)">10 min</button>
+          <button class="dpill" onclick="setDur('plan',15,this)">15 min</button>
+          <button class="dpill" onclick="setDur('plan',30,this)">30 min</button>
+          <button class="dpill" onclick="setDur('plan',60,this)">1 h</button>
+        </div>
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <div class="pill-label">Mode</div>
+        <div class="pill-row">
+          <button class="mpill on" id="mP1" onclick="setMode('plan','1v1')">1 vs 1</button>
+          <button class="mpill" id="mP2" onclick="setMode('plan','2v2')">2 vs 2</button>
+        </div>
+      </div>
+
+      <button class="cbtn" id="btnPlan" onclick="planReserve()">✔ Confirmer la réservation</button>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-wrap fade-up" style="animation-delay:.07s">
+      <div class="tl-title" id="tlTitle">Planning Aujourd'hui</div>
+      <div class="tl-outer" id="tlOuter">
+        <div class="tl-inner">
+          <div class="tl-bar" id="tlBar">
+            <div class="tl-now" id="tlNow"></div>
+          </div>
+          <div class="tl-labels">
+            <span>8h</span><span>9h</span><span>10h</span><span>11h</span><span>12h</span>
+            <span>13h</span><span>14h</span><span>15h</span><span>16h</span><span>17h</span>
+            <span>18h</span><span>19h</span><span>20h</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-top:.5rem">Créneaux libres suggérés :</div>
+      <div class="free-row" id="freeRow"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem">
+      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-wrap" id="tw"></div>
 
 <script>
 // ── État
