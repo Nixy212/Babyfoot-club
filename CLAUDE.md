@@ -182,3 +182,20 @@ psycopg2-binary==2.9.10
 bcrypt==4.1.2
 Python 3.11.9
 ```
+
+---
+
+## 🐛 Bugs corrigés (session 2025-03-01)
+
+### Bug 1 — Bouton "Créer Lobby" du dashboard inopérant
+**Cause** : `handleLobbyBtn()` utilisait `socket.emit('create_lobby')` qui exige une réservation active (`has_active_reservation`). Sans réservation, l'erreur socket était ignorée et l'utilisateur restait bloqué.
+
+**Fix** (`templates/dashboard.html`) : `handleLobbyBtn` utilise désormais `fetch('/api/reserve_and_lobby')` qui crée automatiquement une réservation de 15 min + le lobby en une seule opération atomique. Le bouton est activé pour tous les utilisateurs connectés (la réservation se crée à la volée).
+
+### Bug 2 — Joueur1/Joueur2/Joueur3 dupliqués dans les deux équipes
+**Cause** : `renderTeam()` calculait `guestsForDisplay[i]` avec `i` local à chaque équipe. Résultat : team1 et team2 affichaient le même guest (ex: Joueur1 dans les deux slots).
+
+**Fix** (`templates/lobby.html`) : `renderTeam()` accepte un paramètre `guestOffset`. `updateLobbyUI()` calcule le nombre de slots vides de team1 et passe cet offset à team2, garantissant que chaque équipe affiche des guests distincts.
+
+### Nota bene — L'hôte dans team1
+L'hôte est bien ajouté à `team1` côté serveur lors de la création du lobby (`reserve_and_lobby` et `handle_create_lobby`). Ce bug était un symptôme du Bug 1 : si le lobby n'était jamais créé (socket bloqué), `lobby.html` ne trouvait pas l'hôte dans le lobby et redirectait vers `/dashboard`.
