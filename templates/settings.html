@@ -402,6 +402,7 @@ let currentAvatarPreset = null;
 let currentAvatarFile = null;
 let equippedTheme = null;
 let equippedFrame = null;
+let unlockedCosmetics = [];
 
 const ELO_TIERS = [
   { name:'Recrue',    icon:'🎮', min:800,  max:949  },
@@ -552,6 +553,7 @@ async function equipCosmetic(type, key) {
       toast('Cosmétique équipé ✓', 'ok');
       if (type === 'theme') equippedTheme = key;
       if (type === 'frame') equippedFrame = key;
+      try { const cr = await fetch('/api/my_cosmetics'); if (cr.ok) { const cd = await cr.json(); unlockedCosmetics = cd.unlocked || []; } } catch(e) {}
       renderCosmeticSelectors();
     } else {
       toast(d.message || 'Erreur', 'err');
@@ -566,35 +568,59 @@ function renderCosmeticSelectors() {
   if (!themeGrid || !frameGrid) return;
 
   const THEMES = [
-    { key:'default', name:'Défaut', icon:'🌑', desc:'Thème sombre bronze' },
-    { key:'fire', name:'Fire 🔥', icon:'🔥', desc:'Rouge intense' },
-    { key:'night', name:'Night 🌌', icon:'🌌', desc:'Violet nocturne' },
-    { key:'gold', name:'Gold ✨', icon:'✨', desc:'Or brillant' },
-    { key:'royal', name:'Royal 💙', icon:'💙', desc:'Bleu royal' },
-    { key:'master', name:'Master 🏆', icon:'🏆', desc:'Noir & or' },
+    { key:'default', name:'Défaut', icon:'🌑', desc:'Thème sombre bronze', cosmetic_key: null },
+    { key:'fire',    name:'Fire',   icon:'🔥', desc:'Rouge intense',       cosmetic_key: 'theme_fire' },
+    { key:'night',   name:'Night',  icon:'🌌', desc:'Violet nocturne',     cosmetic_key: 'theme_night' },
+    { key:'gold',    name:'Gold',   icon:'✨', desc:'Or brillant',         cosmetic_key: 'theme_gold' },
+    { key:'royal',   name:'Royal',  icon:'💙', desc:'Bleu royal',          cosmetic_key: 'theme_royal' },
+    { key:'master',  name:'Master', icon:'🏆', desc:'Noir & or',           cosmetic_key: 'theme_master' },
   ];
   const FRAMES = [
-    { key:'none', name:'Aucun', icon:'⚪' },
-    { key:'bronze', name:'Bronze', icon:'🟤' },
-    { key:'flame', name:'Flamme', icon:'🔥' },
-    { key:'phoenix', name:'Phénix', icon:'🦅' },
+    { key:'none',    name:'Aucun',  icon:'⚪', cosmetic_key: null },
+    { key:'bronze',  name:'Bronze', icon:'🟤', cosmetic_key: 'frame_bronze' },
+    { key:'flame',   name:'Flamme', icon:'🔥', cosmetic_key: 'frame_flame' },
+    { key:'phoenix', name:'Phénix', icon:'🦅', cosmetic_key: 'frame_phoenix' },
   ];
 
   themeGrid.innerHTML = THEMES.map(t => {
     const isEquipped = equippedTheme === t.key || (!equippedTheme && t.key === 'default');
-    return `<button onclick="equipCosmetic('theme','${t.key}')" style="padding:.75rem .875rem;border-radius:10px;border:2px solid ${isEquipped ? 'var(--bronze)' : 'var(--border-normal)'};background:${isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};cursor:pointer;text-align:center;font-family:inherit;transition:all .15s">
+    const isLocked = t.cosmetic_key && !unlockedCosmetics.includes(t.cosmetic_key);
+    const lockStyle = isLocked ? 'opacity:.4;cursor:not-allowed;filter:grayscale(60%);' : 'cursor:pointer;';
+    const borderColor = isEquipped ? 'var(--bronze)' : isLocked ? 'rgba(255,255,255,0.08)' : 'var(--border-normal)';
+    const bgColor = isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)';
+    const clickHandler = isLocked ? `showToast('🔒 Complète des quêtes pour débloquer ce thème', 'err')` : `equipCosmetic('theme','${t.key}')`;
+    return `<button onclick="${clickHandler}" style="padding:.75rem .875rem;border-radius:10px;border:2px solid ${borderColor};background:${bgColor};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};${lockStyle}text-align:center;font-family:inherit;transition:all .15s;position:relative">
+      ${isLocked ? '<div style="position:absolute;top:6px;right:8px;font-size:.8rem">🔒</div>' : ''}
       <div style="font-size:1.4rem;margin-bottom:.3rem">${t.icon}</div>
       <div>${t.name}</div>
       ${isEquipped ? '<div style="font-size:.68rem;color:var(--bronze);margin-top:2px">✓ Actif</div>' : ''}
+      ${isLocked ? '<div style="font-size:.65rem;color:var(--text-muted);margin-top:2px">Verrouillé</div>' : ''}
     </button>`;
   }).join('');
 
   frameGrid.innerHTML = FRAMES.map(f => {
     const isEquipped = equippedFrame === f.key || (!equippedFrame && f.key === 'none');
-    return `<button onclick="equipCosmetic('frame','${f.key}')" style="padding:.65rem 1rem;border-radius:10px;border:2px solid ${isEquipped ? 'var(--bronze)' : 'var(--border-normal)'};background:${isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.5rem;transition:all .15s">
-      <span style="font-size:1.1rem">${f.icon}</span>${f.name}${isEquipped ? ' <span style="font-size:.68rem;color:var(--bronze);margin-left:auto">✓</span>' : ''}
+    const isLocked = f.cosmetic_key && !unlockedCosmetics.includes(f.cosmetic_key);
+    const lockStyle = isLocked ? 'opacity:.4;cursor:not-allowed;filter:grayscale(60%);' : 'cursor:pointer;';
+    const borderColor = isEquipped ? 'var(--bronze)' : isLocked ? 'rgba(255,255,255,0.08)' : 'var(--border-normal)';
+    const clickHandler = isLocked ? `showToast('🔒 Complète des quêtes pour débloquer ce cadre', 'err')` : `equipCosmetic('frame','${f.key}')`;
+    return `<button onclick="${clickHandler}" style="padding:.65rem 1rem;border-radius:10px;border:2px solid ${borderColor};background:${isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};${lockStyle}font-family:inherit;display:flex;align-items:center;gap:.5rem;transition:all .15s;position:relative">
+      ${isLocked ? '<span style="position:absolute;top:4px;right:6px;font-size:.75rem">🔒</span>' : ''}
+      <span style="font-size:1.1rem">${f.icon}</span>${f.name}
+      ${isEquipped ? ' <span style="font-size:.68rem;color:var(--bronze);margin-left:auto">✓ Actif</span>' : ''}
+      ${isLocked ? '<span style="font-size:.65rem;color:var(--text-muted);margin-left:auto">Verrouillé</span>' : ''}
     </button>`;
   }).join('');
+}
+
+function showToast(msg, type) {
+  const wrap = document.querySelector('.toast-settings');
+  if (!wrap) return;
+  const t = document.createElement('div');
+  t.className = 'toast-s ' + (type || '');
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
 }
 
 // ── Quêtes ────────────────────────────────────────────────────
@@ -758,9 +784,16 @@ async function loadProfile() {
       document.querySelectorAll('.avatar-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === profile.avatar_preset));
     }
 
-    // Cosmétiques équipés
+    // Cosmétiques équipés + débloqués
     equippedTheme = profile.equipped_theme || null;
     equippedFrame = profile.equipped_frame || null;
+    try {
+      const cr = await fetch('/api/my_cosmetics');
+      if (cr.ok) {
+        const cd = await cr.json();
+        unlockedCosmetics = cd.unlocked || [];
+      }
+    } catch(e) { unlockedCosmetics = []; }
     renderCosmeticSelectors();
 
     // ELO

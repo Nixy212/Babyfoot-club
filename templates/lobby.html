@@ -580,13 +580,19 @@ function renderTeam(containerId, players, teamColor) {
         ${isHost ? `<button class="btn-add-ghost" onclick="addGuest('${displayGuest}')">+ Ajouter</button>` : '<span style="font-size:0.75rem;color:var(--text-muted)">Slot libre</span>'}
       `;
     } else {
+      // No guest available — show invite CTA
+      ghost.style.cssText += ';border-style:dashed;border-color:rgba(205,127,50,0.25)';
       ghost.innerHTML = `
         <div class="player-ghost-name">
-          <div class="player-ghost-avatar">
-            <i class="fas fa-user" style="font-size:11px;color:rgba(255,255,255,0.1)"></i>
+          <div class="player-ghost-avatar" style="border-color:rgba(205,127,50,0.25)">
+            <i class="fas fa-user-plus" style="font-size:11px;color:rgba(205,127,50,0.4)"></i>
           </div>
-          <span style="font-size:0.82rem;color:var(--text-muted)">Slot libre</span>
+          <div>
+            <span style="font-size:0.85rem;color:var(--text-muted)">Slot libre</span>
+            ${isHost ? '<div style="font-size:0.72rem;color:rgba(205,127,50,0.6)">Invitez un joueur →</div>' : ''}
+          </div>
         </div>
+        ${isHost ? `<button class="btn-add-ghost" onclick="focusInvite()" style="background:rgba(205,127,50,0.15);border-color:rgba(205,127,50,0.5);color:var(--bronze)">+ Inviter</button>` : ''}
       `;
     }
     container.appendChild(ghost);
