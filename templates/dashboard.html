@@ -212,7 +212,7 @@
 {% block extra_scripts %}
 <script>
 let socket;
-try { socket = io({reconnection:true,reconnectionDelay:1000,reconnectionDelayMax:10000,reconnectionAttempts:Infinity,timeout:20000,transports:['websocket','polling']}); }
+try { socket = io({reconnection:true,reconnectionDelay:1000,reconnectionDelayMax:10000,reconnectionAttempts:Infinity,timeout:20000,upgrade:false,transports:['polling']}); }
 catch(e) { socket = {emit:()=>{},on:()=>{},connected:false}; }
 
 let currentUsername=null, isAdmin=false, hasReservation=false;

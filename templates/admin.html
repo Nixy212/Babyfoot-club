@@ -372,7 +372,8 @@ try { socket = io({
     reconnectionDelayMax: 10000,   // Max 10s entre tentatives
     reconnectionAttempts: Infinity, // Toujours réessayer
     timeout: 20000,                // 20s avant d'abandonner une connexion
-    transports: ['websocket', 'polling'],  // WebSocket d'abord, polling en fallback
+    transports: ['polling'],  // Mode compatible Render si websocket refuse
+    upgrade: false,
   }); } catch(e) { console.warn("Socket.IO non disponible:", e); socket = { emit: () => {}, on: () => {} }; }
 
 function toggleMenu() {

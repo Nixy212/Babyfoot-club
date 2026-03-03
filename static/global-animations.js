@@ -245,7 +245,8 @@
         const sock = io({
           reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 10000,
           reconnectionAttempts: Infinity, timeout: 20000,
-          transports: ['websocket','polling'],
+          upgrade: false,
+          transports: ['polling'],
         });
         window._hookGlobalSocketEvents(sock);
         window._globalSocket = sock;

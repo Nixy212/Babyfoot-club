@@ -399,7 +399,8 @@ function initSocket() {
     socket = io({
       reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 10000,
       reconnectionAttempts: Infinity, timeout: 20000,
-      transports: ['websocket', 'polling'],
+      upgrade: false,
+      transports: ['polling'],
     });
     if (window.initReconnectIndicator) initReconnectIndicator(socket);
   } catch(e) {

@@ -500,7 +500,7 @@ async function cancelMyResa(){
 // ── Socket (pour créer un lobby)
 let _socket = null;
 try {
-  _socket = io({ transports: ['websocket', 'polling'], reconnection: false });
+  _socket = io({ transports: ['polling'], upgrade: false, reconnection: true });
 } catch(e) { _socket = { emit: () => {}, on: () => {} }; }
 
 async function goToLobby(btn) {
