@@ -4,7 +4,8 @@
 
 {% block extra_head %}
 <script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
-<script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script>if(typeof window.io==='undefined'){document.write('<script src="/socket.io/socket.io.js"><\\/script>');}</script>
 {% endblock %}
 
 {% block body %}

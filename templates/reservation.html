@@ -123,7 +123,8 @@
     .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:6px}
     @keyframes sp{to{transform:rotate(360deg)}}
   </style>
-<script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script>if(typeof window.io==='undefined'){document.write('<script src="/socket.io/socket.io.js"><\\/script>');}</script>
 {% endblock %}
 
 {% block body %}
