@@ -77,9 +77,25 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 Mo max request body
 # ── SocketIO ──────────────────────────────────────────────────
 
 # CORS : définir CORS_ORIGINS dans Render avec ton domaine (ex: https://monapp.onrender.com)
-# Par défaut '*' pour compatibilité locale — à restreindre en prod via variable d'env
-_CORS_RAW = os.environ.get('CORS_ORIGINS', '').strip().rstrip('/')
-_ALLOWED_ORIGINS = _CORS_RAW if _CORS_RAW else '*'
+# Supporte 1 origine ou une liste séparée par virgules.
+def _parse_cors_origins(raw):
+    raw = (raw or '').strip()
+    if not raw:
+        return '*'
+    parts = []
+    for p in raw.split(','):
+        p = p.strip()
+        if not p:
+            continue
+        p = p.strip("'\"").rstrip('/')
+        if p:
+            parts.append(p)
+    if not parts:
+        return '*'
+    return parts[0] if len(parts) == 1 else parts
+
+_CORS_RAW = os.environ.get('CORS_ORIGINS', '')
+_ALLOWED_ORIGINS = _parse_cors_origins(_CORS_RAW)
 logger.info(f"CORS autorisé : {_ALLOWED_ORIGINS}")
 socketio = SocketIO(
     app,
