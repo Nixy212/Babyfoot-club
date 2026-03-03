@@ -3056,7 +3056,7 @@ def handle_connect():
     username = session.get('username')
     if not username:
         logger.warning(f"WS refuse: utilisateur non authentifie ({request.sid})")
-        return False
+        return
     connected_users[request.sid] = username
     logger.info(f"WS connecte: {username} ({request.sid})")
 
