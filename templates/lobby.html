@@ -3,7 +3,7 @@
 {% block title %}Lobby — Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="{{ url_for('static', filename='confetti.js') }}" defer></script>
 <script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
 {% endblock %}
@@ -427,10 +427,19 @@ function makePlayerCard(username, amHost, color) {
 }
 
 function addGuestToLobby(guestName, targetTeam) {
-  if (!socket) return;
-  // Socket.IO met automatiquement les émissions en queue si pas encore connecté
-  // Pas besoin de vérifier socket.connected — ça évite le toast "connexion en cours"
-  socket.emit('invite_to_lobby', { user: guestName, team: targetTeam || '' });
+  if (!socket || typeof socket.emit !== 'function') {
+    toast("Connexion lobby indisponible", 'err');
+    return;
+  }
+  const payload = { user: guestName, team: targetTeam || '' };
+  if (socket.connected) {
+    socket.emit('invite_to_lobby', payload);
+    return;
+  }
+  // Force une reconnexion explicite puis envoie l'invitation dès que possible.
+  socket.once('connect', () => socket.emit('invite_to_lobby', payload));
+  if (typeof socket.connect === 'function') socket.connect();
+  toast('Reconnexion au lobby…', 'inf');
 }
 
 function makeGhostCard(guestName, amHost, targetTeam) {
