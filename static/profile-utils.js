@@ -6,6 +6,35 @@
 window.ProfileUtils = (() => {
   // Cache local des profils pour éviter N requêtes
   const _cache = {};
+  const CACHE_TTL_MS = 15000;
+  let _lastFetchAt = 0;
+  let _inflightProfilesReq = null;
+
+  function _cacheFresh() {
+    return Object.keys(_cache).length > 0 && (Date.now() - _lastFetchAt) < CACHE_TTL_MS;
+  }
+
+  async function _refreshProfiles(force = false) {
+    if (!force && _cacheFresh()) return _cache;
+    if (_inflightProfilesReq) return _inflightProfilesReq;
+    _inflightProfilesReq = (async () => {
+      try {
+        const res = await fetch('/users_list');
+        if (!res.ok) return _cache;
+        const list = await res.json();
+        (Array.isArray(list) ? list : []).forEach(u => {
+          if (u && u.username) _cache[u.username] = u;
+        });
+        if (Object.keys(_cache).length > 0) _lastFetchAt = Date.now();
+      } catch (e) {}
+      return _cache;
+    })();
+    try {
+      return await _inflightProfilesReq;
+    } finally {
+      _inflightProfilesReq = null;
+    }
+  }
 
   /**
    * Retourne le nom affiché : nickname si défini, sinon username
@@ -95,32 +124,24 @@ window.ProfileUtils = (() => {
    * Charge les infos d'un utilisateur (depuis /users_list ou cache)
    */
   async function fetchUserProfile(username) {
-    if (_cache[username]) return _cache[username];
-    try {
-      const res = await fetch('/users_list');
-      const list = await res.json();
-      (Array.isArray(list) ? list : []).forEach(u => {
-        if (u && u.username) _cache[u.username] = u;
-      });
-    } catch (e) {}
+    if (!username) return { username: '' };
+    if (_cache[username] && _cacheFresh()) return _cache[username];
+    await _refreshProfiles(false);
     return _cache[username] || { username };
   }
 
   /**
    * Pré-charge tous les profils et retourne un Map username->user
    */
-  async function fetchAllProfiles() {
-    try {
-      const res = await fetch('/users_list');
-      const list = await res.json();
-      (Array.isArray(list) ? list : []).forEach(u => {
-        if (u && u.username) _cache[u.username] = u;
-      });
-    } catch (e) {}
+  async function fetchAllProfiles(force = false) {
+    await _refreshProfiles(!!force);
     return _cache;
   }
 
-  function _cache_set(username, data) { _cache[username] = data; }
+  function _cache_set(username, data) {
+    _cache[username] = data;
+    _lastFetchAt = Date.now();
+  }
 
   /**
    * Déconnexion partagée — disponible dans tous les templates qui incluent profile-utils.js

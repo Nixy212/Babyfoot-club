@@ -199,8 +199,9 @@ pending_invitations = {}      # username -> {from, timestamp}
 connected_users = {}
 
 def get_socket_user():
-    # Priorité : SID mappé (fiable), sinon session Flask (fallback reconnexion mobile)
-    return connected_users.get(request.sid) or session.get('username')
+    # Identité WS strictement liée au SID courant.
+    # Évite qu'une session HTTP changée dans un autre onglet applique des actions au mauvais compte.
+    return connected_users.get(request.sid)
 
 # ── Rate limiting login (anti brute-force) ────────────────────
 
@@ -2251,6 +2252,8 @@ def api_get_profile():
         "bio":         user.get("bio") or "",
         "avatar_preset": user.get("avatar_preset") or "",
         "avatar_url":  user.get("avatar_url") or "",
+        "equipped_theme": user.get("active_theme") or "default",
+        "equipped_frame": user.get("active_frame") or "none",
         "elo":         elo,
         "elo_tier":    tier_name,
         "elo_icon":    tier_icon,
@@ -2484,8 +2487,28 @@ def api_equip_cosmetic():
     if not username:
         return jsonify({"error": "Non connecté"}), 401
     data = request.get_json() or {}
-    cosmetic_key = data.get("key", "")
-    slot = data.get("slot", "")  # "theme" ou "frame"
+    raw_slot = str(data.get("slot") or data.get("type") or "").strip().lower()  # "theme" ou "frame"
+    raw_key = str(data.get("key") or "").strip().lower()
+    if raw_slot not in ("theme", "frame"):
+        return jsonify({"success": False, "message": "Slot invalide (theme/frame)"}), 400
+    if not raw_key:
+        return jsonify({"success": False, "message": "Cosmétique manquant"}), 400
+
+    # Accepte les clés courtes front ("fire", "bronze") et les clés canoniques ("theme_fire", "frame_bronze")
+    aliases = {"theme": {"default": "default"}, "frame": {"none": "none"}}
+    for ckey, meta in COSMETICS_CATALOG.items():
+        ctype = (meta or {}).get("type")
+        if ctype not in aliases:
+            continue
+        aliases[ctype][ckey.lower()] = ckey
+        short_key = ckey.split("_", 1)[1] if "_" in ckey else ckey
+        aliases[ctype][short_key.lower()] = ckey
+
+    slot = raw_slot
+    cosmetic_key = aliases[slot].get(raw_key)
+    if not cosmetic_key:
+        return jsonify({"success": False, "message": "Cosmétique invalide pour ce slot"}), 400
+
     # Vérifier que le joueur possède ce cosmétique
     conn = get_db_connection()
     cur = conn.cursor()
@@ -2498,8 +2521,14 @@ def api_equip_cosmetic():
         unlocked = json.loads(row.get("unlocked_cosmetics") or "[]")
     except Exception:
         unlocked = []
+    # Compat anciennes données: normaliser d'éventuelles clés courtes stockées en DB.
+    unlocked_norm = set(unlocked)
+    for k in unlocked:
+        mapped = aliases[slot].get(str(k).strip().lower())
+        if mapped:
+            unlocked_norm.add(mapped)
     # "default" et "none" sont toujours équipables
-    if cosmetic_key not in ("default", "none") and cosmetic_key not in unlocked:
+    if cosmetic_key not in ("default", "none") and cosmetic_key not in unlocked_norm:
         # Super admin peut tout équiper
         if not is_super_admin(username):
             cur.close(); conn.close()
@@ -2518,7 +2547,7 @@ def api_equip_cosmetic():
         cur.close(); conn.close()
         return jsonify({"success": False, "message": "Slot invalide (theme/frame)"}), 400
     conn.commit(); cur.close(); conn.close()
-    return jsonify({"success": True})
+    return jsonify({"success": True, "slot": slot, "key": cosmetic_key})
 
 @app.route("/api/admin/unlock_cosmetic", methods=["POST"])
 @handle_errors
@@ -3072,7 +3101,7 @@ def handle_connect():
     username = session.get('username')
     if not username:
         logger.warning(f"WS refuse: utilisateur non authentifie ({request.sid})")
-        return
+        return False
     connected_users[request.sid] = username
     logger.info(f"WS connecte: {username} ({request.sid})")
 

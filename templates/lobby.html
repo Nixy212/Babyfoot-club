@@ -169,9 +169,12 @@ const isGuest = u => GUESTS.includes(u);
 async function init() {
   // 1. Charger l'utilisateur connecté
   try {
-    const r = await fetch('/current_user');
-    if (!r.ok) { location.href = '/login'; return; }
-    const u = await r.json();
+    let u = window._baseUserData || null;
+    if (!u || !u.username) {
+      const r = await fetch('/current_user');
+      if (!r.ok) { location.href = '/login'; return; }
+      u = await r.json();
+    }
     ME = u.username;
     IS_ADMIN = !!u.is_admin;
     if (window.ProfileUtils) {

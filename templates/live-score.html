@@ -59,6 +59,42 @@
     .no-game-option-sub { font-size: 0.8rem; color: var(--text-muted); }
     @media (max-width: 500px) { .no-game-options { grid-template-columns: 1fr; } }
 
+    .scoreboard-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .team-score-col { text-align: center; flex: 1; min-width: 0; }
+    .game-actions { display: flex; gap: .75rem; margin-top: .5rem; }
+    .btn-stop-game {
+      flex: 1;
+      font-size: .85rem;
+      color: #e74c3c;
+      border-color: rgba(231,76,60,.3);
+    }
+    .rematch-actions-secondary { margin-top: .75rem; }
+    .btn-rematch-exit {
+      width: 100%;
+      font-size: .82rem;
+      border-color: var(--border-normal);
+      color: var(--text-secondary);
+    }
+    @media (max-width: 768px) {
+      .scoreboard-row { gap: .85rem; }
+      #score1, #score2 { font-size: 3.35rem !important; }
+      #specScore1, #specScore2 { font-size: 3rem !important; }
+    }
+    @media (max-width: 520px) {
+      .scoreboard-row { gap: .55rem; }
+      #score1, #score2 { font-size: 2.7rem !important; }
+      #specScore1, #specScore2 { font-size: 2.45rem !important; }
+      .game-actions { flex-direction: column; }
+      #rematchPopup, #hostDecisionPopup { padding: 1rem !important; }
+      .popup-card { padding: 1.2rem !important; border-radius: 14px !important; }
+    }
+
     /* ── Thèmes cosmétiques ──────────────────────────────────── */
     body.theme-fire {
       --bg-primary:    #0d0200;
@@ -236,8 +272,8 @@
         </div>
         <div class="card-body">
           <!-- Scores -->
-          <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-bottom:1.25rem">
-            <div style="text-align:center;flex:1">
+          <div class="scoreboard-row">
+            <div class="team-score-col">
               <div id="team1Players" style="font-size:.85rem;color:var(--text-secondary);margin-bottom:.5rem;min-height:1.2em"></div>
               <div id="score1" style="font-family:'Space Mono',monospace;font-size:4rem;font-weight:900;color:var(--bronze);line-height:1">0</div>
               <button id="btnScore1" class="btn btn-primary" style="margin-top:.75rem;width:100%;font-size:.9rem" onclick="addPoint('team1')">
@@ -245,7 +281,7 @@
               </button>
             </div>
             <div style="font-size:1.5rem;font-weight:900;color:var(--text-muted);flex-shrink:0">–</div>
-            <div style="text-align:center;flex:1">
+            <div class="team-score-col">
               <div id="team2Players" style="font-size:.85rem;color:var(--text-secondary);margin-bottom:.5rem;min-height:1.2em"></div>
               <div id="score2" style="font-family:'Space Mono',monospace;font-size:4rem;font-weight:900;color:#3498db;line-height:1">0</div>
               <button id="btnScore2" class="btn" style="margin-top:.75rem;width:100%;font-size:.9rem;background:rgba(52,152,219,.15);color:#3498db;border:1px solid rgba(52,152,219,.3)" onclick="addPoint('team2')">
@@ -254,8 +290,8 @@
             </div>
           </div>
           <!-- Actions admin -->
-          <div style="display:flex;gap:.75rem;margin-top:.5rem">
-            <button class="btn btn-ghost" style="flex:1;font-size:.85rem;color:#e74c3c;border-color:rgba(231,76,60,.3)" onclick="stopGame()">
+          <div class="game-actions">
+            <button id="btnStopGame" class="btn btn-ghost btn-stop-game" onclick="stopGame()">
               ⏹ Terminer
             </button>
           </div>
@@ -334,7 +370,7 @@
 
 <!-- Popup Rematch -->
 <div id="rematchPopup" style="display:none;position:fixed;inset:0;z-index:9001;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:1.5rem">
-  <div style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:2rem;width:100%;max-width:380px;text-align:center">
+  <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:2rem;width:100%;max-width:380px;text-align:center">
     <div style="font-size:2rem;margin-bottom:.75rem">🔄</div>
     <h3 style="margin-bottom:.5rem">Revanche ?</h3>
     <p id="voteStatus" style="color:var(--text-muted);font-size:.875rem;margin-bottom:1rem"></p>
@@ -351,12 +387,15 @@
       <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="voteRematch('no')">❌ Non</button>
     </div>
     <div id="myVoteConfirm" style="display:none;color:var(--text-secondary);font-size:.875rem;padding:.75rem;background:rgba(255,255,255,.04);border-radius:8px"></div>
+    <div class="rematch-actions-secondary">
+      <button class="btn btn-ghost btn-rematch-exit" onclick="leaveRematch()">↩ Retour dashboard</button>
+    </div>
   </div>
 </div>
 
 <!-- Popup Décision hôte -->
 <div id="hostDecisionPopup" style="display:none;position:fixed;inset:0;z-index:9002;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:1.5rem">
-  <div style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:2rem;width:100%;max-width:360px;text-align:center">
+  <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:2rem;width:100%;max-width:360px;text-align:center">
     <div style="font-size:1.75rem;margin-bottom:.75rem">🤔</div>
     <p id="hostDecisionMsg" style="color:var(--text-secondary);font-size:.9rem;margin-bottom:1.25rem"></p>
     <div style="display:flex;gap:.75rem">
@@ -501,6 +540,7 @@ async function checkActiveGame() {
       const isInGame = t1.includes(currentUser) || t2.includes(currentUser);
       canControl = userIsAdmin || game.started_by === currentUser || isInGame;
       const canScore = userIsAdmin;
+      const canStop = userIsAdmin || game.started_by === currentUser;
       lastGame = {...game, team1_players: t1, team2_players: t2};
 
       if (canControl) {
@@ -509,8 +549,10 @@ async function checkActiveGame() {
         updateGameUI(lastGame);
         const s1 = document.getElementById('btnScore1');
         const s2 = document.getElementById('btnScore2');
+        const stopBtn = document.getElementById('btnStopGame');
         if (s1) s1.style.display = canScore ? '' : 'none';
         if (s2) s2.style.display = canScore ? '' : 'none';
+        if (stopBtn) stopBtn.style.display = canStop ? '' : 'none';
       } else {
         showArea('spectatorArea');
         document.getElementById('pageSub').textContent = 'Partie en direct — score mis à jour automatiquement';
@@ -724,6 +766,18 @@ function hostQuitRematch() {
   socket.emit('host_quit_rematch');
 }
 
+function leaveRematch() {
+  const iAmHost = !!(lastGame && (lastGame.started_by === currentUser));
+  if (socket && socket.connected && (iAmHost || isAdmin)) {
+    socket.emit('host_quit_rematch');
+  }
+  document.getElementById('rematchPopup').style.display = 'none';
+  document.getElementById('hostDecisionPopup').style.display = 'none';
+  document.getElementById('winnerOverlay').style.display = 'none';
+  if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
+  location.href = '/dashboard';
+}
+
 function showRematchPopup() {
   myRematchVote = null;
   document.getElementById('voteYesCount').textContent = '0';
@@ -731,6 +785,7 @@ function showRematchPopup() {
   document.getElementById('voteStatus').textContent = '';
   document.getElementById('myVoteButtons').style.display = 'flex';
   document.getElementById('myVoteConfirm').style.display = 'none';
+  document.getElementById('hostDecisionPopup').style.display = 'none';
   document.getElementById('rematchPopup').style.display = 'flex';
 }
 
@@ -761,9 +816,20 @@ function registerSocketEvents() {
     await ensureProfiles();
     const t1 = parsePlayers(game.team1_players), t2 = parsePlayers(game.team2_players);
     const parsed = {...game, team1_players: t1, team2_players: t2};
+    const isInGame = t1.includes(currentUser) || t2.includes(currentUser);
     lastGame = parsed;
-    canControl = isAdmin || game.started_by === currentUser;
-    if (canControl) { showArea('gameArea'); updateGameUI(parsed); }
+    canControl = isAdmin || game.started_by === currentUser || isInGame;
+    if (canControl) {
+      showArea('gameArea');
+      updateGameUI(parsed);
+      const canStop = isAdmin || game.started_by === currentUser;
+      const s1 = document.getElementById('btnScore1');
+      const s2 = document.getElementById('btnScore2');
+      const stopBtn = document.getElementById('btnStopGame');
+      if (s1) s1.style.display = isAdmin ? '' : 'none';
+      if (s2) s2.style.display = isAdmin ? '' : 'none';
+      if (stopBtn) stopBtn.style.display = canStop ? '' : 'none';
+    }
     else { showArea('spectatorArea'); updateSpectatorUI(parsed); }
   });
 
@@ -820,7 +886,11 @@ function registerSocketEvents() {
 
   socket.on('host_replace_or_quit', (data) => {
     const isHost = currentUser === data.host || isAdmin;
-    if (!isHost) return;
+    if (!isHost) {
+      const status = document.getElementById('voteStatus');
+      if (status) status.textContent = "En attente de la décision de l'hôte...";
+      return;
+    }
     document.getElementById('hostDecisionMsg').textContent = `${data.declined_player} ne veut pas rejouer. Que faire ?`;
     document.getElementById('hostDecisionPopup').style.display = 'flex';
   });
@@ -1101,9 +1171,12 @@ function showQuestUnlockToasts(quests) {
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   try {
-    const res = await fetchWithTimeout('/current_user', 8000);
-    if (!res.ok) { location.href = '/login'; return; }
-    const user = await res.json();
+    let user = window._baseUserData || null;
+    if (!user || !user.username) {
+      const res = await fetchWithTimeout('/current_user', 8000);
+      if (!res.ok) { location.href = '/login'; return; }
+      user = await res.json();
+    }
     if (!user || !user.username) { location.href = '/login'; return; }
     currentUser = user.username;
     isAdmin = user.is_admin || false;

@@ -403,6 +403,52 @@ let equippedTheme = null;
 let equippedFrame = null;
 let unlockedCosmetics = [];
 
+function normalizeCosmeticKey(type, key) {
+  const raw = String(key || '').trim().toLowerCase();
+  if (type === 'theme') {
+    if (!raw || raw === 'default') return 'default';
+    if (raw.startsWith('theme_')) return raw;
+    const map = {
+      fire: 'theme_fire',
+      night: 'theme_night',
+      gold: 'theme_gold',
+      royal: 'theme_royal',
+      master: 'theme_master',
+    };
+    return map[raw] || raw;
+  }
+  if (type === 'frame') {
+    if (!raw || raw === 'none') return 'none';
+    if (raw.startsWith('frame_')) return raw;
+    const map = {
+      bronze: 'frame_bronze',
+      flame: 'frame_flame',
+      phoenix: 'frame_phoenix',
+    };
+    return map[raw] || raw;
+  }
+  return raw;
+}
+
+function normalizeUnlockedCosmetics(list) {
+  const src = Array.isArray(list) ? list : [];
+  const out = new Set();
+  src.forEach((k) => {
+    const raw = String(k || '').trim().toLowerCase();
+    if (!raw) return;
+    if (raw === 'default' || raw.startsWith('theme_') || ['fire', 'night', 'gold', 'royal', 'master'].includes(raw)) {
+      out.add(normalizeCosmeticKey('theme', raw));
+      return;
+    }
+    if (raw === 'none' || raw.startsWith('frame_') || ['bronze', 'flame', 'phoenix'].includes(raw)) {
+      out.add(normalizeCosmeticKey('frame', raw));
+      return;
+    }
+    out.add(raw);
+  });
+  return Array.from(out);
+}
+
 const ELO_TIERS = [
   { name:'Recrue',    icon:'🎮', min:800,  max:949  },
   { name:'Amateur',   icon:'🌱', min:950,  max:1099 },
@@ -546,13 +592,25 @@ async function changePassword() {
 // ── Cosmétiques ───────────────────────────────────────────────
 async function equipCosmetic(type, key) {
   try {
-    const r = await fetch('/api/equip_cosmetic', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type, key}) });
+    const r = await fetch('/api/equip_cosmetic', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ slot: type, key })
+    });
     const d = await r.json();
     if (d.success || d.ok) {
       toast('Cosmétique équipé ✓', 'ok');
-      if (type === 'theme') equippedTheme = key;
-      if (type === 'frame') equippedFrame = key;
-      try { const cr = await fetch('/api/my_cosmetics'); if (cr.ok) { const cd = await cr.json(); unlockedCosmetics = cd.unlocked || []; } } catch(e) {}
+      if (type === 'theme') equippedTheme = normalizeCosmeticKey('theme', d.key || key);
+      if (type === 'frame') equippedFrame = normalizeCosmeticKey('frame', d.key || key);
+      try {
+        const cr = await fetch('/api/my_cosmetics');
+        if (cr.ok) {
+          const cd = await cr.json();
+          unlockedCosmetics = normalizeUnlockedCosmetics(cd.unlocked || []);
+          equippedTheme = normalizeCosmeticKey('theme', cd.active_theme || equippedTheme || 'default');
+          equippedFrame = normalizeCosmeticKey('frame', cd.active_frame || equippedFrame || 'none');
+        }
+      } catch(e) {}
       renderCosmeticSelectors();
     } else {
       toast(d.message || 'Erreur', 'err');
@@ -568,17 +626,17 @@ function renderCosmeticSelectors() {
 
   const THEMES = [
     { key:'default', name:'Défaut', icon:'🌑', desc:'Thème sombre bronze', cosmetic_key: null },
-    { key:'fire',    name:'Fire',   icon:'🔥', desc:'Rouge intense',       cosmetic_key: 'theme_fire' },
-    { key:'night',   name:'Night',  icon:'🌌', desc:'Violet nocturne',     cosmetic_key: 'theme_night' },
-    { key:'gold',    name:'Gold',   icon:'✨', desc:'Or brillant',         cosmetic_key: 'theme_gold' },
-    { key:'royal',   name:'Royal',  icon:'💙', desc:'Bleu royal',          cosmetic_key: 'theme_royal' },
-    { key:'master',  name:'Master', icon:'🏆', desc:'Noir & or',           cosmetic_key: 'theme_master' },
+    { key:'theme_fire',   name:'Fire',   icon:'🔥', desc:'Rouge intense',       cosmetic_key: 'theme_fire' },
+    { key:'theme_night',  name:'Night',  icon:'🌌', desc:'Violet nocturne',     cosmetic_key: 'theme_night' },
+    { key:'theme_gold',   name:'Gold',   icon:'✨', desc:'Or brillant',         cosmetic_key: 'theme_gold' },
+    { key:'theme_royal',  name:'Royal',  icon:'💙', desc:'Bleu royal',          cosmetic_key: 'theme_royal' },
+    { key:'theme_master', name:'Master', icon:'🏆', desc:'Noir & or',           cosmetic_key: 'theme_master' },
   ];
   const FRAMES = [
     { key:'none',    name:'Aucun',  icon:'⚪', cosmetic_key: null },
-    { key:'bronze',  name:'Bronze', icon:'🟤', cosmetic_key: 'frame_bronze' },
-    { key:'flame',   name:'Flamme', icon:'🔥', cosmetic_key: 'frame_flame' },
-    { key:'phoenix', name:'Phénix', icon:'🦅', cosmetic_key: 'frame_phoenix' },
+    { key:'frame_bronze',  name:'Bronze', icon:'🟤', cosmetic_key: 'frame_bronze' },
+    { key:'frame_flame',   name:'Flamme', icon:'🔥', cosmetic_key: 'frame_flame' },
+    { key:'frame_phoenix', name:'Phénix', icon:'🦅', cosmetic_key: 'frame_phoenix' },
   ];
 
   themeGrid.innerHTML = THEMES.map(t => {
@@ -715,12 +773,14 @@ function renderElo(stats) {
 // ── Chargement profil ─────────────────────────────────────────
 async function loadProfile() {
   try {
-    const [userRes, profileRes] = await Promise.all([
-      fetch('/current_user'),
-      fetch('/api/profile'),
-    ]);
-    if (!userRes.ok) { location.href = '/login'; return; }
-    const user = await userRes.json();
+    const profileResPromise = fetch('/api/profile');
+    let user = window._baseUserData || null;
+    if (!user || !user.username) {
+      const userRes = await fetch('/current_user');
+      if (!userRes.ok) { location.href = '/login'; return; }
+      user = await userRes.json();
+    }
+    const profileRes = await profileResPromise;
     const profile = profileRes.ok ? await profileRes.json() : {};
     currentUser = user;
 
@@ -785,13 +845,15 @@ async function loadProfile() {
     }
 
     // Cosmétiques équipés + débloqués
-    equippedTheme = profile.equipped_theme || null;
-    equippedFrame = profile.equipped_frame || null;
+    equippedTheme = 'default';
+    equippedFrame = 'none';
     try {
       const cr = await fetch('/api/my_cosmetics');
       if (cr.ok) {
         const cd = await cr.json();
-        unlockedCosmetics = cd.unlocked || [];
+        unlockedCosmetics = normalizeUnlockedCosmetics(cd.unlocked || []);
+        equippedTheme = normalizeCosmeticKey('theme', cd.active_theme || 'default');
+        equippedFrame = normalizeCosmeticKey('frame', cd.active_frame || 'none');
       }
     } catch(e) { unlockedCosmetics = []; }
     renderCosmeticSelectors();

@@ -1,8 +1,15 @@
 (function() {
   'use strict';
 
+  function shouldReduceVisualEffects() {
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    return prefersReduced || isMobile;
+  }
+
   // ── Animations flottantes ──────────────────────────────────────────────────
   function createFloatingShapes() {
+    if (shouldReduceVisualEffects()) return;
     if (document.querySelector('.floating-shapes-global')) return;
     const container = document.createElement('div');
     container.className = 'floating-shapes-global';
@@ -15,6 +22,7 @@
   }
 
   function createGlowPulse() {
+    if (shouldReduceVisualEffects()) return;
     if (document.querySelector('.glow-pulse-global')) return;
     const glow = document.createElement('div');
     glow.className = 'glow-pulse-global';

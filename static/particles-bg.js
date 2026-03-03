@@ -3,6 +3,9 @@
  * Purement CSS, zéro canvas, zéro rAF. Impact batterie nul.
  */
 (function () {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+  if (prefersReduced || isMobile) return;
 
   // [bottom%, left%, durée(s), delay(s), taille(px), opacité, couleur]
   const P = [
