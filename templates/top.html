@@ -230,22 +230,30 @@ function ratio(goals, games) {
   return (goals / games).toFixed(2);
 }
 
-fetch('/current_user').then(r => r.json()).then(d => {
-  if (d && d.username) {
-    ProfileUtils.updateNav(d);
-    // Lien admin dans menu mobile (si admin)
-    if (d && d.is_admin) {
-      const mm = document.getElementById('mobileMenu');
-      if (mm && !mm.querySelector('a[href="/admin"]')) {
-        const a = document.createElement('a');
-        a.href = '/admin'; a.textContent = '🛡️ Admin';
-        const firstLink = mm.querySelector('a');
-        if (firstLink) mm.insertBefore(a, firstLink);
-      }
-    }
-    loadLeaderboard(d.username);
+(async () => {
+  let d = window._baseUserData || null;
+  if ((!d || !d.username) && typeof loadBaseUser === 'function') {
+    d = await loadBaseUser();
   }
-});
+  if (!d || !d.username) {
+    try {
+      const r = await fetch('/current_user');
+      if (r.ok) d = await r.json();
+    } catch (e) {}
+  }
+  if (!d || !d.username) return;
+  if (window.ProfileUtils) ProfileUtils.updateNav(d);
+  if (d.is_admin) {
+    const mm = document.getElementById('mobileMenu');
+    if (mm && !mm.querySelector('a[href="/admin"]')) {
+      const a = document.createElement('a');
+      a.href = '/admin'; a.textContent = 'Admin';
+      const firstLink = mm.querySelector('a');
+      if (firstLink) mm.insertBefore(a, firstLink);
+    }
+  }
+  loadLeaderboard(d.username);
+})();
 
 const ELO_TIERS = [
   { name:'Recrue 🎮',   icon:'🎮', min:800,  max:949  },
@@ -297,14 +305,14 @@ async function loadLeaderboard(me) {
       const name = escapeHtml((p.nickname && p.nickname.trim()) ? p.nickname.trim() : p.username);
       const subName = (p.nickname && p.nickname.trim()) ? `<span style="font-size:0.7rem;color:var(--text-muted)">${escapeHtml(p.username)}</span>` : '';
 
-      // Avatar
+      // Avatar + cosmétiques
       let avContent;
-      if (p.avatar_url) {
-        avContent = `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`;
+      if (window.ProfileUtils) {
+        avContent = ProfileUtils.avatarWithCosmeticsHTML(p, 40, { extraClass: `lb-av ${avClass}` });
       } else if (p.avatar_preset) {
-        avContent = p.avatar_preset;
+        avContent = `<div class="lb-av ${avClass}" style="overflow:hidden">${p.avatar_preset}</div>`;
       } else {
-        avContent = p.username[0].toUpperCase();
+        avContent = `<div class="lb-av ${avClass}" style="overflow:hidden">${p.username[0].toUpperCase()}</div>`;
       }
 
       return `
@@ -313,7 +321,7 @@ async function loadLeaderboard(me) {
             ${isPodium ? PODIUM_ICONS[i] : '#' + rank}
           </div>
           <div class="lb-av-wrap">
-            <div class="lb-av ${avClass}" style="overflow:hidden;display:flex;align-items:center;justify-content:center">${avContent}</div>
+            ${avContent}
             ${isOnline ? '<span class="online-dot" title="En ligne"></span>' : ''}
           </div>
           <div class="lb-info">
@@ -351,3 +359,4 @@ async function loadLeaderboard(me) {
 </script>
 
 {% endblock %}
+

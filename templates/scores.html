@@ -28,7 +28,6 @@
   </div>
 </div>
 
-<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
 <script>
 function toggleMenu() {
   const isOpen = document.getElementById('mobileMenu').classList.contains('open');
@@ -55,25 +54,45 @@ function parsePlayers(players) {
   }
 }
 
-fetch('/current_user').then(r => r.json()).then(d => {
-  if (d && d.username) {
-    ProfileUtils.updateNav(d);
-    // Lien admin dans menu mobile (si admin)
-    if (d && d.is_admin) {
-      const mm = document.getElementById('mobileMenu');
-      if (mm && !mm.querySelector('a[href="/admin"]')) {
-        const a = document.createElement('a');
-        a.href = '/admin'; a.textContent = '🛡️ Admin';
-        const firstLink = mm.querySelector('a');
-        if (firstLink) mm.insertBefore(a, firstLink);
-      }
+(async () => {
+  let d = window._baseUserData || null;
+  if ((!d || !d.username) && typeof loadBaseUser === 'function') {
+    d = await loadBaseUser();
+  }
+  if (!d || !d.username) {
+    try {
+      const r = await fetch('/current_user');
+      if (r.ok) d = await r.json();
+    } catch (e) {}
+  }
+  if (!d || !d.username) return;
+  if (window.ProfileUtils) ProfileUtils.updateNav(d);
+  if (d.is_admin) {
+    const mm = document.getElementById('mobileMenu');
+    if (mm && !mm.querySelector('a[href="/admin"]')) {
+      const a = document.createElement('a');
+      a.href = '/admin'; a.textContent = 'Admin';
+      const firstLink = mm.querySelector('a');
+      if (firstLink) mm.insertBefore(a, firstLink);
     }
   }
-});
+})();
 
 async function loadScores() {
   const container = document.getElementById('scoresGrid');
   try {
+    if (window.ProfileUtils) await ProfileUtils.fetchAllProfiles(false);
+    const profCache = (window.ProfileUtils && ProfileUtils._getAllCache) ? ProfileUtils._getAllCache() : {};
+    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const renderTeam = (players) => players.map((u) => {
+      const p = profCache[u] || { username: u };
+      const dname = (p.nickname && p.nickname.trim()) ? p.nickname.trim() : u;
+      const av = window.ProfileUtils
+        ? ProfileUtils.avatarWithCosmeticsHTML(p, 22)
+        : `<span style="width:22px;height:22px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700">${esc((u || '?')[0].toUpperCase())}</span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:5px;max-width:100%">${av}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">${esc(dname)}</span></span>`;
+    }).join('<span style="opacity:.45;margin:0 6px">&</span>');
+
     const res = await fetch('/scores_all');
     if (res.status === 401) {
       window.location.href = '/login';
@@ -131,12 +150,12 @@ async function loadScores() {
           <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0">
             <div style="flex:1;min-width:0">
               <div style="font-size:0.75rem;font-weight:700;color:#22c55e;margin-bottom:2px;white-space:nowrap">Vainqueurs</div>
-              <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${winnerTeam.join(' & ')}</div>
+              <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${renderTeam(winnerTeam)}</div>
             </div>
             <div style="font-family:'Space Mono',monospace;font-size:1.375rem;font-weight:900;color:var(--bronze);white-space:nowrap;flex-shrink:0">${winScore}–${loseScore}</div>
             <div style="flex:1;min-width:0;text-align:right">
               <div style="font-size:0.75rem;font-weight:700;color:#e74c3c;margin-bottom:2px;white-space:nowrap">Perdants</div>
-              <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${loserTeam.join(' & ')}</div>
+              <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${renderTeam(loserTeam)}</div>
             </div>
           </div>
         </div>
@@ -161,3 +180,4 @@ loadScores();
 </script>
 
 {% endblock %}
+

@@ -1,64 +1,67 @@
 /**
- * particles-bg.js — Poussière dorée en diagonale (bas-gauche → haut-droite)
- * Purement CSS, zéro canvas, zéro rAF. Impact batterie nul.
+ * particles-bg.js - Theme emoji outline particles drifting diagonally.
  */
 (function () {
-  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-  if (prefersReduced || isMobile) return;
+  'use strict';
 
-  // [bottom%, left%, durée(s), delay(s), taille(px), opacité, couleur]
-  const P = [
-    [ 0, 5,  19, 0.0, 2.5, .22, '#e8a06a'],
-    [ 0,10,  25, 2.1, 1.8, .16, '#e8b84a'],
-    [ 0,18,  21, 5.3, 3.0, .20, '#d4884e'],
-    [ 0,24,  32, 1.2, 1.5, .13, '#ffdc78'],
-    [ 0,31,  18, 7.8, 2.0, .19, '#e8a06a'],
-    [ 0,38,  27, 3.5, 2.8, .15, '#e8b84a'],
-    [ 0,44,  23, 0.8, 1.6, .21, '#d4884e'],
-    [ 0,50,  20, 9.1, 3.2, .18, '#ffdc78'],
-    [ 0,57,  29, 4.4, 2.2, .14, '#e8a06a'],
-    [ 0,63,  24, 6.7, 1.9, .20, '#e8b84a'],
-    [ 0,70,  17, 2.9, 2.6, .15, '#d4884e'],
-    [ 0,76,  30, 8.3, 1.4, .23, '#ffdc78'],
-    [ 0,82,  22, 1.6, 3.1, .17, '#e8a06a'],
-    [ 0,89,  26, 5.0, 2.1, .19, '#e8b84a'],
-    [ 0,95,  19, 3.8, 1.7, .13, '#d4884e'],
-    [ 0, 8,  28,11.2, 2.4, .15, '#ffdc78'],
-    [ 0,22,  21, 7.0, 1.3, .18, '#e8a06a'],
-    [ 0,35,  33, 0.3, 2.9, .12, '#e8b84a'],
-    [ 0,48,  16, 9.6, 1.8, .21, '#d4884e'],
-    [ 0,62,  24, 4.1, 2.5, .16, '#ffdc78'],
-    [ 0,73,  20, 6.5, 1.6, .20, '#e8a06a'],
-    [ 0,85,  27, 2.4, 3.3, .14, '#e8b84a'],
-    [ 0,15,  22,13.1, 2.0, .17, '#d4884e'],
-    [ 0,42,  18,10.5, 1.5, .19, '#ffdc78'],
-    [ 0,68,  31, 1.9, 2.7, .13, '#e8a06a'],
-    [ 0, 3,  23, 8.7, 1.9, .15, '#e8b84a'],
-    [ 0,55,  19, 5.5, 2.3, .22, '#d4884e'],
-    [ 0,78,  26,12.0, 1.7, .16, '#ffdc78'],
-    [ 0,92,  21, 3.2, 2.8, .18, '#e8a06a'],
-    [ 0,29,  29, 7.4, 1.4, .14, '#e8b84a'],
-  ];
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return;
+
+  const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+  const PARTICLE_COUNT = isMobile ? 10 : 24;
+
+  const STROKE_BY_THEME = {
+    default: 'rgba(212,136,78,0.42)',
+    theme_fire: 'rgba(255,107,44,0.5)',
+    theme_night: 'rgba(142,125,255,0.5)',
+    theme_gold: 'rgba(227,179,59,0.5)',
+    theme_royal: 'rgba(74,147,235,0.5)',
+    theme_master: 'rgba(215,164,58,0.52)',
+  };
+
+  function activeThemeKey() {
+    const fromManager = window.ThemeManager && window.ThemeManager.getActiveTheme
+      ? window.ThemeManager.getActiveTheme()
+      : null;
+    const fromAttr = document.documentElement.getAttribute('data-active-theme');
+    return fromManager || fromAttr || 'default';
+  }
+
+  function activeThemeEmoji() {
+    if (window.ThemeManager && window.ThemeManager.getThemeEmoji) {
+      return window.ThemeManager.getThemeEmoji();
+    }
+    const cssEmoji = getComputedStyle(document.documentElement).getPropertyValue('--theme-emoji').trim();
+    const cleaned = cssEmoji.replace(/^['"]|['"]$/g, '');
+    return cleaned || '⚽';
+  }
+
+  function strokeColorForTheme(key) {
+    return STROKE_BY_THEME[key] || STROKE_BY_THEME.default;
+  }
 
   function injectCSS() {
+    if (document.getElementById('emoji-dust-style')) return;
     const s = document.createElement('style');
-    // translateX positif = drift vers la droite (diagonale bas-gauche → haut-droite)
+    s.id = 'emoji-dust-style';
     s.textContent = `
       #dust-layer{
         position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;
       }
-      .dust{
-        position:absolute;border-radius:50%;
-        animation:dustDiag linear infinite;
+      .dust-emoji{
+        position:absolute;
+        color:transparent;
+        -webkit-text-stroke:1px var(--dust-stroke, rgba(212,136,78,.42));
+        text-shadow:0 0 8px var(--dust-stroke, rgba(212,136,78,.42));
         will-change:transform,opacity;
+        animation:dustEmojiDiag linear infinite;
+        user-select:none;
       }
-      @keyframes dustDiag{
-        0%  { transform:translateY(0) translateX(0) scale(1); opacity:0; }
-        6%  { opacity:1; }
-        40% { transform:translateY(-40vh) translateX(22vw) scale(1.08); }
-        70% { transform:translateY(-70vh) translateX(38vw) scale(0.94); opacity:.7;}
-        100%{ transform:translateY(-110vh) translateX(52vw) scale(0.78); opacity:0; }
+      @keyframes dustEmojiDiag{
+        0%   { transform:translateY(0) translateX(0) rotate(-8deg) scale(1); opacity:0; }
+        8%   { opacity:1; }
+        55%  { transform:translateY(-56vh) translateX(26vw) rotate(7deg) scale(1.06); opacity:.75; }
+        100% { transform:translateY(-116vh) translateX(56vw) rotate(16deg) scale(.85); opacity:0; }
       }
     `;
     document.head.appendChild(s);
@@ -66,30 +69,67 @@
 
   function build() {
     injectCSS();
-    const layer = document.createElement('div');
-    layer.id = 'dust-layer';
-    P.forEach(([bot, left, dur, delay, size, opacity, color]) => {
+    let layer = document.getElementById('dust-layer');
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = 'dust-layer';
+      document.body.insertBefore(layer, document.body.firstChild);
+    }
+    layer.innerHTML = '';
+
+    const themeKey = activeThemeKey();
+    const emoji = activeThemeEmoji();
+    const stroke = strokeColorForTheme(themeKey);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const size = (isMobile ? 11 : 13) + Math.random() * (isMobile ? 4 : 8);
+      const left = Math.random() * 96;
+      const bottom = -8 + Math.random() * 12;
+      const duration = (isMobile ? 18 : 20) + Math.random() * (isMobile ? 16 : 18);
+      const delay = Math.random() * 18;
+      const opacity = (isMobile ? 0.2 : 0.28) + Math.random() * 0.28;
+      const drift = (Math.random() * 0.8 + 0.6).toFixed(2);
+
       const el = document.createElement('span');
-      el.className = 'dust';
+      el.className = 'dust-emoji';
+      el.textContent = emoji;
       el.style.cssText = [
-        `bottom:${bot}%`,
-        `left:${left}%`,
-        `width:${size}px`,
-        `height:${size}px`,
-        `background:${color}`,
-        `opacity:${opacity}`,
-        `animation-duration:${dur}s`,
-        `animation-delay:-${delay}s`,
-        `box-shadow:0 0 ${size*2.2}px ${size*0.9}px ${color}50`,
+        `left:${left.toFixed(2)}%`,
+        `bottom:${bottom.toFixed(2)}%`,
+        `font-size:${size.toFixed(1)}px`,
+        `opacity:${opacity.toFixed(2)}`,
+        `animation-duration:${duration.toFixed(1)}s`,
+        `animation-delay:-${delay.toFixed(2)}s`,
+        `--dust-stroke:${stroke}`,
+        `filter:drop-shadow(0 0 ${Math.max(5, size * 0.9).toFixed(1)}px var(--dust-stroke))`,
+        `transform-origin:center`,
+        `--drift:${drift}`,
       ].join(';');
       layer.appendChild(el);
+    }
+  }
+
+  function refreshThemeOnParticles() {
+    const layer = document.getElementById('dust-layer');
+    if (!layer) return;
+    const themeKey = activeThemeKey();
+    const emoji = activeThemeEmoji();
+    const stroke = strokeColorForTheme(themeKey);
+    layer.querySelectorAll('.dust-emoji').forEach((el) => {
+      el.textContent = emoji;
+      el.style.setProperty('--dust-stroke', stroke);
+      el.style.filter = `drop-shadow(0 0 10px ${stroke})`;
     });
-    document.body.insertBefore(layer, document.body.firstChild);
+  }
+
+  function init() {
+    build();
+    window.addEventListener('bf:theme-changed', refreshThemeOnParticles);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', build);
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    build();
+    init();
   }
 })();

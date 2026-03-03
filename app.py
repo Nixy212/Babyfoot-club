@@ -194,6 +194,7 @@ rematch_no_votes = []         # Joueurs qui ont voté NON
 servo_commands = {"servo1": [], "servo2": []}
 rematch_pending = False       # True entre game_ended et le lancement du rematch
 pending_invitations = {}      # username -> {from, timestamp}
+pending_rematch_replacements = {}  # replacement_username -> invitation rematch en attente
 
 # ── connected_users : sid -> username pour les handlers SocketIO ──
 connected_users = {}
@@ -202,6 +203,15 @@ def get_socket_user():
     # Identité WS strictement liée au SID courant.
     # Évite qu'une session HTTP changée dans un autre onglet applique des actions au mauvais compte.
     return connected_users.get(request.sid)
+
+def emit_to_user(username, event_name, payload):
+    """Emet un event Socket.IO a toutes les connexions d'un utilisateur."""
+    delivered = False
+    for sid, user in list(connected_users.items()):
+        if user == username:
+            socketio.emit(event_name, payload, to=sid, namespace='/')
+            delivered = True
+    return delivered
 
 # ── Rate limiting login (anti brute-force) ────────────────────
 
@@ -894,7 +904,7 @@ def schedule_zombie_game_cleanup():
 
 def _reset_game_state():
     """Reinitialise l'etat global d'une partie."""
-    global current_game, rematch_votes, servo_commands, rematch_pending
+    global current_game, rematch_votes, servo_commands, rematch_pending, pending_rematch_replacements
     current_game = {
         "team1_score": 0, "team2_score": 0,
         "team1_players": [], "team2_players": [],
@@ -903,12 +913,13 @@ def _reset_game_state():
     }
     rematch_votes = {"team1": [], "team2": []}
     rematch_pending = False
+    pending_rematch_replacements.clear()
     servo_commands["servo1"].append("close")
     servo_commands["servo2"].append("close")
 
 def _launch_rematch(game):
     """Lance un rematch. Centralise le code de relance."""
-    global current_game, rematch_votes, rematch_no_votes, servo_commands, rematch_pending
+    global current_game, rematch_votes, rematch_no_votes, servo_commands, rematch_pending, pending_rematch_replacements
     rematch_no_votes.clear()
     current_game = {
         "team1_score": 0, "team2_score": 0,
@@ -921,6 +932,7 @@ def _launch_rematch(game):
     }
     rematch_votes = {"team1": [], "team2": []}
     rematch_pending = False
+    pending_rematch_replacements.clear()
     servo_commands["servo1"].append("open")
     servo_commands["servo2"].append("open")
     socketio.emit('game_started', current_game, namespace='/')
@@ -1243,7 +1255,9 @@ def current_user():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        q = "SELECT nickname, avatar_preset, avatar_url FROM users WHERE username = %s" if USE_POSTGRES else "SELECT nickname, avatar_preset, avatar_url FROM users WHERE username = ?"
+        q = ("SELECT nickname, avatar_preset, avatar_url, active_theme, active_frame FROM users WHERE username = %s"
+             if USE_POSTGRES else
+             "SELECT nickname, avatar_preset, avatar_url, active_theme, active_frame FROM users WHERE username = ?")
         cur.execute(q, (username,))
         prof = row_to_dict(cur.fetchone()) or {}
         cur.close(); conn.close()
@@ -1256,6 +1270,8 @@ def current_user():
         "avatar_preset": prof.get("avatar_preset") or "",
         "avatar_url": "",  # Ne pas envoyer la base64 — trop lourd, utiliser /api/avatar/<username>
         "has_avatar": bool(avatar_url_raw),  # Flag cohérent avec /users_list
+        "active_theme": prof.get("active_theme") or "default",
+        "active_frame": prof.get("active_frame") or "none",
         "is_admin": is_admin(username),
         "is_super_admin": is_super_admin(username),
         "admin_class": admin_class,
@@ -1310,6 +1326,8 @@ def leaderboard():
         if USE_POSTGRES:
             cur.execute("""
                 SELECT u.username, u.nickname, u.avatar_preset, u.avatar_url,
+                       COALESCE(u.active_frame, 'none') as active_frame,
+                       COALESCE(u.active_theme, 'default') as active_theme,
                        u.total_goals, u.total_games, u.elo,
                        COALESCE(u.winstreak, 0) as winstreak,
                        COALESCE(u.total_wins, 0) as wins
@@ -1320,6 +1338,8 @@ def leaderboard():
         else:
             cur.execute("""
                 SELECT username, nickname, avatar_preset, avatar_url,
+                       COALESCE(active_frame, 'none') as active_frame,
+                       COALESCE(active_theme, 'default') as active_theme,
                        total_goals, total_games, elo,
                        COALESCE(winstreak, 0) as winstreak,
                        COALESCE(total_wins, 0) as wins
@@ -1363,6 +1383,13 @@ def leaderboard():
         else:
             for row in rows:
                 row["badges"] = []
+        for row in rows:
+            avatar_raw = row.get("avatar_url") or ""
+            row["has_avatar"] = bool(avatar_raw)
+            # Eviter d'envoyer une éventuelle base64 volumineuse dans le classement.
+            row["avatar_url"] = ""
+            row["active_frame"] = row.get("active_frame") or "none"
+            row["active_theme"] = row.get("active_theme") or "default"
     finally:
         cur.close()
         conn.close()
@@ -1931,7 +1958,7 @@ def users_list():
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        cur.execute("SELECT username, nickname, avatar_preset, avatar_url, elo, role FROM users ORDER BY username ASC")
+        cur.execute("SELECT username, nickname, avatar_preset, avatar_url, elo, role, active_theme, active_frame FROM users ORDER BY username ASC")
         rows = [row_to_dict(r) for r in cur.fetchall()]
 
         # Badges de tous les joueurs en une seule requête
@@ -1971,6 +1998,8 @@ def users_list():
         "avatar_preset": r.get("avatar_preset") or "",
         "avatar_url":   "",   # Ne pas envoyer la base64 — utiliser /api/avatar/<username>
         "has_avatar":   bool(r.get("avatar_url")),
+        "active_theme": r.get("active_theme") or "default",
+        "active_frame": r.get("active_frame") or "none",
         "elo":          r.get("elo") or 1000,
         "role":         int(r.get("role") or 0),
         "badges":       badges_by_user.get(r["username"], []),
@@ -3192,6 +3221,13 @@ def _remove_player_from_lobby(username):
 def handle_disconnect():
     username = connected_users.pop(request.sid, None)
     logger.info(f"WS deconnecte: {request.sid} ({username})")
+    if username and username in pending_rematch_replacements:
+        inv = pending_rematch_replacements.pop(username, None) or {}
+        emit_to_user(inv.get('host'), 'rematch_invite_declined', {
+            'replacement_player': username,
+            'declined_player': inv.get('declined_player'),
+            'reason': 'offline'
+        })
     if username and active_lobby.get('active'):
         # Délai de grâce : on attend avant de retirer le joueur du lobby
         # (navigation entre pages = déconnexion + reconnexion rapide)
@@ -3728,7 +3764,7 @@ def handle_score(data):
 
 @socketio.on('vote_rematch')
 def handle_vote_rematch(data):
-    global rematch_votes, rematch_no_votes, current_game, servo_commands, rematch_pending
+    global rematch_votes, rematch_no_votes, current_game, servo_commands, rematch_pending, pending_rematch_replacements
     username = get_socket_user()
     if not username:
         return
@@ -3736,6 +3772,7 @@ def handle_vote_rematch(data):
     host = current_game.get('started_by')
 
     if data.get('vote') == 'no':
+        pending_rematch_replacements.clear()
         # Enregistrer le NON
         if username not in rematch_no_votes:
             rematch_no_votes.append(username)
@@ -3786,7 +3823,7 @@ def handle_vote_rematch(data):
 
 @socketio.on('host_quit_rematch')
 def handle_host_quit_rematch():
-    global rematch_votes, rematch_no_votes, rematch_pending
+    global rematch_votes, rematch_no_votes, rematch_pending, pending_rematch_replacements
     username = get_socket_user()
     host = current_game.get('started_by')
     if username != host and not is_admin(username):
@@ -3794,8 +3831,196 @@ def handle_host_quit_rematch():
     rematch_votes = {"team1": [], "team2": []}
     rematch_no_votes = []
     rematch_pending = False
+    pending_rematch_replacements.clear()
     socketio.emit('rematch_cancelled', {}, namespace='/')
 
+def _validate_rematch_replacement_request(actor_username, data):
+    """Valide une demande de remplacement pour la revanche."""
+    host = current_game.get('started_by')
+    if actor_username != host and not is_admin(actor_username):
+        return None, "Seul l'hote ou un admin peut remplacer un joueur"
+    if current_game.get('active') or not rematch_pending:
+        return None, "Aucune revanche en attente"
+
+    data = data or {}
+    declined_player = str(data.get('declined_player') or '').strip()
+    replacement_player = str(data.get('replacement_player') or data.get('replacement') or '').strip()
+    if not declined_player or not replacement_player:
+        return None, "Parametres manquants"
+    if declined_player == replacement_player:
+        return None, "Le remplacant doit etre different"
+
+    t1 = list(current_game.get('team1_players', []) or [])
+    t2 = list(current_game.get('team2_players', []) or [])
+    all_players = set(t1 + t2)
+    if declined_player not in all_players:
+        return None, "Joueur a remplacer introuvable"
+    if replacement_player in all_players:
+        return None, "Ce joueur est deja dans la partie"
+
+    if not is_guest_player(replacement_player):
+        conn = None
+        cur = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            q = ("SELECT username FROM users WHERE username=%s"
+                 if USE_POSTGRES else
+                 "SELECT username FROM users WHERE username=?")
+            cur.execute(q, (replacement_player,))
+            exists = row_to_dict(cur.fetchone()) is not None
+            if not exists:
+                return None, "Le remplacant n'existe pas"
+        except Exception:
+            return None, "Impossible de verifier le remplacant"
+        finally:
+            try:
+                if cur: cur.close()
+            except Exception:
+                pass
+            try:
+                if conn: conn.close()
+            except Exception:
+                pass
+
+    target_team = None
+    if declined_player in t1:
+        t1[t1.index(declined_player)] = replacement_player
+        target_team = 'team1'
+    elif declined_player in t2:
+        t2[t2.index(declined_player)] = replacement_player
+        target_team = 'team2'
+
+    return {
+        'declined_player': declined_player,
+        'replacement_player': replacement_player,
+        'team1_players': t1,
+        'team2_players': t2,
+        'team': target_team
+    }, None
+
+def _apply_rematch_replacement(payload):
+    """Applique le remplacement dans current_game et nettoie les votes."""
+    global current_game, rematch_votes, rematch_no_votes, pending_rematch_replacements
+    declined_player = payload['declined_player']
+    replacement_player = payload['replacement_player']
+    current_game['team1_players'] = payload['team1_players']
+    current_game['team2_players'] = payload['team2_players']
+
+    rematch_no_votes = [u for u in rematch_no_votes if u not in (declined_player, replacement_player)]
+    rematch_votes['team1'] = [u for u in rematch_votes.get('team1', []) if u not in (declined_player, replacement_player)]
+    rematch_votes['team2'] = [u for u in rematch_votes.get('team2', []) if u not in (declined_player, replacement_player)]
+    pending_rematch_replacements.pop(replacement_player, None)
+
+    socketio.emit('rematch_player_replaced', {
+        'declined_player': declined_player,
+        'replacement_player': replacement_player,
+        'team': payload.get('team')
+    }, namespace='/')
+
+@socketio.on('rematch_replace_player')
+def handle_rematch_replace_player(data):
+    """Compatibilite legacy: remplacement direct sans invitation."""
+    username = get_socket_user()
+    if not username:
+        emit('error', {'message': 'Non authentifie'})
+        return
+    payload, err = _validate_rematch_replacement_request(username, data)
+    if err:
+        emit('error', {'message': err})
+        return
+    _apply_rematch_replacement(payload)
+    _launch_rematch(current_game)
+
+@socketio.on('rematch_invite_player')
+def handle_rematch_invite_player(data):
+    """Hote/admin: invite un joueur a remplacer puis attend sa reponse."""
+    global pending_rematch_replacements
+    username = get_socket_user()
+    if not username:
+        emit('error', {'message': 'Non authentifie'})
+        return
+
+    payload, err = _validate_rematch_replacement_request(username, data)
+    if err:
+        emit('error', {'message': err})
+        return
+
+    replacement_player = payload['replacement_player']
+    if is_guest_player(replacement_player):
+        _apply_rematch_replacement(payload)
+        _launch_rematch(current_game)
+        return
+
+    # Nettoyer les invitations de rematch expirees.
+    now_ts = _time.time()
+    stale = [u for u, inv in list(pending_rematch_replacements.items()) if now_ts - inv.get('timestamp', 0) > 120]
+    for u in stale:
+        pending_rematch_replacements.pop(u, None)
+
+    invite_payload = {
+        'actor': username,
+        'host': username,
+        'declined_player': payload['declined_player'],
+        'replacement_player': replacement_player,
+        'timestamp': now_ts
+    }
+    pending_rematch_replacements[replacement_player] = invite_payload
+
+    delivered = emit_to_user(replacement_player, 'rematch_replacement_invite', {
+        'host': username,
+        'declined_player': payload['declined_player'],
+        'replacement_player': replacement_player
+    })
+    if not delivered:
+        pending_rematch_replacements.pop(replacement_player, None)
+        emit('error', {'message': 'Le joueur selectionne est hors ligne'})
+        return
+
+    emit('rematch_invite_sent', {
+        'to': replacement_player,
+        'declined_player': payload['declined_player']
+    })
+
+@socketio.on('rematch_replacement_response')
+def handle_rematch_replacement_response(data):
+    """Le joueur invite accepte/refuse sa participation au rematch."""
+    username = get_socket_user()
+    if not username:
+        return
+    invite = pending_rematch_replacements.get(username)
+    if not invite:
+        emit('error', {'message': "Aucune invitation de remplacement en attente"})
+        return
+
+    # Invitation expiree.
+    if _time.time() - invite.get('timestamp', 0) > 120:
+        pending_rematch_replacements.pop(username, None)
+        emit('error', {'message': "Invitation expiree"})
+        return
+
+    accept = bool((data or {}).get('accept'))
+    pending_rematch_replacements.pop(username, None)
+
+    if not accept:
+        emit_to_user(invite.get('actor'), 'rematch_invite_declined', {
+            'replacement_player': username,
+            'declined_player': invite.get('declined_player')
+        })
+        return
+
+    payload, err = _validate_rematch_replacement_request(invite.get('actor'), invite)
+    if err:
+        emit_to_user(invite.get('actor'), 'rematch_invite_declined', {
+            'replacement_player': username,
+            'declined_player': invite.get('declined_player'),
+            'reason': 'invalid'
+        })
+        emit('error', {'message': err})
+        return
+
+    _apply_rematch_replacement(payload)
+    _launch_rematch(current_game)
 @socketio.on('reset_game')
 def handle_reset():
     global current_game, rematch_votes, servo_commands, rematch_pending
@@ -4054,3 +4279,4 @@ def save_game_results(game):
 
 # ── Point d'entree WSGI ───────────────────────────────────────
 # Commande : gunicorn --config gunicorn_config.py app:app
+

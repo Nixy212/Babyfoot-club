@@ -363,7 +363,6 @@
 
 <div class="toast-wrap" id="toast-wrap"></div>
 
-<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
 <script>
 let socket;
 try { socket = io({
@@ -409,7 +408,7 @@ fetch('/current_user').then(r => {
 }).then(d => {
   if (!d || !d.username) { location.href = '/login'; return; }
   if (!d.is_admin) { location.href = '/dashboard'; return; }
-  ProfileUtils.updateNav(d);
+  if (window.ProfileUtils) ProfileUtils.updateNav(d);
   isSuperAdmin = d.is_super_admin || false;
   currentAdminUser = d.username;
   const dangerZone = document.getElementById('dangerZone');

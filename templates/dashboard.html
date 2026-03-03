@@ -366,22 +366,37 @@ function showNotif(msg, type) {
 async function loadLeaderboard() {
   const el = document.getElementById('leaderboard');
   try {
+    if (window.ProfileUtils) await ProfileUtils.fetchAllProfiles(false);
+    const cache = (window.ProfileUtils && ProfileUtils._getAllCache) ? ProfileUtils._getAllCache() : {};
     const res = await fetch('/leaderboard'); if(!res.ok) throw new Error();
     let data = (await res.json()).filter(p=>/^Joueur\d+$/i.test(p.username)===false);
     if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucun classement — jouez une partie !</p>'; return; }
     const M=['🥇','🥈','🥉'];
-    el.innerHTML=data.slice(0,3).map((p,i)=>`
+    const esc = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    el.innerHTML=data.slice(0,3).map((p,i)=>{
+      const prof = Object.assign({}, cache[p.username] || { username: p.username }, p);
+      const name = (prof.nickname && prof.nickname.trim()) ? prof.nickname.trim() : prof.username;
+      const sub = name !== prof.username ? `<span style="font-size:.7rem;color:var(--text-muted);display:block;line-height:1.1">@${esc(prof.username)}</span>` : '';
+      const av = window.ProfileUtils
+        ? ProfileUtils.avatarWithCosmeticsHTML(prof, 34)
+        : `<span style="width:34px;height:34px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700">${esc((prof.username||'?')[0].toUpperCase())}</span>`;
+      return `
       <div style="display:flex;align-items:center;gap:.75rem;padding:.625rem 0;${i<2?'border-bottom:1px solid var(--border-subtle)':''}">
         <span style="font-size:1.2rem;flex-shrink:0">${M[i]||i+1}</span>
-        <span style="font-weight:700;color:var(--text-primary);flex:1">${p.nickname||p.username}</span>
+        ${av}
+        <span style="font-weight:700;color:var(--text-primary);flex:1;line-height:1.2">${esc(name)}${sub}</span>
         <span style="font-weight:900;color:var(--bronze)">${p.elo||1000} <small style="font-size:.7rem;font-weight:500;color:var(--text-tertiary)">ELO</small></span>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch(e) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Indisponible</p>'; }
 }
 
 async function loadReservations() {
   const el = document.getElementById('reservations');
   try {
+    const esc = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (window.ProfileUtils) await ProfileUtils.fetchAllProfiles(false);
+    const cache = (window.ProfileUtils && ProfileUtils._getAllCache) ? ProfileUtils._getAllCache() : {};
     const res = await fetch('/reservations_today'); if(!res.ok) throw new Error();
     const data = await res.json();
     if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucune réservation — <a href="/reservation" style="color:var(--bronze)">réservez un créneau</a> !</p>'; return; }
@@ -390,12 +405,17 @@ async function loadReservations() {
     el.innerHTML=data.slice(0,5).map((r,i)=>{
       const isMine=r.reserved_by===currentUsername;
       const past=r.day===todayFr&&r.end_time&&now>new Date(r.end_time);
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.625rem 0;${i<data.length-1?'border-bottom:1px solid var(--border-subtle);':''}opacity:${past?.4:1}">
+      const prof = cache[r.reserved_by] || { username: r.reserved_by };
+      const dname = (prof.nickname && prof.nickname.trim()) ? prof.nickname.trim() : r.reserved_by;
+      const av = window.ProfileUtils
+        ? ProfileUtils.avatarWithCosmeticsHTML(prof, 24)
+        : `<span style="width:24px;height:24px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700">${(r.reserved_by||'?')[0].toUpperCase()}</span>`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.625rem 0;${i<data.length-1?'border-bottom:1px solid var(--border-subtle);':''}opacity:${past ? 0.4 : 1}">
         <div style="display:flex;align-items:center;gap:.625rem">
-          <span style="width:8px;height:8px;border-radius:50%;background:${isMine?'#cd7f32':'rgba(255,255,255,.2)'};flex-shrink:0"></span>
+          ${av}
           <div>
             <div style="font-weight:600;font-size:.9rem;color:var(--text-primary)">${r.day===todayFr?"Aujourd'hui":'Demain'} · ${r.time}${past?' <span style="font-size:.7rem;color:var(--text-muted)">(passé)</span>':''}</div>
-            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} — ${r.reserved_by}</div>
+            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} — ${esc(dname)}</div>
           </div>
         </div>
         ${isMine?'<span style="font-size:.75rem;padding:2px 10px;border-radius:20px;background:rgba(205,127,50,.15);color:var(--bronze);font-weight:600">Vous</span>':''}

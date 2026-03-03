@@ -81,6 +81,59 @@
       border-color: var(--border-normal);
       color: var(--text-secondary);
     }
+    .replace-list {
+      display: grid;
+      gap: .5rem;
+      max-height: 260px;
+      overflow: auto;
+      margin: .25rem 0 .75rem;
+      padding-right: .2rem;
+    }
+    .replace-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border-normal);
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: .55rem .7rem;
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      transition: border-color .15s, background .15s, transform .12s;
+    }
+    .replace-item:hover { border-color: var(--border-accent); background: var(--bg-hover); transform: translateY(-1px); }
+    .replace-item.active { border-color: var(--bronze); background: rgba(205,127,50,.14); }
+    .replace-item-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: var(--bg-tertiary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: .82rem;
+    }
+    .replace-item-avatar .avatar-shell {
+      width: 32px !important;
+      height: 32px !important;
+      border-width: 1px;
+    }
+    .replace-item-name { font-weight: 700; font-size: .86rem; line-height: 1.2; }
+    .replace-item-sub { font-size: .72rem; color: var(--text-muted); margin-top: 1px; }
+    .replace-item-status {
+      margin-left: auto;
+      font-size: .68rem;
+      font-weight: 700;
+      color: #2ecc71;
+      border: 1px solid rgba(46,204,113,.35);
+      border-radius: 999px;
+      padding: 2px 7px;
+      flex-shrink: 0;
+    }
     @media (max-width: 768px) {
       .scoreboard-row { gap: .85rem; }
       #score1, #score2 { font-size: 3.35rem !important; }
@@ -91,7 +144,7 @@
       #score1, #score2 { font-size: 2.7rem !important; }
       #specScore1, #specScore2 { font-size: 2.45rem !important; }
       .game-actions { flex-direction: column; }
-      #rematchPopup, #hostDecisionPopup { padding: 1rem !important; }
+      #rematchPopup, #hostDecisionPopup, #replacePlayerPopup, #replacementInvitePopup { padding: 1rem !important; }
       .popup-card { padding: 1.2rem !important; border-radius: 14px !important; }
     }
 
@@ -405,6 +458,35 @@
   </div>
 </div>
 
+<!-- Popup Remplacement joueur -->
+<div id="replacePlayerPopup" style="display:none;position:fixed;inset:0;z-index:9003;background:rgba(0,0,0,.84);align-items:center;justify-content:center;padding:1.5rem">
+  <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:1.5rem;width:100%;max-width:420px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem">
+      <h3 style="margin:0;font-size:1.05rem">👥 Choisir un remplaçant</h3>
+      <button class="btn btn-ghost" style="font-size:.75rem;padding:.35rem .65rem" onclick="closeReplacePlayerPopup()">✕</button>
+    </div>
+    <p id="replacePlayerHint" style="margin:.1rem 0 .6rem;color:var(--text-secondary);font-size:.82rem"></p>
+    <div id="replacePlayerList" class="replace-list"></div>
+    <div style="display:flex;gap:.6rem">
+      <button id="btnConfirmReplacement" class="btn btn-primary" style="flex:1" onclick="confirmReplacement()">✅ Remplacer et relancer</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="closeReplacePlayerPopup()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup Invitation remplacement -->
+<div id="replacementInvitePopup" style="display:none;position:fixed;inset:0;z-index:9004;background:rgba(0,0,0,.86);align-items:center;justify-content:center;padding:1.5rem">
+  <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:1.5rem;width:100%;max-width:390px;text-align:center">
+    <div style="font-size:1.9rem;margin-bottom:.6rem">📨</div>
+    <h3 style="margin:0 0 .5rem;font-size:1.1rem">Invitation de remplacement</h3>
+    <p id="replacementInviteMsg" style="color:var(--text-secondary);font-size:.86rem;line-height:1.5;margin-bottom:1rem"></p>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-primary" style="flex:1" onclick="respondReplacementInvite(true)">✅ Accepter</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="respondReplacementInvite(false)">❌ Refuser</button>
+    </div>
+  </div>
+</div>
+
 <!-- Popup expiration réservation -->
 <div id="resaExpiryPopup" style="display:none;position:fixed;bottom:5.5rem;right:1rem;left:1rem;max-width:340px;margin:0 auto;z-index:8999;background:var(--bg-elevated);border:1px solid rgba(231,152,0,.4);border-radius:14px;padding:1rem 1.25rem;align-items:center;gap:.875rem;box-shadow:0 4px 24px rgba(0,0,0,.5)">
   <div id="resaExpiryIcon" style="font-size:1.5rem;flex-shrink:0">⏱️</div>
@@ -615,9 +697,11 @@ function renderTeamPlayers(elId, players) {
     const p = _profilesCache[u] || { username: u };
     const name = (p.nickname && p.nickname.trim()) ? p.nickname.trim() : u;
 
-    // Avatar
+    // Avatar + cadres/thèmes
     let avHtml = '';
-    if (p.has_avatar || p.avatar_url) {
+    if (window.ProfileUtils) {
+      avHtml = ProfileUtils.avatarWithCosmeticsHTML(p, 24);
+    } else if (p.has_avatar || p.avatar_url) {
       avHtml = `<img src="/api/avatar/${encodeURIComponent(u)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px" onerror="this.style.display='none'">`;
     } else if (p.avatar_preset) {
       avHtml = `<span style="font-size:1rem;vertical-align:middle;margin-right:4px">${p.avatar_preset}</span>`;
@@ -639,7 +723,7 @@ function renderTeamPlayers(elId, players) {
         }</span>`
       : '';
 
-    return `<span title="${u}" style="display:inline-flex;align-items:center">${avHtml}<span>${name}</span>${badgesHtml}</span>`;
+    return `<span title="${u}" style="display:inline-flex;align-items:center;gap:5px">${avHtml}<span>${name}</span>${badgesHtml}</span>`;
   });
   el.innerHTML = parts.join('<span style="opacity:.5;margin:0 6px">&</span>');
 }
@@ -744,6 +828,18 @@ function forceResetGame() {
 let winnerOverlayTimer = null;
 let myRematchVote = null;
 let declinedPlayer = null;
+let replacementCandidates = [];
+let selectedReplacementPlayer = null;
+let incomingReplacementInvite = null;
+
+function escHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function voteRematch(vote) {
   if (myRematchVote) return; // déjà voté
@@ -755,15 +851,147 @@ function voteRematch(vote) {
   document.getElementById('myVoteConfirm').textContent = vote === 'yes' ? '✓ Vote OUI enregistré — en attente des autres...' : "✕ Vote NON enregistré — en attente de l'hôte...";
 }
 
-function hostReplacePlayer() {
+async function hostReplacePlayer() {
+  if (!declinedPlayer) {
+    showToast("Aucun joueur à remplacer", 'warn');
+    return;
+  }
   document.getElementById('hostDecisionPopup').style.display = 'none';
-  // Ouvrir la recherche d'un joueur (rediriger vers lobby ou afficher un champ)
-  showToast('Invitez un joueur via le lobby pour le remplacer', 'info');
+  selectedReplacementPlayer = null;
+  replacementCandidates = [];
+  const hint = document.getElementById('replacePlayerHint');
+  const list = document.getElementById('replacePlayerList');
+  const btn = document.getElementById('btnConfirmReplacement');
+  if (btn) btn.disabled = true;
+  if (hint) hint.textContent = `${declinedPlayer} a voté NON. Choisissez un remplaçant en ligne.`;
+  if (list) list.innerHTML = `<div style="padding:.9rem;color:var(--text-muted);text-align:center">Chargement des joueurs…</div>`;
+  document.getElementById('replacePlayerPopup').style.display = 'flex';
+
+  try {
+    const [usersRes, onlineRes] = await Promise.all([
+      fetch('/users_list'),
+      fetch('/api/online_users')
+    ]);
+    if (!usersRes.ok || !onlineRes.ok) throw new Error('fetch_failed');
+    const users = await usersRes.json();
+    const online = await onlineRes.json();
+    const onlineSet = new Set((online.online || []).map(String));
+
+    const t1 = new Set(parsePlayers(lastGame ? lastGame.team1_players : []));
+    const t2 = new Set(parsePlayers(lastGame ? lastGame.team2_players : []));
+    const inGame = new Set([...t1, ...t2]);
+    const GUESTS = ['Joueur1', 'Joueur2', 'Joueur3'];
+
+    const userMap = {};
+    (Array.isArray(users) ? users : []).forEach(u => {
+      if (u && u.username) userMap[u.username] = u;
+    });
+
+    const candidates = [];
+    Object.keys(userMap).forEach((uname) => {
+      if (!onlineSet.has(uname)) return;
+      if (inGame.has(uname)) return;
+      if (uname === declinedPlayer) return;
+      candidates.push(userMap[uname]);
+    });
+    GUESTS.forEach((g) => {
+      if (!inGame.has(g) && g !== declinedPlayer) {
+        candidates.push({ username: g, nickname: '', avatar_preset: '', has_avatar: false });
+      }
+    });
+
+    replacementCandidates = candidates;
+    renderReplacementCandidates();
+  } catch (e) {
+    if (list) list.innerHTML = `<div style="padding:.9rem;color:#e74c3c;text-align:center">Impossible de charger les joueurs</div>`;
+  }
 }
 
 function hostQuitRematch() {
   document.getElementById('hostDecisionPopup').style.display = 'none';
   socket.emit('host_quit_rematch');
+}
+
+function closeReplacePlayerPopup() {
+  selectedReplacementPlayer = null;
+  const btn = document.getElementById('btnConfirmReplacement');
+  if (btn) btn.disabled = true;
+  document.getElementById('replacePlayerPopup').style.display = 'none';
+}
+
+function closeReplacementInvitePopup() {
+  incomingReplacementInvite = null;
+  const p = document.getElementById('replacementInvitePopup');
+  if (p) p.style.display = 'none';
+}
+
+function selectReplacementPlayer(username) {
+  selectedReplacementPlayer = username;
+  const btn = document.getElementById('btnConfirmReplacement');
+  if (btn) btn.disabled = !selectedReplacementPlayer;
+  document.querySelectorAll('.replace-item').forEach((el) => {
+    el.classList.toggle('active', el.dataset.username === username);
+  });
+}
+
+function renderReplacementCandidates() {
+  const list = document.getElementById('replacePlayerList');
+  const btn = document.getElementById('btnConfirmReplacement');
+  if (!list) return;
+  if (!replacementCandidates.length) {
+    list.innerHTML = `<div style="padding:.9rem;color:var(--text-muted);text-align:center">Aucun joueur disponible en ligne</div>`;
+    if (btn) btn.disabled = true;
+    return;
+  }
+  list.innerHTML = replacementCandidates.map((u) => {
+    const username = u.username || '';
+    const displayName = (u.nickname && u.nickname.trim()) ? u.nickname.trim() : username;
+    const sub = displayName !== username ? `<div class="replace-item-sub">@${escHtml(username)}</div>` : '';
+    const isGuest = /^Joueur\d+$/i.test(username);
+    const avatar = window.ProfileUtils
+      ? ProfileUtils.avatarWithCosmeticsHTML(u, 32)
+      : escHtml((username[0] || '?').toUpperCase());
+    return `
+      <button class="replace-item" data-username="${escHtml(username)}" onclick="selectReplacementPlayer(this.dataset.username)">
+        <span class="replace-item-avatar">${avatar}</span>
+        <span>
+          <div class="replace-item-name">${escHtml(displayName)}</div>
+          ${sub}
+        </span>
+        <span class="replace-item-status">${isGuest ? 'INVITÉ' : 'EN LIGNE'}</span>
+      </button>
+    `;
+  }).join('');
+  if (btn) btn.disabled = !selectedReplacementPlayer;
+}
+
+function confirmReplacement() {
+  if (!selectedReplacementPlayer) {
+    showToast('Choisissez un remplaçant', 'warn');
+    return;
+  }
+  if (!socket || !socket.connected) {
+    showToast('⚡ Reconnexion en cours...', 'warn');
+    return;
+  }
+  socket.emit('rematch_invite_player', {
+    declined_player: declinedPlayer,
+    replacement_player: selectedReplacementPlayer
+  });
+  const btn = document.getElementById('btnConfirmReplacement');
+  if (btn) btn.disabled = true;
+  showToast(`Invitation envoyée à ${selectedReplacementPlayer}...`, 'info');
+}
+
+function respondReplacementInvite(accept) {
+  if (!incomingReplacementInvite) return;
+  if (!socket || !socket.connected) {
+    showToast('⚡ Reconnexion en cours...', 'warn');
+    return;
+  }
+  socket.emit('rematch_replacement_response', { accept: !!accept });
+  if (!accept) showToast('Invitation refusée', 'warn');
+  closeReplacementInvitePopup();
 }
 
 function leaveRematch() {
@@ -773,6 +1001,8 @@ function leaveRematch() {
   }
   document.getElementById('rematchPopup').style.display = 'none';
   document.getElementById('hostDecisionPopup').style.display = 'none';
+  document.getElementById('replacePlayerPopup').style.display = 'none';
+  document.getElementById('replacementInvitePopup').style.display = 'none';
   document.getElementById('winnerOverlay').style.display = 'none';
   if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
   location.href = '/dashboard';
@@ -786,6 +1016,7 @@ function showRematchPopup() {
   document.getElementById('myVoteButtons').style.display = 'flex';
   document.getElementById('myVoteConfirm').style.display = 'none';
   document.getElementById('hostDecisionPopup').style.display = 'none';
+  document.getElementById('replacementInvitePopup').style.display = 'none';
   document.getElementById('rematchPopup').style.display = 'flex';
 }
 
@@ -837,6 +1068,7 @@ function registerSocketEvents() {
     await ensureProfiles();
     document.getElementById('winnerOverlay').style.display = 'none';
     document.getElementById('rematchPopup').style.display = 'none';
+    document.getElementById('replacementInvitePopup').style.display = 'none';
     hideResaExpiry();
     resaExpiryWarned2min = false; resaExpiryWarned0min = false;
     if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
@@ -885,6 +1117,7 @@ function registerSocketEvents() {
   });
 
   socket.on('host_replace_or_quit', (data) => {
+    declinedPlayer = data && data.declined_player ? data.declined_player : null;
     const isHost = currentUser === data.host || isAdmin;
     if (!isHost) {
       const status = document.getElementById('voteStatus');
@@ -895,9 +1128,42 @@ function registerSocketEvents() {
     document.getElementById('hostDecisionPopup').style.display = 'flex';
   });
 
+  socket.on('rematch_invite_sent', (data) => {
+    const target = data && data.to ? data.to : 'joueur';
+    showToast(`Invitation envoyée à ${target}`, 'info');
+  });
+
+  socket.on('rematch_invite_declined', (data) => {
+    const target = data && data.replacement_player ? data.replacement_player : 'Le joueur';
+    showToast(`${target} a refusé l'invitation`, 'warn');
+    document.getElementById('replacePlayerPopup').style.display = 'flex';
+  });
+
+  socket.on('rematch_replacement_invite', (data) => {
+    incomingReplacementInvite = data || null;
+    const host = data && data.host ? data.host : 'L\'hôte';
+    const out = data && data.declined_player ? data.declined_player : 'un joueur';
+    const msg = document.getElementById('replacementInviteMsg');
+    if (msg) msg.textContent = `${host} vous propose de remplacer ${out} pour la revanche.`;
+    document.getElementById('replacementInvitePopup').style.display = 'flex';
+  });
+
+  socket.on('rematch_player_replaced', (data) => {
+    const oldP = data && data.declined_player ? data.declined_player : 'Joueur';
+    const newP = data && data.replacement_player ? data.replacement_player : 'remplaçant';
+    document.getElementById('replacePlayerPopup').style.display = 'none';
+    document.getElementById('hostDecisionPopup').style.display = 'none';
+    document.getElementById('replacementInvitePopup').style.display = 'none';
+    incomingReplacementInvite = null;
+    selectedReplacementPlayer = null;
+    showToast(`Remplacement validé: ${oldP} → ${newP}`, 'info');
+  });
+
   socket.on('rematch_cancelled', () => {
     document.getElementById('rematchPopup').style.display = 'none';
     document.getElementById('hostDecisionPopup').style.display = 'none';
+    document.getElementById('replacePlayerPopup').style.display = 'none';
+    document.getElementById('replacementInvitePopup').style.display = 'none';
     document.getElementById('winnerOverlay').style.display = 'none';
     if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
     showToast('Pas de revanche — retour dashboard...', 'info');
@@ -1117,8 +1383,13 @@ function showResaExpiry(icon, title, sub, borderColor) {
 function hideResaExpiry() { document.getElementById('resaExpiryPopup').style.display = 'none'; }
 
 // ── Chargement thème cosmétique ────────────────────────────────────────────
-async function loadPlayerTheme(username) {
+async function loadPlayerTheme(userData) {
   try {
+    if (window.ThemeManager && ThemeManager.setUserData && userData) {
+      ThemeManager.setUserData(userData);
+      window._activeFrame = userData.active_frame || 'none';
+      return;
+    }
     const data = await fetch('/api/my_cosmetics').then(r => r.json());
     const theme = data.active_theme || 'default';
     const frame = data.active_frame || 'none';
@@ -1128,7 +1399,11 @@ async function loadPlayerTheme(username) {
 }
 
 function applyTheme(theme) {
-  const body = document.getElementById('liveScoreBody') || document.body;
+  if (window.ThemeManager && ThemeManager.applyTheme) {
+    ThemeManager.applyTheme(theme || 'default');
+    return;
+  }
+  const body = document.body;
   const THEMES = ['theme-fire','theme-night','theme-gold','theme-royal','theme-master'];
   THEMES.forEach(t => body.classList.remove(t));
   if (theme && theme !== 'default') body.classList.add('theme-' + theme.replace('theme_', ''));
@@ -1200,7 +1475,7 @@ async function init() {
     await checkActiveGame();
     startResaExpiryWatch();
     // Charger et appliquer le thème cosmétique du joueur
-    loadPlayerTheme(currentUser);
+    loadPlayerTheme(user);
 
   } catch(e) {
     console.error('Init error:', e);

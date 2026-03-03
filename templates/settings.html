@@ -392,8 +392,6 @@
 
 <div class="toast-settings" id="toastWrap"></div>
 
-<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
-
 <script>
 // ── État local ────────────────────────────────────────────────
 let currentUser = null;
@@ -612,6 +610,14 @@ async function equipCosmetic(type, key) {
         }
       } catch(e) {}
       renderCosmeticSelectors();
+      if (window._baseUserData) {
+        window._baseUserData.active_theme = equippedTheme || 'default';
+        window._baseUserData.active_frame = equippedFrame || 'none';
+        if (window.ThemeManager && ThemeManager.setUserData) ThemeManager.setUserData(window._baseUserData);
+        if (window.ProfileUtils) ProfileUtils.updateNav(window._baseUserData);
+      } else if (type === 'theme' && window.ThemeManager && ThemeManager.applyTheme) {
+        ThemeManager.applyTheme(equippedTheme || 'default');
+      }
     } else {
       toast(d.message || 'Erreur', 'err');
     }
@@ -854,6 +860,11 @@ async function loadProfile() {
         unlockedCosmetics = normalizeUnlockedCosmetics(cd.unlocked || []);
         equippedTheme = normalizeCosmeticKey('theme', cd.active_theme || 'default');
         equippedFrame = normalizeCosmeticKey('frame', cd.active_frame || 'none');
+        if (window._baseUserData) {
+          window._baseUserData.active_theme = equippedTheme;
+          window._baseUserData.active_frame = equippedFrame;
+          if (window.ThemeManager && ThemeManager.setUserData) ThemeManager.setUserData(window._baseUserData);
+        }
       }
     } catch(e) { unlockedCosmetics = []; }
     renderCosmeticSelectors();

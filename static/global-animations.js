@@ -210,6 +210,40 @@
     }
   };
 
+  // ── Invitation remplacement revanche ───────────────────────────────────────
+  window._globalShowRematchInvite = function(data, socket) {
+    const bar = getNotifBar();
+    const notif = document.createElement('div');
+    notif.className = 'g-notif';
+    notif.style.borderLeftColor = '#f1c40f';
+    notif.style.borderColor = 'rgba(241,196,15,0.45)';
+    const host = data && data.host ? data.host : 'Hote';
+    const declined = data && data.declined_player ? data.declined_player : 'un joueur';
+    notif.innerHTML = `
+      <div class="g-notif-text">
+        <strong style="color:#f1c40f">Revanche</strong> — ${host} vous propose de remplacer ${declined}
+        <div style="font-size:0.78rem;color:#888;margin-top:2px">Accepter pour rejoindre la partie</div>
+      </div>
+      <div class="g-notif-btns">
+        <button class="g-btn-accept" style="background:linear-gradient(135deg,#d4a017,#f1c40f);color:#1a1a1a">✓ Accepter</button>
+        <button class="g-btn-decline">✕</button>
+      </div>
+    `;
+    const timer = autoClose(notif, 20000);
+    notif.querySelector('.g-btn-accept').onclick = () => {
+      clearTimeout(timer);
+      socket.emit('rematch_replacement_response', { accept: true });
+      dismissNotif(notif);
+      setTimeout(() => { location.href = '/live-score'; }, 450);
+    };
+    notif.querySelector('.g-btn-decline').onclick = () => {
+      clearTimeout(timer);
+      socket.emit('rematch_replacement_response', { accept: false });
+      dismissNotif(notif);
+    };
+    bar.appendChild(notif);
+  };
+
   // ── Socket global (pages sans socket propre) ──────────────────────────────
   window._hookGlobalSocketEvents = function(socket) {
     if (!socket || socket.__globalHooked) return;
@@ -241,14 +275,42 @@
     socket.on('join_request_result', (data) => {
       window._globalShowJoinResult(data.accepted, data.host);
     });
+
+    socket.on('rematch_replacement_invite', (data) => {
+      if (location.pathname === '/live-score') return;
+      window._globalShowRematchInvite(data, socket);
+    });
   };
+
+  let _socketIoScriptPromise = null;
+  function ensureSocketIoClient() {
+    if (typeof io !== 'undefined') return Promise.resolve(true);
+    if (_socketIoScriptPromise) return _socketIoScriptPromise;
+    _socketIoScriptPromise = new Promise((resolve) => {
+      const tryLoad = (src, next) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve(typeof io !== 'undefined');
+        s.onerror = () => { if (next) next(); else resolve(false); };
+        document.head.appendChild(s);
+      };
+      tryLoad('https://cdn.socket.io/4.7.5/socket.io.min.js', () => {
+        tryLoad('/socket.io/socket.io.js', () => {
+          tryLoad('/static/socket.io.min.js');
+        });
+      });
+    });
+    return _socketIoScriptPromise;
+  }
 
   function initGlobalSocketForPage() {
     const pagesWithSocket = ['/dashboard', '/lobby', '/live-score'];
     const needsOwn = !pagesWithSocket.some(p => location.pathname.startsWith(p));
+    if (!needsOwn) return;
 
-    if (needsOwn) {
-      if (typeof io === 'undefined') return;
+    ensureSocketIoClient().then((ok) => {
+      if (!ok || typeof io === 'undefined') return;
       try {
         const sock = io({
           reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 10000,
@@ -259,7 +321,7 @@
         window._hookGlobalSocketEvents(sock);
         window._globalSocket = sock;
       } catch(e) {}
-    }
+    });
   }
 
   // ── Indicateur reconnexion ────────────────────────────────────────────────
@@ -284,14 +346,7 @@
     createFloatingShapes();
     createGlowPulse();
     injectNotifStyles();
-    // Attendre que socket.io soit prêt pour les pages sans socket propre
-    if (typeof io !== 'undefined') {
-      initGlobalSocketForPage();
-    } else {
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initGlobalSocketForPage, 500);
-      });
-    }
+    initGlobalSocketForPage();
   }
 
   if (document.readyState === 'loading') {

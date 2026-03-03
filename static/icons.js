@@ -3,7 +3,7 @@
  * Style : trait épuré, illustration artisanale, palette bronze/or
  */
 
-const BFIcons = {
+var BFIcons = window.BFIcons || {
 
   // 🏠 → Maison illustrée
   home: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -223,6 +223,7 @@ const BFIcons = {
     <path d="M22 24L26 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
   </svg>`,
 };
+window.BFIcons = BFIcons;
 
 // Helper pour créer un élément SVG inline
 function bfIcon(name, size = 24, className = '') {
@@ -265,12 +266,14 @@ function initBFIcons(root = document) {
 document.addEventListener('DOMContentLoaded', () => initBFIcons());
 
 // MutationObserver pour les éléments injectés dynamiquement (ex: leaderboard)
-const _bfObserver = new MutationObserver(mutations => {
-  mutations.forEach(m => m.addedNodes.forEach(n => {
-    if (n.nodeType === 1) {
-      if (n.hasAttribute('data-bficon')) initBFIcons(n.parentElement || document);
-      else if (n.querySelectorAll) initBFIcons(n);
-    }
-  }));
-});
-_bfObserver.observe(document.body, { childList: true, subtree: true });
+if (!window._bfObserver) {
+  window._bfObserver = new MutationObserver(mutations => {
+    mutations.forEach(m => m.addedNodes.forEach(n => {
+      if (n.nodeType === 1) {
+        if (n.hasAttribute('data-bficon')) initBFIcons(n.parentElement || document);
+        else if (n.querySelectorAll) initBFIcons(n);
+      }
+    }));
+  });
+  window._bfObserver.observe(document.body, { childList: true, subtree: true });
+}

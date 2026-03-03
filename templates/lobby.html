@@ -124,7 +124,6 @@
 
 <div class="toast-wrap" id="toastWrap"></div>
 
-<script src="{{ url_for('static', filename='profile-utils.js') }}"></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
 // SOCKET
@@ -358,7 +357,7 @@ function makePlayerCard(username, amHost, color) {
   // Avatar via ProfileUtils.avatarHTML si disponible (gère has_avatar, avatar_url, preset, initiale)
   let av = '';
   if (window.ProfileUtils) {
-    av = `<span style="width:32px;height:32px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">${ProfileUtils.avatarHTML(prof, 32)}</span>`;
+    av = ProfileUtils.avatarWithCosmeticsHTML(prof, 32);
   } else if (prof.has_avatar || prof.avatar_url) {
     av = `<img src="/api/avatar/${encodeURIComponent(username)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`;
   } else if (prof.avatar_preset) {
@@ -420,9 +419,9 @@ function makePlayerCard(username, amHost, color) {
     ProfileUtils.fetchUserProfile(username).then(p => {
       if (!p || p === prof) return;
       // Remplacer uniquement l'avatar dans la carte si elle est encore dans le DOM
-      const avEl = card.querySelector('span[style*="border-radius:50%"]');
+      const avEl = card.querySelector('.avatar-shell');
       if (avEl && card.isConnected) {
-        avEl.innerHTML = ProfileUtils.avatarHTML(p, 32);
+        avEl.outerHTML = ProfileUtils.avatarWithCosmeticsHTML(p, 32);
       }
     });
   }
@@ -518,9 +517,9 @@ function renderPlayerSelector() {
     // Avatar mini dans le chip
     let chipAv = '';
     if (window.ProfileUtils) {
-      chipAv = `<span style="width:20px;height:20px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;vertical-align:middle;margin-right:4px">${ProfileUtils.avatarHTML(prof, 20)}</span>`;
+      chipAv = ProfileUtils.avatarWithCosmeticsHTML(prof, 20);
     }
-    chip.innerHTML = `${dot}${chipAv}<span>${esc(dname)}</span>`;
+    chip.innerHTML = `${dot}${chipAv}<span style="margin-left:4px">${esc(dname)}</span>`;
     chip.onclick = () => {
       if (SELECTED.includes(name)) {
         SELECTED = SELECTED.filter(x => x !== name);
