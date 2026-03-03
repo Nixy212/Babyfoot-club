@@ -3,7 +3,7 @@
 {% block title %}Lobby — Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
-<script src="/socket.io/socket.io.js"></script>
+<script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
 <script src="{{ url_for('static', filename='confetti.js') }}" defer></script>
 <script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
 {% endblock %}

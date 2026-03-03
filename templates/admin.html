@@ -4,7 +4,7 @@
 
 {% block extra_head %}
 <script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
-<script src="/socket.io/socket.io.js"></script>
+<script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
 {% endblock %}
 
 {% block body %}

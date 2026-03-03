@@ -157,7 +157,7 @@
     .quest-unlock-reward{ font-size:0.75rem; color:rgba(255,215,0,0.85); margin-top:2px; }
   </style>
 <script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
-<script src="/socket.io/socket.io.js"></script>
+<script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
 <script src="{{ url_for('static', filename='animations.js') }}" defer></script>
 <script src="{{ url_for('static', filename='confetti.js') }}" defer></script>
 {% endblock %}
@@ -638,8 +638,25 @@ function startGame() {
   if (t1.length === 0 || t2.length === 0) { showToast('Il faut au moins 1 joueur par équipe', 'err'); return; }
   const all = [...t1, ...t2];
   if (new Set(all).size !== all.length) { showToast('Un joueur ne peut pas être dans les deux équipes', 'err'); return; }
-  if (!socket || !socket.connected) { showToast('⚡ Connexion perdue, reconnexion en cours...', 'warn'); return; }
-  socket.emit('start_game', {team1: t1, team2: t2});
+  if (!socket) { showToast('Socket indisponible', 'err'); return; }
+  const payload = { team1: t1, team2: t2 };
+  if (!socket.connected) {
+    if (startGame._pendingReconnect) {
+      showToast('Reconnexion déjà en cours...', 'warn');
+      return;
+    }
+    startGame._pendingReconnect = true;
+    showToast('⚡ Connexion perdue, reconnexion en cours...', 'warn');
+    socket.once('connect', () => {
+      startGame._pendingReconnect = false;
+      socket.emit('start_game', payload);
+      showToast('Connexion rétablie, démarrage envoyé', 'info');
+    });
+    if (typeof socket.connect === 'function') socket.connect();
+    setTimeout(() => { startGame._pendingReconnect = false; }, 6000);
+    return;
+  }
+  socket.emit('start_game', payload);
 }
 
 function showToast(msg, type = 'info') {
