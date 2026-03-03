@@ -735,7 +735,8 @@ async function loadProfile() {
     if (nameEl) nameEl.textContent = profile.nickname || user.username;
     if (roleEl) {
       const roles = {0:'Joueur', 1:'Super Admin', 2:'Admin'};
-      roleEl.textContent = roles[user.role] || 'Joueur';
+      const roleCode = Number(typeof user.admin_class !== 'undefined' ? user.admin_class : 0);
+      roleEl.textContent = roles[roleCode] || 'Joueur';
       roleEl.style.display = 'block';
     }
 

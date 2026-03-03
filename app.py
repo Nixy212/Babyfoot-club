@@ -116,10 +116,10 @@ def set_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
-    # CSP : autoriser socket.io CDN + fonts Google + cloudflare CDN
+    # CSP : scripts/styles locaux + CDN Font Awesome
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cdn.socket.io https://cdnjs.cloudflare.com; "
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
         "img-src 'self' data: https://res.cloudinary.com; "
@@ -205,6 +205,7 @@ def check_rate_limit(ip):
 
 _goal_processing = False
 _goal_lock = _threading.Lock()  # verrou thread-safe pour les buts
+_reservation_lock = _threading.Lock()  # verrou anti course pour creation de reservation
 
 # ── Connexion DB ──────────────────────────────────────────────
 
@@ -965,9 +966,8 @@ def handle_errors(f):
         except ValueError as e:
             return jsonify({"success": False, "message": str(e)}), 400
         except Exception as e:
-            msg = str(e) if str(e) else type(e).__name__
             logger.error(f"Erreur {f.__name__}: {e}\n{traceback.format_exc()}")
-            return jsonify({"success": False, "message": msg}), 500
+            return jsonify({"success": False, "message": "Erreur interne du serveur"}), 500
     return decorated
 
 def validate_username(u):
@@ -1815,6 +1815,10 @@ def reserve_plan():
     return _do_reservation(username, start_time, end_time, duration, mode)
 
 def _do_reservation(username, start_time, end_time, duration, mode):
+    with _reservation_lock:
+        return _do_reservation_nolock(username, start_time, end_time, duration, mode)
+
+def _do_reservation_nolock(username, start_time, end_time, duration, mode):
     """Logique commune de reservation avec verification anti-chevauchement."""
     now = now_local()
     # Double verification : seulement aujourd'hui et demain (sauf admin)
@@ -2918,9 +2922,24 @@ if not _ARDUINO_SECRET:
     logger.error("🚨 ARDUINO_SECRET non defini ! Definissez cette variable dans Render → Environment.")
     logger.error("   Sans ce secret, l'endpoint Arduino est non protégé.")
 
+def _is_arduino_request_authorized(payload=None):
+    """Autorise si secret Arduino valide (query/header/body) ou session admin."""
+    payload = payload or {}
+    provided = (
+        request.args.get("secret")
+        or request.headers.get("X-Arduino-Secret")
+        or payload.get("secret")
+    )
+    username = session.get("username")
+    if username and is_admin(username):
+        return True
+    return bool(_get_arduino_secret()) and provided == _get_arduino_secret()
+
 @app.route("/api/arduino/status", methods=["GET"])
 def api_arduino_status():
     """Etat complet pour l'ESP32 (sync au demarrage + poll)."""
+    if not _is_arduino_request_authorized():
+        return jsonify({"success": False, "message": "Non autorise"}), 403
     active = current_game.get("active", False)
     t1 = current_game.get("team1_score", 0)
     t2 = current_game.get("team2_score", 0)
@@ -2940,6 +2959,8 @@ def api_arduino_status():
 @app.route("/api/arduino/commands", methods=["GET"])
 def api_arduino_commands():
     global servo_commands
+    if not _is_arduino_request_authorized():
+        return jsonify({"success": False, "message": "Non autorise"}), 403
     now = _time.time()
     if not hasattr(api_arduino_commands, 'last_poll'):
         api_arduino_commands.last_poll = 0
@@ -2958,10 +2979,7 @@ def api_arduino_servo():
     """Controle direct des servos via HTTP (utilise le secret Arduino, pas la session)."""
     global servo_commands
     data = request.get_json(silent=True) or {}
-    ARDUINO_SECRET = _get_arduino_secret()
-    # Accepter soit le secret Arduino soit une session admin
-    username = session.get('username') if request.cookies.get('session') else None
-    if not ARDUINO_SECRET or (data.get("secret") != ARDUINO_SECRET and not is_admin(username)):
+    if not _is_arduino_request_authorized(data):
         return jsonify({"success": False, "message": "Non autorise"}), 403
     servo = data.get("servo")
     action = data.get("action")
@@ -2979,7 +2997,7 @@ def _get_arduino_secret():
 def api_arduino_goal():
     global current_game, rematch_pending
     data = request.get_json(silent=True) or {}
-    if data.get("secret") != _get_arduino_secret():
+    if not _is_arduino_request_authorized(data):
         return jsonify({"success": False, "message": "Secret invalide"}), 403
     now = _time.time()
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
@@ -3035,7 +3053,10 @@ def _process_goal(team):
 @socketio.on('connect')
 def handle_connect():
     global rematch_pending
-    username = session.get('username', 'Anonymous')
+    username = session.get('username')
+    if not username:
+        logger.warning(f"WS refuse: utilisateur non authentifie ({request.sid})")
+        return False
     connected_users[request.sid] = username
     logger.info(f"WS connecte: {username} ({request.sid})")
 
@@ -3641,20 +3662,21 @@ def handle_score(data):
         if team not in ['team1', 'team2']:
             emit('error', {'message': 'Equipe invalide'})
             return
-        current_game[f"{team}_score"] += 1
-        if current_game[f"{team}_score"] >= 10:
-            current_game['winner'] = team
-            current_game['active'] = False
-            try:
-                save_game_results(current_game)
-            except Exception as e:
-                logger.error(f"Save error: {e}")
-            socketio.emit('game_ended', current_game, namespace='/')
-            rematch_pending = True
-            socketio.emit('rematch_prompt', {}, namespace='/')
-        else:
-            socketio.emit('score_updated', current_game, namespace='/')
-            emit('score_ack', {'team': team, 'score': current_game[f"{team}_score"]})
+        # Evite les doubles increments si plusieurs events arrivent en meme temps.
+        acquired = _goal_lock.acquire(blocking=False)
+        if not acquired:
+            emit('error', {'message': 'Traitement score en cours'})
+            return
+        try:
+            result = _process_goal(team)
+        finally:
+            _goal_lock.release()
+        payload = result.get_json() if hasattr(result, 'get_json') else {}
+        emit('score_ack', {
+            'team': team,
+            'score': current_game.get(f"{team}_score", 0),
+            'game_ended': bool(payload.get('game_ended', False))
+        })
     except Exception as e:
         logger.error(f"Erreur update_score: {e}")
         emit('error', {'message': str(e)})

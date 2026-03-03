@@ -4,7 +4,7 @@
 
 {% block extra_head %}
 <script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -901,7 +901,7 @@ function populateBadgeAwardSelects() {
     }
     // Joueurs : déjà dans le select users si loadUsers() a tourné
     const awardSel = document.getElementById('awardPlayerSelect');
-    const viewSel  = document.getElementById('awardPlayerSelect');
+    const viewSel  = document.getElementById('viewPlayerSelect');
     if (awardSel && awardSel.options.length <= 1) _populatePlayerSelect('awardPlayerSelect');
   });
 }
