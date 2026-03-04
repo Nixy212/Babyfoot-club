@@ -1851,15 +1851,15 @@ def reserve_and_lobby():
     username = session["username"]
     if duration not in [5, 10, 15]:
         return jsonify({"success": False, "message": "Duree invalide (5, 10 ou 15 min)"}), 400
+    # Bloquer la création de lobby si une partie est en cours (sauf super admin)
+    if current_game.get('active') and not is_super_admin(username):
+        return jsonify({"success": False, "message": "Une partie est en cours — lobby indisponible"}), 400
     now = now_local()
     start_time = now
     end_time = now + timedelta(minutes=duration)
     result = _do_reservation(username, start_time, end_time, duration, mode)
     result_data = result.get_json() if hasattr(result, 'get_json') else {}
     if result_data and result_data.get("success"):
-        # Bloquer si une partie est en cours (sauf super admin)
-        if current_game.get('active') and not is_super_admin(username):
-            return jsonify({"success": False, "message": "Une partie est en cours — impossible de créer un lobby"}), 400
         # Creer le lobby avec l'utilisateur comme hote
         with _lobby_lock:
             if active_lobby.get('active'):
