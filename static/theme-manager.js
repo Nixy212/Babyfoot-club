@@ -7,12 +7,12 @@
 
   const STORAGE_KEY = 'bf_active_theme';
   const THEMES = {
-    default: { bodyClass: '', emoji: '⚽' },
-    theme_fire: { bodyClass: 'theme-fire', emoji: '🔥' },
-    theme_night: { bodyClass: 'theme-night', emoji: '🌌' },
-    theme_gold: { bodyClass: 'theme-gold', emoji: '✨' },
-    theme_royal: { bodyClass: 'theme-royal', emoji: '💠' },
-    theme_master: { bodyClass: 'theme-master', emoji: '🏆' },
+    default: { bodyClass: '', emoji: '⚽', bg:'#0f101a', accentRgb:'212,136,78', gridColor:'rgba(212,136,78,.025)' },
+    theme_fire:   { bodyClass: 'theme-fire',   emoji: '🔥', bg:'#130704', accentRgb:'255,107,44', gridColor:'rgba(255,107,44,.04)' },
+    theme_night:  { bodyClass: 'theme-night',  emoji: '🌌', bg:'#090812', accentRgb:'142,125,255', gridColor:'rgba(142,125,255,.04)' },
+    theme_gold:   { bodyClass: 'theme-gold',   emoji: '✨', bg:'#111003', accentRgb:'227,179,59',  gridColor:'rgba(227,179,59,.04)' },
+    theme_royal:  { bodyClass: 'theme-royal',  emoji: '💠', bg:'#071021', accentRgb:'74,147,235',  gridColor:'rgba(74,147,235,.04)' },
+    theme_master: { bodyClass: 'theme-master', emoji: '🏆', bg:'#0f0e0a', accentRgb:'215,164,58',  gridColor:'rgba(215,164,58,.04)' },
   };
   const BODY_THEME_CLASSES = Object.values(THEMES).map((t) => t.bodyClass).filter(Boolean);
 
@@ -44,6 +44,12 @@
     if (document.body) setBodyThemeClass(cfg.bodyClass);
     document.documentElement.setAttribute('data-active-theme', key);
     document.documentElement.style.setProperty('--theme-emoji', '"' + cfg.emoji + '"');
+
+    // Fix mobile (iOS Safari / Chrome Android) : forcer les vars CSS sur <html>
+    // garantit l'héritage même si body.theme-X est appliqué après le premier paint
+    if (cfg.accentRgb) document.documentElement.style.setProperty('--theme-accent-rgb', cfg.accentRgb);
+    if (cfg.gridColor)  document.documentElement.style.setProperty('--grid-color', cfg.gridColor);
+    if (cfg.bg && document.body) document.body.style.backgroundColor = cfg.bg;
 
     window.__activeThemeKey = key;
     window.__activeThemeEmoji = cfg.emoji;

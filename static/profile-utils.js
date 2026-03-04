@@ -100,6 +100,19 @@ window.ProfileUtils = (() => {
     return `<span class="${classes.join(' ')}" style="width:${s}px;height:${s}px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden">${avatarHTML(user, s)}</span>`;
   }
 
+  // badgesOnlyHTML — affiche uniquement les images des badges (sans nom), taille configurable
+  function badgesOnlyHTML(user, imgSize) {
+    const s = imgSize || 22;
+    const badges = (user && user.badges) || [];
+    if (!badges.length) return '';
+    return badges.slice(0, 4).map(b => {
+      if (b.image_url) {
+        return `<span title="${(b.name||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;width:${s+6}px;height:${s+6}px;border-radius:50%;background:${b.color||'#888'}22;border:1.5px solid ${b.color||'#888'}55;flex-shrink:0;overflow:hidden"><img src="${b.image_url}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover" alt="${(b.name||'').replace(/"/g,'&quot;')}"></span>`;
+      }
+      return `<span title="${(b.name||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;width:${s+6}px;height:${s+6}px;border-radius:50%;background:${b.color||'#888'}22;border:1.5px solid ${b.color||'#888'}55;font-size:${Math.round(s*.85)}px;flex-shrink:0">${b.icon||'🏅'}</span>`;
+    }).join('');
+  }
+
   function playerCardHTML(user, opts) {
     const options = opts || {};
     const size = options.size || 36;
@@ -111,10 +124,12 @@ window.ProfileUtils = (() => {
     const sub = (showUsername && isNicknamed)
       ? `<span style="font-size:0.68rem;color:var(--text-muted);display:block;line-height:1.1">${user.username}</span>`
       : '';
+    const bdg = badgesOnlyHTML(user, options.badgeSize || 18);
+    const bdgRow = bdg ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;align-items:center">${bdg}</div>` : '';
     if (compact) {
-      return `<span style="display:inline-flex;align-items:center;gap:6px">${av}<span><span style="font-weight:600;font-size:0.875rem">${name}</span>${sub}</span></span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:6px">${av}<span><span style="font-weight:600;font-size:0.875rem">${name}</span>${sub}${bdgRow}</span></span>`;
     }
-    return `<div style="display:flex;align-items:center;gap:10px">${av}<div><div style="font-weight:600;font-size:0.9rem;line-height:1.2">${name}</div>${sub}</div></div>`;
+    return `<div style="display:flex;align-items:center;gap:10px">${av}<div><div style="font-weight:600;font-size:0.9rem;line-height:1.2">${name}</div>${sub}${bdgRow}</div></div>`;
   }
 
   function applyAvatarCosmetics(el, user) {
@@ -189,6 +204,7 @@ window.ProfileUtils = (() => {
     normalizeFrameKey,
     avatarHTML,
     avatarWithCosmeticsHTML,
+    badgesOnlyHTML,
     playerCardHTML,
     applyAvatarCosmetics,
     updateNav,
