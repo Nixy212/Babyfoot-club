@@ -51,6 +51,12 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 # ProxyFix : essentiel pour que Flask comprenne HTTPS derrière Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_for=1)
 
+# ── Blueprint Arduino REST (simulateur / Arduino WiFi) ────────
+from arduino_routes import arduino_bp
+app.register_blueprint(arduino_bp)
+logger_bp = logging.getLogger(__name__)
+logger_bp.info("Blueprint Arduino enregistré (/api/arduino/*)")
+
 # ── Secrets ──────────────────────────────────────────────────
 
 _secret_key = os.environ.get('SECRET_KEY')
@@ -1179,6 +1185,74 @@ def debug_game():
         "rematch_votes": rematch_votes,
         "servo_commands": servo_commands,
     })
+
+# ══════════════════════════════════════════════════════════════
+# ⚠️  DEV / TEST ONLY — NE PAS UTILISER EN PRODUCTION PUBLIQUE
+# Endpoint de récupération du token Arduino actif pour debug.
+# Accessible uniquement au compte Imran (super admin classe 1).
+# Protégé par double vérification : session Flask + rôle super_admin.
+# ══════════════════════════════════════════════════════════════
+
+@app.route("/admin/arduino-token", methods=["GET"])
+@handle_errors
+def admin_get_arduino_token():
+    """
+    [DEV/TEST ONLY] Retourne le token Arduino actif de la partie en cours.
+    Réservé exclusivement au compte Imran (is_super_admin).
+    Utilisé uniquement pour tester le simulateur arduino_simulator.py.
+    """
+    caller = session.get("username")
+
+    # Vérification double : session active + super admin (Imran uniquement)
+    if not caller:
+        return jsonify({"error": "Non authentifié"}), 401
+    if not is_super_admin(caller):
+        return jsonify({"error": "Réservé à Imran (super admin)"}), 403
+
+    try:
+        from arduino_manager import arduino_state as _ard_state
+
+        # Récupérer tous les tokens actifs (en général 1 seul pendant une partie)
+        active = []
+        now = _time.time()
+        for gid, tdata in _ard_state.active_tokens.items():
+            if now <= tdata.get("expires_at", 0):
+                pending = _ard_state.get_pending_actions(gid)
+                game_state = _ard_state.get_game_state(gid) or {}
+                active.append({
+                    "game_id": gid,
+                    "token": tdata["token"],
+                    "created_at": tdata["created_at"],
+                    "expires_at": tdata["expires_at"],
+                    "expires_in_seconds": round(tdata["expires_at"] - now),
+                    "pending_actions": len(pending),
+                    "game_active": game_state.get("active", False),
+                    "score": {
+                        "team1": game_state.get("score_team1", 0),
+                        "team2": game_state.get("score_team2", 0)
+                    }
+                })
+
+        if not active:
+            # Aucun token actif : retourner l'état global pour aider au debug
+            return jsonify({
+                "warning": "Aucun token Arduino actif — lancez une partie d'abord",
+                "current_game_active": current_game.get("active", False),
+                "tokens": []
+            }), 200
+
+        logger.info(f"[DEV] Token Arduino consulté par {caller}")
+        return jsonify({
+            "tokens": active,
+            # Raccourci : token de la première partie active (cas nominal)
+            "token": active[0]["token"],
+            "game_id": active[0]["game_id"],
+            "dev_note": "DEV/TEST ONLY — ne jamais exposer ce token aux joueurs"
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Erreur admin_get_arduino_token: {e}")
+        return jsonify({"error": "Erreur interne"}), 500
 
 # ── Auth ──────────────────────────────────────────────────────
 
@@ -3114,6 +3188,14 @@ def _process_goal(team):
         socketio.emit("game_ended", current_game, namespace="/")
         rematch_pending = True
         socketio.emit("rematch_prompt", {}, namespace="/")
+        # ── Révoquer le token Arduino à la fin de la partie ───────────────
+        try:
+            from arduino_manager import end_game_arduino as _end_arduino
+            _ard_game_id = id(current_game)
+            _end_arduino(_ard_game_id)
+            logger.info(f"Token Arduino révoqué (game_ended): game_id={_ard_game_id}")
+        except Exception as _e:
+            logger.error(f"Erreur révocation token Arduino: {_e}")
         return jsonify({"success": True, "game_ended": True, "winner": team})
     socketio.emit("score_updated", current_game, namespace="/")
     return jsonify({
@@ -3631,6 +3713,19 @@ def handle_start_game_from_lobby():
     socketio.emit('game_started', current_game, namespace='/')
     socketio.emit('servo1_unlock', {}, namespace='/')
     socketio.emit('servo2_unlock', {}, namespace='/')
+    # ── Token Arduino : généré à chaque démarrage de partie ──────────────
+    try:
+        from arduino_manager import start_game_arduino as _start_arduino
+        _ard_game_id = id(current_game)
+        _ard_token = _start_arduino(_ard_game_id)
+        socketio.emit('arduino_token_generated', {
+            'game_id': _ard_game_id,
+            'token': _ard_token,
+            'source': 'lobby'
+        }, namespace='/')
+        logger.info(f"Token Arduino généré (lobby): game_id={_ard_game_id}")
+    except Exception as _e:
+        logger.error(f"Erreur token Arduino (lobby): {_e}")
 
 @socketio.on('start_game')
 def handle_start_game(data):
@@ -3664,6 +3759,19 @@ def handle_start_game(data):
         socketio.emit('game_started', current_game, namespace='/')
         socketio.emit('servo1_unlock', {}, namespace='/')
         socketio.emit('servo2_unlock', {}, namespace='/')
+        # ── Token Arduino ─────────────────────────────────────────────────
+        try:
+            from arduino_manager import start_game_arduino as _start_arduino
+            _ard_game_id = id(current_game)
+            _ard_token = _start_arduino(_ard_game_id)
+            socketio.emit('arduino_token_generated', {
+                'game_id': _ard_game_id,
+                'token': _ard_token,
+                'source': 'direct'
+            }, namespace='/')
+            logger.info(f"Token Arduino généré (direct): game_id={_ard_game_id}")
+        except Exception as _e:
+            logger.error(f"Erreur token Arduino (direct): {_e}")
     except Exception as e:
         logger.error(f"Erreur start_game: {e}")
         emit('error', {'message': str(e)})
@@ -3723,6 +3831,15 @@ def handle_stop_game():
     socketio.emit('game_stopped', {}, namespace='/')
     socketio.emit('servo1_lock', {}, namespace='/')
     socketio.emit('servo2_lock', {}, namespace='/')
+    # ── Révoquer le token Arduino (stop manuel) ───────────────────────────
+    try:
+        from arduino_manager import arduino_state as _ard_state
+        # Révoquer tous les tokens actifs (il ne devrait y en avoir qu'un)
+        for _gid in list(_ard_state.active_tokens.keys()):
+            _ard_state.revoke_token(_gid)
+            logger.info(f"Token Arduino révoqué (stop_game): game_id={_gid}")
+    except Exception as _e:
+        logger.error(f"Erreur révocation token Arduino (stop_game): {_e}")
 
 @socketio.on('update_score')
 def handle_score(data):

@@ -329,6 +329,120 @@
 }
 </style>
 
+<!-- ══════════════════════════════════════════════════════════
+     ⚠️  DEV / TEST ONLY — Token Arduino actif
+     Visible UNIQUEMENT pour le compte Imran (super admin).
+     Ne jamais exposer ce panneau aux joueurs normaux.
+     ══════════════════════════════════════════════════════════ -->
+<div id="arduinoDevZone" class="card" style="display:none;margin-bottom:1.5rem;border:1.5px solid rgba(0,255,180,0.28);background:linear-gradient(135deg,rgba(0,30,20,0.7) 0%,rgba(0,20,40,0.7) 100%)">
+  <div class="card-header" style="border-bottom:1px solid rgba(0,255,180,0.18);background:transparent">
+    <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+      <h3 style="color:#00ffb4;margin:0;display:flex;align-items:center;gap:0.5rem">
+        <!-- Icône circuit/puce -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffb4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        Token Arduino — Dev/Test
+      </h3>
+      <span style="font-size:0.7rem;padding:2px 10px;border-radius:99px;background:rgba(0,255,180,0.12);color:#00ffb4;font-weight:700;letter-spacing:.04em;border:1px solid rgba(0,255,180,0.25)">⚠️ IMRAN ONLY</span>
+      <span style="font-size:0.7rem;padding:2px 10px;border-radius:99px;background:rgba(255,180,0,0.1);color:#ffb400;font-weight:600;border:1px solid rgba(255,180,0,0.25)">DEV / TEST ONLY</span>
+    </div>
+  </div>
+  <div class="card-body">
+
+    <!-- Description -->
+    <p style="color:rgba(0,255,180,0.7);font-size:0.85rem;margin:0 0 1.25rem;line-height:1.6">
+      Récupère le token Bearer actif de la partie en cours pour lancer le simulateur Arduino
+      (<code style="background:rgba(0,255,180,0.1);padding:1px 6px;border-radius:4px;font-size:0.8rem">arduino_simulator.py</code>).
+      Ce token est valable 1h et révoqué automatiquement à la fin de la partie.
+    </p>
+
+    <!-- Bouton fetch -->
+    <button
+      id="btnFetchArduinoToken"
+      onclick="fetchArduinoToken()"
+      style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;border-radius:10px;background:rgba(0,255,180,0.12);color:#00ffb4;border:1.5px solid rgba(0,255,180,0.35);font-weight:600;font-size:0.875rem;cursor:pointer;transition:all .2s">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+      Récupérer le token actif
+    </button>
+
+    <!-- Zone résultat (cachée jusqu'à fetch) -->
+    <div id="arduinoTokenResult" style="display:none;margin-top:1.25rem">
+
+      <!-- Indicateur aucune partie -->
+      <div id="arduinoTokenNone" style="display:none;padding:0.9rem 1rem;border-radius:10px;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.25);color:#ffb400;font-size:0.875rem">
+        ⚠️ Aucun token actif — lancez une partie depuis l'interface d'abord.
+      </div>
+
+      <!-- Token trouvé -->
+      <div id="arduinoTokenFound" style="display:none">
+
+        <!-- Ligne game_id + expiration -->
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:0.9rem">
+          <div style="flex:1;min-width:130px;padding:0.6rem 0.9rem;border-radius:8px;background:rgba(0,255,180,0.07);border:1px solid rgba(0,255,180,0.15)">
+            <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Game ID</div>
+            <div id="arduinoGameId" style="font-family:'Space Mono',monospace;font-size:0.95rem;color:#00ffb4;font-weight:700"></div>
+          </div>
+          <div style="flex:1;min-width:130px;padding:0.6rem 0.9rem;border-radius:8px;background:rgba(0,255,180,0.07);border:1px solid rgba(0,255,180,0.15)">
+            <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Expire dans</div>
+            <div id="arduinoTokenExpiry" style="font-family:'Space Mono',monospace;font-size:0.95rem;color:#00ffb4;font-weight:700"></div>
+          </div>
+          <div style="flex:1;min-width:130px;padding:0.6rem 0.9rem;border-radius:8px;background:rgba(0,255,180,0.07);border:1px solid rgba(0,255,180,0.15)">
+            <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Actions en attente</div>
+            <div id="arduinoPendingCount" style="font-family:'Space Mono',monospace;font-size:0.95rem;color:#00ffb4;font-weight:700"></div>
+          </div>
+        </div>
+
+        <!-- Token affiché dans un bloc monospace copiable -->
+        <div style="position:relative">
+          <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+            Bearer Token
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:stretch">
+            <div
+              id="arduinoTokenDisplay"
+              style="flex:1;padding:0.75rem 1rem;border-radius:8px;background:rgba(0,0,0,0.45);border:1px solid rgba(0,255,180,0.3);font-family:'Space Mono',monospace;font-size:0.78rem;color:#00ffb4;word-break:break-all;line-height:1.6;letter-spacing:.02em;user-select:all">
+            </div>
+            <!-- Bouton copie -->
+            <button
+              id="btnCopyToken"
+              onclick="copyArduinoToken()"
+              title="Copier le token"
+              style="padding:0 0.9rem;border-radius:8px;background:rgba(0,255,180,0.1);border:1.5px solid rgba(0,255,180,0.3);color:#00ffb4;cursor:pointer;font-size:1rem;transition:all .15s;flex-shrink:0">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <!-- Commande simulateur prête à copier -->
+        <div style="margin-top:1rem">
+          <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+            Commande simulateur Python
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:stretch">
+            <div
+              id="arduinoSimCmd"
+              style="flex:1;padding:0.7rem 1rem;border-radius:8px;background:rgba(0,0,0,0.45);border:1px solid rgba(0,255,180,0.2);font-family:'Space Mono',monospace;font-size:0.72rem;color:rgba(0,255,180,0.8);word-break:break-all;line-height:1.7;user-select:all">
+            </div>
+            <button
+              onclick="copySimCmd()"
+              title="Copier la commande"
+              style="padding:0 0.9rem;border-radius:8px;background:rgba(0,255,180,0.08);border:1.5px solid rgba(0,255,180,0.2);color:rgba(0,255,180,0.7);cursor:pointer;font-size:1rem;transition:all .15s;flex-shrink:0">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <!-- Note dev -->
+        <p style="margin-top:1rem;font-size:0.75rem;color:rgba(255,180,0,0.65);line-height:1.5;padding:0.6rem 0.9rem;border-radius:8px;background:rgba(255,180,0,0.06);border:1px solid rgba(255,180,0,0.15)">
+          ⚠️ <strong style="color:rgba(255,180,0,0.9)">DEV/TEST ONLY</strong> — Ne jamais partager ce token avec les joueurs.
+          Il est révoqué automatiquement à la fin de la partie ou après 1h.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ── Fin zone DEV/TEST Arduino ─────────────────────────── -->
+
 <!-- ZONE DANGER — Classe 1 uniquement (Imran) -->
 <div id="dangerZone" class="card" style=";margin-bottom:1.5rem;border-color:rgba(231,76,60,0.3);display:none">
   <div class="card-header" style="border-bottom-color:rgba(231,76,60,0.2)">
@@ -417,6 +531,9 @@ fetch('/current_user').then(r => {
   if (cosZone) cosZone.style.display = isSuperAdmin ? 'block' : 'none';
   const badgesZone = document.getElementById('badgesZone');
   if (badgesZone) badgesZone.style.display = isSuperAdmin ? 'block' : 'none';
+  // ⚠️ DEV/TEST ONLY — Zone token Arduino, visible uniquement pour Imran (super admin)
+  const arduinoDevZone = document.getElementById('arduinoDevZone');
+  if (arduinoDevZone) arduinoDevZone.style.display = isSuperAdmin ? 'block' : 'none';
   if (isSuperAdmin) { loadCatalog(); loadBadgeCatalogue(); }
 });
 
@@ -1187,6 +1304,122 @@ async function unlockForUser() {
       if (status) status.innerHTML = `<span style="color:#e74c3c">✕ ${res.message}</span>`;
     }
   } catch(e) { showToast('Erreur réseau', 'err'); }
+}
+
+// ══════════════════════════════════════════════════════════
+// ⚠️  DEV / TEST ONLY — Fonctions Token Arduino
+// Visibles uniquement pour Imran (super admin).
+// Ne jamais exposer en production publique.
+// ══════════════════════════════════════════════════════════
+
+let _arduinoTokenValue = '';   // token en cache pour copie
+let _arduinoSimCmdValue = '';  // commande simulateur en cache
+
+async function fetchArduinoToken() {
+  const btn    = document.getElementById('btnFetchArduinoToken');
+  const result = document.getElementById('arduinoTokenResult');
+  const noneEl = document.getElementById('arduinoTokenNone');
+  const foundEl = document.getElementById('arduinoTokenFound');
+
+  // Feedback visuel bouton
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  btn.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite">
+      <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+    </svg>
+    Récupération...`;
+
+  try {
+    const res  = await fetch('/admin/arduino-token');
+    const data = await res.json();
+
+    result.style.display  = 'block';
+    noneEl.style.display  = 'none';
+    foundEl.style.display = 'none';
+
+    if (!res.ok || data.error) {
+      showToast('✕ ' + (data.error || 'Erreur'), 'err');
+      return;
+    }
+
+    if (data.warning || !data.token) {
+      // Aucun token actif
+      noneEl.style.display = 'block';
+      showToast('Aucune partie active', 'err');
+      return;
+    }
+
+    // ── Remplir les champs ──────────────────────────────
+    const info = data.tokens && data.tokens[0] ? data.tokens[0] : data;
+
+    document.getElementById('arduinoGameId').textContent      = data.game_id ?? '—';
+    document.getElementById('arduinoPendingCount').textContent = (info.pending_actions ?? 0) + ' action(s)';
+
+    const expiryS = info.expires_in_seconds ?? 3600;
+    const expiryMin = Math.floor(expiryS / 60);
+    const expirySec = expiryS % 60;
+    document.getElementById('arduinoTokenExpiry').textContent =
+      expiryMin > 0 ? `${expiryMin}m ${expirySec}s` : `${expiryS}s`;
+
+    // Token principal
+    _arduinoTokenValue = data.token;
+    document.getElementById('arduinoTokenDisplay').textContent = data.token;
+
+    // Commande simulateur
+    const baseUrl = window.location.origin;
+    _arduinoSimCmdValue =
+      `python arduino_simulator.py \\\n` +
+      `  --url ${baseUrl} \\\n` +
+      `  --game-id ${data.game_id} \\\n` +
+      `  --token ${data.token} \\\n` +
+      `  --simulate-goals`;
+    document.getElementById('arduinoSimCmd').textContent = _arduinoSimCmdValue;
+
+    foundEl.style.display = 'block';
+    showToast('✓ Token récupéré', 'ok');
+
+  } catch(e) {
+    showToast('Erreur réseau', 'err');
+    console.error('[DEV] fetchArduinoToken error:', e);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+      </svg>
+      Récupérer le token actif`;
+  }
+}
+
+function copyArduinoToken() {
+  if (!_arduinoTokenValue) return;
+  navigator.clipboard.writeText(_arduinoTokenValue).then(() => {
+    const btn = document.getElementById('btnCopyToken');
+    btn.textContent = '✅';
+    showToast('Token copié !', 'ok');
+    setTimeout(() => { btn.textContent = '📋'; }, 2000);
+  }).catch(() => showToast('Copie manuelle : sélectionnez le token', 'err'));
+}
+
+function copySimCmd() {
+  if (!_arduinoSimCmdValue) return;
+  // Supprimer les \ et sauts de ligne pour une commande sur une seule ligne
+  const oneLiner = _arduinoSimCmdValue.replace(/\s*\\\n\s*/g, ' ').trim();
+  navigator.clipboard.writeText(oneLiner).then(() => {
+    showToast('Commande copiée !', 'ok');
+  }).catch(() => showToast('Copie manuelle : sélectionnez la commande', 'err'));
+}
+
+// Style spin pour l'icône de chargement (injecté une fois)
+if (!document.getElementById('spinStyle')) {
+  const s = document.createElement('style');
+  s.id = 'spinStyle';
+  s.textContent = '@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+  document.head.appendChild(s);
 }
 
 let currentAdminUser = null;
