@@ -367,9 +367,13 @@ function makePlayerCard(username, amHost, color) {
   }
 
   // Badges
-  const badgesHtml = (prof.badges || []).slice(0, 3).map(b =>
-    `<span title="${esc(b.name)}" style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:99px;font-size:.62rem;font-weight:700;background:${b.color}22;border:1px solid ${b.color}44;color:${b.color}">${b.icon || ''}</span>`
-  ).join('');
+  // Badges image uniquement, plus gros — sans texte
+  const badgesHtml = (prof.badges || []).slice(0, 4).map(b => {
+    const img = b.image_url
+      ? `<img src="${b.image_url}" style="width:18px;height:18px;border-radius:50%;object-fit:cover" alt="">`
+      : `<span style="font-size:14px;line-height:1">${b.icon||'🏅'}</span>`;
+    return `<span title="${esc(b.name)}" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:${b.color}22;border:1.5px solid ${b.color}55;flex-shrink:0">${img}</span>`;
+  }).join('');
 
   const onlineDot = ONLINE.has(username) ? '<span class="online-dot-lobby"></span>' : '';
 

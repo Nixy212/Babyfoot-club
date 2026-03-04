@@ -271,56 +271,6 @@
       </div>
     </div>
 
-    <!-- ── ELO / NIVEAU ───────────────────────────────────────── -->
-    <div class="settings-card">
-      <div class="settings-section-title">📊 Mon niveau</div>
-      <div class="settings-row">
-        <!-- Badge niveau actuel -->
-        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
-          <div class="elo-badge">
-            <span id="eloIcon" style="font-size:2rem">🎮</span>
-            <div class="elo-info">
-              <span class="elo-value" id="eloValue">1000</span>
-              <span class="elo-tier" id="eloTier">Recrue</span>
-              <span class="elo-label">Points ELO</span>
-            </div>
-          </div>
-          <div style="flex:1;min-width:180px">
-            <div id="eloDesc" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;font-style:italic"></div>
-            <div style="background:var(--bg-tertiary);border-radius:8px;height:8px;overflow:hidden">
-              <div id="eloProgressBar" style="height:100%;border-radius:8px;background:linear-gradient(90deg,#cd7f32,#ffd700);transition:width .5s"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem">
-              <span id="eloMin"></span><span id="eloMax"></span>
-            </div>
-            <!-- Winstreak -->
-            <div id="streakBadge" style="display:none;margin-top:0.7rem">
-              <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.35);font-size:0.8rem;font-weight:800;color:#ff8c00">
-                🔥 Série en cours : <span id="streakCount">0</span> victoire(s) d'affilée !
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Explication système ELO enrichi -->
-        <div style="background:var(--bg-tertiary);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.82rem;color:var(--text-muted);line-height:1.6">
-          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.5rem">💡 Système ELO v2 — Comment ça marche ?</div>
-          <div>Chaque joueur commence à <strong style="color:#cd7f32">1000 points</strong>. Le gain est dynamique :</div>
-          <ul style="margin:0.5rem 0 0.5rem 1rem;padding:0">
-            <li><strong style="color:#ffd700">K variable</strong> : tu progresses plus vite au bas du classement (+40K) qu'au sommet (+14K)</li>
-            <li><strong style="color:#ff8c00">Bonus winstreak</strong> : chaque victoire d'affilée rapporte +15%, jusqu'à ×2.0 (5+ victoires)</li>
-            <li><strong style="color:#9b59b6">Bonus upset</strong> : battre qqn 200+ ELO au-dessus de toi = ×1.5</li>
-            <li><strong style="color:#e74c3c">Domination</strong> : gagner 10-0 ou 10-1 = +20% de gain</li>
-            <li>Le plancher est à <strong style="color:#cd7f32">800 points</strong> — tu ne peux pas tomber en dessous</li>
-          </ul>
-        </div>
-
-        <!-- Tableau de tous les niveaux -->
-        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🏅 Tous les niveaux</div>
-        <div id="eloTiersGrid" style="display:flex;flex-direction:column;gap:0.5rem"></div>
-      </div>
-    </div>
-
     <!-- Changement de mot de passe -->
     <!-- Section Quêtes & Cosmétiques -->
     <div class="settings-card">
@@ -371,6 +321,56 @@
         <button class="btn btn-primary btn-full" onclick="changePassword()" id="btnChangePw">
           Mettre à jour le mot de passe
         </button>
+      </div>
+    </div>
+
+    <!-- ── ELO / NIVEAU ───────────────────────────────────────── -->
+    <div class="settings-card">
+      <div class="settings-section-title">📊 Mon niveau</div>
+      <div class="settings-row">
+        <!-- Badge niveau actuel -->
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
+          <div class="elo-badge">
+            <span id="eloIcon" style="font-size:2rem">🎮</span>
+            <div class="elo-info">
+              <span class="elo-value" id="eloValue">1000</span>
+              <span class="elo-tier" id="eloTier">Recrue</span>
+              <span class="elo-label">Points ELO</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:180px">
+            <div id="eloDesc" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem;font-style:italic"></div>
+            <div style="background:var(--bg-tertiary);border-radius:8px;height:8px;overflow:hidden">
+              <div id="eloProgressBar" style="height:100%;border-radius:8px;background:linear-gradient(90deg,#cd7f32,#ffd700);transition:width .5s"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem">
+              <span id="eloMin"></span><span id="eloMax"></span>
+            </div>
+            <!-- Winstreak -->
+            <div id="streakBadge" style="display:none;margin-top:0.7rem">
+              <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.35);font-size:0.8rem;font-weight:800;color:#ff8c00">
+                🔥 Série en cours : <span id="streakCount">0</span> victoire(s) d'affilée !
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explication système ELO enrichi -->
+        <div style="background:var(--bg-tertiary);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.82rem;color:var(--text-muted);line-height:1.6">
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.5rem">💡 Système ELO v2 — Comment ça marche ?</div>
+          <div>Chaque joueur commence à <strong style="color:#cd7f32">1000 points</strong>. Le gain est dynamique :</div>
+          <ul style="margin:0.5rem 0 0.5rem 1rem;padding:0">
+            <li><strong style="color:#ffd700">K variable</strong> : tu progresses plus vite au bas du classement (+40K) qu'au sommet (+14K)</li>
+            <li><strong style="color:#ff8c00">Bonus winstreak</strong> : chaque victoire d'affilée rapporte +15%, jusqu'à ×2.0 (5+ victoires)</li>
+            <li><strong style="color:#9b59b6">Bonus upset</strong> : battre qqn 200+ ELO au-dessus de toi = ×1.5</li>
+            <li><strong style="color:#e74c3c">Domination</strong> : gagner 10-0 ou 10-1 = +20% de gain</li>
+            <li>Le plancher est à <strong style="color:#cd7f32">800 points</strong> — tu ne peux pas tomber en dessous</li>
+          </ul>
+        </div>
+
+        <!-- Tableau de tous les niveaux -->
+        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🏅 Tous les niveaux</div>
+        <div id="eloTiersGrid" style="display:flex;flex-direction:column;gap:0.5rem"></div>
       </div>
     </div>
 
@@ -823,9 +823,13 @@ async function loadProfile() {
         const br = await fetch(`/api/badges/user/${encodeURIComponent(user.username)}`);
         const bd = br.ok ? await br.json() : [];
         const badges = bd.badges || bd || [];
-        badgesEl.innerHTML = badges.slice(0,5).map(b =>
-          `<span title="${b.name}" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700;background:${b.color}22;border:1px solid ${b.color}55;color:${b.color}">${b.image_url ? `<img src="${b.image_url}" style="width:13px;height:13px;border-radius:2px;object-fit:cover">` : b.icon} ${b.name}</span>`
-        ).join('');
+        // Badges image uniquement — plus gros, sans texte
+        badgesEl.innerHTML = badges.slice(0,6).map(b => {
+          const imgContent = b.image_url
+            ? `<img src="${b.image_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover" alt="${(b.name||'').replace(/"/g,'&quot;')}">`
+            : `<span style="font-size:22px;line-height:1">${b.icon||'🏅'}</span>`;
+          return `<span title="${(b.name||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${b.color||'#888'}22;border:2px solid ${b.color||'#888'}55;flex-shrink:0;cursor:default;transition:transform .15s" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''">${imgContent}</span>`;
+        }).join('');
       } catch(e) {}
     }
 

@@ -334,9 +334,9 @@ async function loadLeaderboard(me) {
                 <span style="font-size:0.72rem;color:var(--text-muted)">${games} partie${games !== 1 ? 's' : ''} · ${wins} victoire${wins !== 1 ? 's' : ''}</span>
               </div>
               ${tier.max < 9999 ? `<div style="margin-top:5px;height:3px;border-radius:99px;background:rgba(255,255,255,0.07);overflow:hidden;max-width:100px"><div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#cd7f32,#ffd700);width:${Math.round(((elo-tier.min)/(tier.max-tier.min+1))*100)}%"></div></div>` : ''}
-              ${badges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
-                ${badges.slice(0,4).map(b=>`<span title="${b.name}" style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:0.68rem;font-weight:700;background:${b.color}22;border:1px solid ${b.color}55;color:${b.color}">${b.image_url ? `<img src="${b.image_url}" style="width:13px;height:13px;border-radius:2px;object-fit:cover">` : b.icon} ${b.name}</span>`).join('')}
-                ${badges.length > 4 ? `<span style="font-size:0.68rem;color:var(--text-muted);padding:2px 4px">+${badges.length-4}</span>` : ''}
+              ${badges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;align-items:center">
+                ${badges.slice(0,5).map(b=>b.image_url ? `<span title="${b.name}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${b.color}22;border:1.5px solid ${b.color}55;overflow:hidden;flex-shrink:0"><img src="${b.image_url}" style="width:22px;height:22px;border-radius:50%;object-fit:cover"></span>` : `<span title="${b.name}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${b.color}22;border:1.5px solid ${b.color}55;font-size:16px">${b.icon||'🏅'}</span>`).join('')}
+                ${badges.length > 5 ? `<span style="font-size:0.7rem;color:var(--text-muted);font-weight:700">+${badges.length-5}</span>` : ''}
               </div>` : ''}
             </div>
           <div class="lb-score" style="text-align:right">
