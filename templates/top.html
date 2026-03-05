@@ -1,10 +1,10 @@
 ﻿{% extends "base.html" %}
 {% set active_page = "top" %}
-{% block title %}Classement â€” Baby-Foot Club{% endblock %}
+{% block title %}Classement — Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* â”€â”€ Leaderboard mobile-first â”€â”€ */
+    /* ── Leaderboard mobile-first ── */
     .lb-list {
       overflow: hidden;
     }
@@ -99,7 +99,7 @@
       margin-top: 1px;
     }
 
-    /* Podium top 3 â€” lÃ©gÃ¨re mise en avant */
+    /* Podium top 3 — légère mise en avant */
     .lb-item:nth-child(1) .lb-score-val { color: #ffd700; }
     .lb-item:nth-child(2) .lb-score-val { color: #c0c0c0; }
     .lb-item:nth-child(3) .lb-score-val { color: #cd7f32; }
@@ -157,7 +157,7 @@
     .lb-av-wrap { position: relative; flex-shrink: 0; }
     .lb-av-wrap .online-dot { position: absolute; bottom: 0; right: 0; width: 11px; height: 11px; border: 2px solid var(--bg-secondary); }
 
-    /* Ã‰cran large : lÃ©gÃ¨re animation au hover */
+    /* Écran large : légère animation au hover */
     @media (hover: hover) {
       .lb-item:hover {
         background: var(--bg-hover);
@@ -185,13 +185,13 @@
   <div class="container" style="max-width:800px">
 
     <div class="page-header">
-      <h1>ðŸ† Classement ELO</h1>
-      <p>Les meilleurs joueurs du club â€” mis Ã  jour aprÃ¨s chaque partie</p>
+      <h1>🏆 Classement ELO</h1>
+      <p>Les meilleurs joueurs du club — mis à jour après chaque partie</p>
     </div>
 
     <div class="card">
       <div class="card-header">
-        <h3>ðŸ¥‡ Top joueurs</h3>
+        <h3>🥇 Top joueurs</h3>
       </div>
       <div class="lb-list" id="leaderboard">
         <div style="padding:3rem;text-align:center">
@@ -202,7 +202,7 @@
     </div>
 
     <div style="text-align:center;margin-top:1.5rem">
-      <a href="/dashboard" class="btn btn-ghost">â† Dashboard</a>
+      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
     </div>
 
   </div>
@@ -255,13 +255,13 @@ function ratio(goals, games) {
 })();
 
 const ELO_TIERS = [
-  { name:'Recrue ðŸŽ®',   icon:'ðŸŽ®', min:800,  max:949  },
-  { name:'Amateur ðŸŒ±',  icon:'ðŸŒ±', min:950,  max:1099 },
-  { name:'Rival ðŸ”¥',    icon:'ðŸ”¥', min:1100, max:1249 },
-  { name:'ConfirmÃ© âš¡', icon:'âš¡', min:1250, max:1399 },
-  { name:'Expert ðŸ’Ž',   icon:'ðŸ’Ž', min:1400, max:1549 },
-  { name:'Ã‰lite ðŸ‘‘',    icon:'ðŸ‘‘', min:1550, max:1699 },
-  { name:'MaÃ®tre ðŸ†',   icon:'ðŸ†', min:1700, max:9999 },
+  { name:'Recrue 🎮',   icon:'🎮', min:800,  max:949  },
+  { name:'Amateur 🌱',  icon:'🌱', min:950,  max:1099 },
+  { name:'Rival 🔥',    icon:'🔥', min:1100, max:1249 },
+  { name:'Confirmé ⚡', icon:'⚡', min:1250, max:1399 },
+  { name:'Expert 💎',   icon:'💎', min:1400, max:1549 },
+  { name:'Élite 👑',    icon:'👑', min:1550, max:1699 },
+  { name:'Maître 🏆',   icon:'🏆', min:1700, max:9999 },
 ];
 function eloTier(elo) {
   for (let i = ELO_TIERS.length - 1; i >= 0; i--) {
@@ -278,12 +278,12 @@ async function loadLeaderboard(me) {
       fetch('/api/online_users').then(r => r.json())
     ]);
     const onlineSet = new Set((onlineRes.online || []));
-    // Filtre guest dÃ©jÃ  fait cÃ´tÃ© serveur, mais sÃ©curitÃ© supplÃ©mentaire
+    // Filtre guest déjà fait côté serveur, mais sécurité supplémentaire
     lb = (lb || []).filter(p => p && p.username);
 
     if (!lb.length) {
       el.innerHTML = `<div style="padding:3rem;text-align:center">
-        <p style="color:var(--text-tertiary)">Personne de classÃ© pour l'instant â€” jouez une partie pour apparaÃ®tre ici !</p>
+        <p style="color:var(--text-tertiary)">Personne de classé pour l'instant — jouez une partie pour apparaître ici !</p>
       </div>`;
       return;
     }
@@ -301,13 +301,13 @@ async function loadLeaderboard(me) {
       const badges = p.badges || [];
       const badgesMarkup = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML)
         ? ProfileUtils.badgesOnlyHTML({ badges }, 24)
-        : badges.slice(0, 5).map((b) => `<span title="${escapeHtml(b.name || '')}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${(b.color || '#888')}22;border:1.5px solid ${(b.color || '#888')}55;font-size:14px">${escapeHtml(b.icon || 'ðŸ…')}</span>`).join('');
+        : badges.slice(0, 5).map((b) => `<span title="${escapeHtml(b.name || '')}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${(b.color || '#888')}22;border:1.5px solid ${(b.color || '#888')}55;font-size:14px">${escapeHtml(b.icon || '🏅')}</span>`).join('');
       const isOnline = onlineSet.has(p.username);
       function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
       const name = escapeHtml((p.nickname && p.nickname.trim()) ? p.nickname.trim() : p.username);
       const subName = (p.nickname && p.nickname.trim()) ? `<span style="font-size:0.7rem;color:var(--text-muted)">${escapeHtml(p.username)}</span>` : '';
 
-      // Avatar + cosmÃ©tiques
+      // Avatar + cosmétiques
       let avContent;
       if (window.ProfileUtils) {
         avContent = ProfileUtils.avatarWithCosmeticsHTML(p, 40, { extraClass: `lb-av ${avClass}` });
@@ -329,11 +329,11 @@ async function loadLeaderboard(me) {
           <div class="lb-info">
               <div class="lb-name">
                 ${name}${isMe ? '<span class="tag-me">vous</span>' : ''}
-                ${streak >= 3 ? `<span style="font-size:0.73rem;margin-left:5px;color:#ff8c00;font-weight:800;animation:streakPulse 1.5s ease infinite" title="${streak} victoires d'affilÃ©e">ðŸ”¥${streak}</span>` : ''}
+                ${streak >= 3 ? `<span style="font-size:0.73rem;margin-left:5px;color:#ff8c00;font-weight:800;animation:streakPulse 1.5s ease infinite" title="${streak} victoires d'affilée">🔥${streak}</span>` : ''}
               </div>
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px">
                 ${subName}
-                <span style="font-size:0.72rem;color:var(--text-muted)">${games} partie${games !== 1 ? 's' : ''} Â· ${wins} victoire${wins !== 1 ? 's' : ''}</span>
+                <span style="font-size:0.72rem;color:var(--text-muted)">${games} partie${games !== 1 ? 's' : ''} · ${wins} victoire${wins !== 1 ? 's' : ''}</span>
               </div>
               ${tier.max < 9999 ? `<div style="margin-top:5px;height:3px;border-radius:99px;background:rgba(255,255,255,0.07);overflow:hidden;max-width:100px"><div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#cd7f32,#ffd700);width:${Math.round(((elo-tier.min)/(tier.max-tier.min+1))*100)}%"></div></div>` : ''}
               ${badges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;align-items:center">
@@ -354,7 +354,7 @@ async function loadLeaderboard(me) {
 
   } catch(e) {
     el.innerHTML = `<div style="padding:3rem;text-align:center">
-      <p style="color:var(--text-tertiary)">Impossible de charger le classement â€” rÃ©essayez dans quelques instants</p>
+      <p style="color:var(--text-tertiary)">Impossible de charger le classement — réessayez dans quelques instants</p>
     </div>`;
   }
 }

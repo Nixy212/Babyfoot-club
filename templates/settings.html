@@ -1,6 +1,6 @@
 ﻿{% extends "base.html" %}
 {% set active_page = "settings" %}
-{% block title %}ParamÃ¨tres â€” Baby-Foot Club{% endblock %}
+{% block title %}Paramètres — Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -331,8 +331,8 @@
 <div class="page">
   <div class="container" style="max-width:600px">
     <div class="page-header">
-      <h1>âš™ï¸ ParamÃ¨tres</h1>
-      <p>GÃ©rez votre compte et vos prÃ©fÃ©rences</p>
+      <h1>⚙️ Paramètres</h1>
+      <p>Gérez votre compte et vos préférences</p>
     </div>
 
     <!-- Profil -->
@@ -340,17 +340,17 @@
       <div class="profile-header">
         <div class="avatar-big" id="profileAv">?</div>
         <div>
-          <div class="profile-name" id="profileName">â€”</div>
+          <div class="profile-name" id="profileName">—</div>
           <div class="profile-role" id="profileRole" style="display:none">Joueur</div>
-          <!-- Badges reÃ§us -->
+          <!-- Badges reçus -->
           <div id="profileBadges" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px"></div>
         </div>
       </div>
     </div>
 
-    <!-- â”€â”€ PERSONNALISATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- ── PERSONNALISATION ───────────────────────────────────── -->
     <div class="settings-card">
-      <div class="settings-section-title">ðŸŽ¨ Personnaliser mon profil</div>
+      <div class="settings-section-title">🎨 Personnaliser mon profil</div>
       <div class="settings-row">
 
         <!-- Avatar -->
@@ -360,24 +360,24 @@
             <div class="avatar-preview-big" id="avatarPreviewBig">
               <span id="avatarPreviewEmoji">?</span>
               <img id="avatarPreviewImg" src="" style="display:none">
-              <div class="avatar-edit-overlay">âœï¸</div>
+              <div class="avatar-edit-overlay">✏️</div>
             </div>
           </div>
           <div>
             <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem">Choisir un avatar</div>
             <div class="avatar-presets" id="avatarPresets">
-              <button class="avatar-preset-btn" data-preset="âš½" onclick="selectPreset('âš½')">âš½</button>
-              <button class="avatar-preset-btn" data-preset="ðŸ†" onclick="selectPreset('ðŸ†')">ðŸ†</button>
-              <button class="avatar-preset-btn" data-preset="ðŸ”¥" onclick="selectPreset('ðŸ”¥')">ðŸ”¥</button>
-              <button class="avatar-preset-btn" data-preset="âš¡" onclick="selectPreset('âš¡')">âš¡</button>
-              <button class="avatar-preset-btn" data-preset="ðŸ‘‘" onclick="selectPreset('ðŸ‘‘')">ðŸ‘‘</button>
-              <button class="avatar-preset-btn" data-preset="ðŸ’Ž" onclick="selectPreset('ðŸ’Ž')">ðŸ’Ž</button>
-              <button class="avatar-preset-btn" data-preset="ðŸŽ¯" onclick="selectPreset('ðŸŽ¯')">ðŸŽ¯</button>
-              <button class="avatar-preset-btn" data-preset="ðŸ¦" onclick="selectPreset('ðŸ¦')">ðŸ¦</button>
+              <button class="avatar-preset-btn" data-preset="⚽" onclick="selectPreset('⚽')">⚽</button>
+              <button class="avatar-preset-btn" data-preset="🏆" onclick="selectPreset('🏆')">🏆</button>
+              <button class="avatar-preset-btn" data-preset="🔥" onclick="selectPreset('🔥')">🔥</button>
+              <button class="avatar-preset-btn" data-preset="⚡" onclick="selectPreset('⚡')">⚡</button>
+              <button class="avatar-preset-btn" data-preset="👑" onclick="selectPreset('👑')">👑</button>
+              <button class="avatar-preset-btn" data-preset="💎" onclick="selectPreset('💎')">💎</button>
+              <button class="avatar-preset-btn" data-preset="🎯" onclick="selectPreset('🎯')">🎯</button>
+              <button class="avatar-preset-btn" data-preset="🦁" onclick="selectPreset('🦁')">🦁</button>
             </div>
             <div style="margin-top:0.6rem">
               <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem" onclick="document.getElementById('avatarFileInput').click()">
-                ðŸ“· Uploader une photo
+                📷 Uploader une photo
               </button>
             </div>
           </div>
@@ -386,7 +386,7 @@
 
         <!-- Surnom -->
         <div style="margin-bottom:1rem">
-          <div class="perso-label">Surnom affichÃ© en jeu</div>
+          <div class="perso-label">Surnom affiché en jeu</div>
           <input type="text" class="perso-input" id="nicknameInput" maxlength="30"
                  placeholder="Ton surnom (laisser vide = username)"
                  oninput="document.getElementById('nicknameCount').textContent=this.value.length+'/30'">
@@ -410,33 +410,33 @@
     </div>
 
     <!-- Changement de mot de passe -->
-    <!-- Section QuÃªtes & CosmÃ©tiques -->
+    <!-- Section Quêtes & Cosmétiques -->
     <div class="settings-card">
-      <div class="settings-section-title">ðŸ… QuÃªtes & CosmÃ©tiques</div>
+      <div class="settings-section-title">🏅 Quêtes & Cosmétiques</div>
       <div class="settings-row">
 
-        <!-- CosmÃ©tiques actifs -->
+        <!-- Cosmétiques actifs -->
         <div style="margin-bottom:1.5rem">
           <div class="cosmetic-help">
             Le systeme d'aide reste identique, mais la partie premium a ete retravaillee:
             cadres plus lisibles, rendu plus propre et verrouillage plus clair.
           </div>
-          <div class="cosmetic-block-title">ðŸŽ¨ ThÃ¨me actif</div>
+          <div class="cosmetic-block-title">🎨 Thème actif</div>
           <div id="themeSelectorGrid" class="cosmetic-grid"></div>
-          <div class="cosmetic-block-title">ðŸ–¼ï¸ Cadre avatar actif</div>
+          <div class="cosmetic-block-title">🖼️ Cadre avatar actif</div>
           <div id="frameSelectorGrid" class="cosmetic-grid frame-grid"></div>
         </div>
 
-        <!-- Liste des quÃªtes -->
-        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">ðŸ… Toutes les quÃªtes</div>
+        <!-- Liste des quêtes -->
+        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🏅 Toutes les quêtes</div>
         <div id="questsFullList" style="display:flex;flex-direction:column;gap:0.5rem">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.85rem">Chargementâ€¦</div>
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.85rem">Chargement…</div>
         </div>
       </div>
     </div>
 
     <div class="settings-card">
-      <div class="settings-section-title">ðŸ”’ Changer le mot de passe</div>
+      <div class="settings-section-title">🔒 Changer le mot de passe</div>
       <div class="settings-row">
         <div class="pw-group">
           <div>
@@ -448,7 +448,7 @@
           <div>
             <div class="pw-label">Nouveau mot de passe</div>
             <div class="pw-input-wrap">
-              <input type="password" id="newPw" placeholder="Min. 6 caractÃ¨res" autocomplete="new-password" oninput="checkStrength(this.value)">
+              <input type="password" id="newPw" placeholder="Min. 6 caractères" autocomplete="new-password" oninput="checkStrength(this.value)">
             </div>
             <div class="pw-strength"><div class="pw-strength-bar" id="strengthBar"></div></div>
             <div class="pw-strength-text" id="strengthText"></div>
@@ -456,24 +456,24 @@
           <div>
             <div class="pw-label">Confirmer le nouveau mot de passe</div>
             <div class="pw-input-wrap">
-              <input type="password" id="confirmPw" placeholder="RÃ©pÃ©tez le nouveau mot de passe" autocomplete="new-password">
+              <input type="password" id="confirmPw" placeholder="Répétez le nouveau mot de passe" autocomplete="new-password">
             </div>
           </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="changePassword()" id="btnChangePw">
-          Mettre Ã  jour le mot de passe
+          Mettre à jour le mot de passe
         </button>
       </div>
     </div>
 
-    <!-- â”€â”€ ELO / NIVEAU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- ── ELO / NIVEAU ───────────────────────────────────────── -->
     <div class="settings-card">
-      <div class="settings-section-title">ðŸ“Š Mon niveau</div>
+      <div class="settings-section-title">📊 Mon niveau</div>
       <div class="settings-row">
         <!-- Badge niveau actuel -->
         <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.25rem">
           <div class="elo-badge">
-            <span id="eloIcon" style="font-size:2rem">ðŸŽ®</span>
+            <span id="eloIcon" style="font-size:2rem">🎮</span>
             <div class="elo-info">
               <span class="elo-value" id="eloValue">1000</span>
               <span class="elo-tier" id="eloTier">Recrue</span>
@@ -491,43 +491,43 @@
             <!-- Winstreak -->
             <div id="streakBadge" style="display:none;margin-top:0.7rem">
               <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.35);font-size:0.8rem;font-weight:800;color:#ff8c00">
-                ðŸ”¥ SÃ©rie en cours : <span id="streakCount">0</span> victoire(s) d'affilÃ©e !
+                🔥 Série en cours : <span id="streakCount">0</span> victoire(s) d'affilée !
               </span>
             </div>
           </div>
         </div>
 
-        <!-- Explication systÃ¨me ELO enrichi -->
+        <!-- Explication système ELO enrichi -->
         <div style="background:var(--bg-tertiary);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:0.82rem;color:var(--text-muted);line-height:1.6">
-          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.5rem">ðŸ’¡ SystÃ¨me ELO v2 â€” Comment Ã§a marche ?</div>
-          <div>Chaque joueur commence Ã  <strong style="color:#cd7f32">1000 points</strong>. Le gain est dynamique :</div>
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:0.5rem">💡 Système ELO v2 — Comment ça marche ?</div>
+          <div>Chaque joueur commence à <strong style="color:#cd7f32">1000 points</strong>. Le gain est dynamique :</div>
           <ul style="margin:0.5rem 0 0.5rem 1rem;padding:0">
             <li><strong style="color:#ffd700">K variable</strong> : tu progresses plus vite au bas du classement (+40K) qu'au sommet (+14K)</li>
-            <li><strong style="color:#ff8c00">Bonus winstreak</strong> : chaque victoire d'affilÃ©e rapporte +15%, jusqu'Ã  Ã—2.0 (5+ victoires)</li>
-            <li><strong style="color:#9b59b6">Bonus upset</strong> : battre qqn 200+ ELO au-dessus de toi = Ã—1.5</li>
+            <li><strong style="color:#ff8c00">Bonus winstreak</strong> : chaque victoire d'affilée rapporte +15%, jusqu'à ×2.0 (5+ victoires)</li>
+            <li><strong style="color:#9b59b6">Bonus upset</strong> : battre qqn 200+ ELO au-dessus de toi = ×1.5</li>
             <li><strong style="color:#e74c3c">Domination</strong> : gagner 10-0 ou 10-1 = +20% de gain</li>
-            <li>Le plancher est Ã  <strong style="color:#cd7f32">800 points</strong> â€” tu ne peux pas tomber en dessous</li>
+            <li>Le plancher est à <strong style="color:#cd7f32">800 points</strong> — tu ne peux pas tomber en dessous</li>
           </ul>
         </div>
 
         <!-- Tableau de tous les niveaux -->
-        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">ðŸ… Tous les niveaux</div>
+        <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">🏅 Tous les niveaux</div>
         <div id="eloTiersGrid" style="display:flex;flex-direction:column;gap:0.5rem"></div>
       </div>
     </div>
 
     <!-- Google / Email (info) -->
     <div class="settings-card">
-      <div class="settings-section-title">ðŸ“§ Mot de passe oubliÃ© ?</div>
+      <div class="settings-section-title">📧 Mot de passe oublié ?</div>
       <div class="settings-row">
         <div class="info-box blue">
-          Contactez un membre du club pour rÃ©initialiser votre mot de passe.
+          Contactez un membre du club pour réinitialiser votre mot de passe.
         </div>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:1rem;margin-bottom:2rem">
-      <a href="/dashboard" class="btn btn-ghost">â† Dashboard</a>
+      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
     </div>
   </div>
 </div>
@@ -535,7 +535,7 @@
 <div class="toast-settings" id="toastWrap"></div>
 
 <script>
-// â”€â”€ Ã‰tat local â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── État local ────────────────────────────────────────────────
 let currentUser = null;
 let currentAvatarPreset = null;
 let currentAvatarFile = null;
@@ -590,13 +590,13 @@ function normalizeUnlockedCosmetics(list) {
 }
 
 const ELO_TIERS = [
-  { name:'Recrue',    icon:'ðŸŽ®', min:800,  max:949  },
-  { name:'Amateur',   icon:'ðŸŒ±', min:950,  max:1099 },
-  { name:'Rival',     icon:'ðŸ”¥', min:1100, max:1249 },
-  { name:'ConfirmÃ©',  icon:'âš¡', min:1250, max:1399 },
-  { name:'Expert',    icon:'ðŸ’Ž', min:1400, max:1549 },
-  { name:'Ã‰lite',     icon:'ðŸ‘‘', min:1550, max:1699 },
-  { name:'MaÃ®tre',    icon:'ðŸ†', min:1700, max:9999 },
+  { name:'Recrue',    icon:'🎮', min:800,  max:949  },
+  { name:'Amateur',   icon:'🌱', min:950,  max:1099 },
+  { name:'Rival',     icon:'🔥', min:1100, max:1249 },
+  { name:'Confirmé',  icon:'⚡', min:1250, max:1399 },
+  { name:'Expert',    icon:'💎', min:1400, max:1549 },
+  { name:'Élite',     icon:'👑', min:1550, max:1699 },
+  { name:'Maître',    icon:'🏆', min:1700, max:9999 },
 ];
 function eloTier(elo) {
   for (let i = ELO_TIERS.length - 1; i >= 0; i--) {
@@ -605,7 +605,7 @@ function eloTier(elo) {
   return ELO_TIERS[0];
 }
 
-// â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Toast ─────────────────────────────────────────────────────
 function toast(msg, type = 'ok') {
   const wrap = document.getElementById('toastWrap');
   if (!wrap) return;
@@ -617,7 +617,7 @@ function toast(msg, type = 'ok') {
   setTimeout(() => d.remove(), 3500);
 }
 
-// â”€â”€ Avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Avatar ────────────────────────────────────────────────────
 function selectPreset(emoji) {
   currentAvatarPreset = emoji;
   currentAvatarFile = null;
@@ -663,8 +663,8 @@ function showAvatarCropTool(img, src) {
     return `
       <div style="width:min(380px,95vw);background:var(--bg-secondary,#1c2030);border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,0.8);padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:800;font-size:1rem;color:#e8ecf2">âœ‚ï¸ Recadrer la photo</span>
-          <button id="avCropClose" style="background:none;border:none;color:#8898a8;font-size:1.3rem;cursor:pointer;line-height:1">âœ•</button>
+          <span style="font-weight:800;font-size:1rem;color:#e8ecf2">✂️ Recadrer la photo</span>
+          <button id="avCropClose" style="background:none;border:none;color:#8898a8;font-size:1.3rem;cursor:pointer;line-height:1">✕</button>
         </div>
         <div style="display:flex;justify-content:center">
           <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:3px solid #cd7f32;position:relative;background:#111;flex-shrink:0">
@@ -672,14 +672,14 @@ function showAvatarCropTool(img, src) {
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.75rem">
-          <label style="font-size:0.82rem;font-weight:600;color:#8898a8">â†” Position horizontale</label>
+          <label style="font-size:0.82rem;font-weight:600;color:#8898a8">↔ Position horizontale</label>
           <input type="range" id="avSliderX" min="0" max="100" value="${cropX}" style="width:100%;accent-color:#cd7f32">
-          <label style="font-size:0.82rem;font-weight:600;color:#8898a8">â†• Position verticale</label>
+          <label style="font-size:0.82rem;font-weight:600;color:#8898a8">↕ Position verticale</label>
           <input type="range" id="avSliderY" min="0" max="100" value="${cropY}" style="width:100%;accent-color:#cd7f32">
-          <label id="avZoomLabel" style="font-size:0.82rem;font-weight:600;color:#8898a8">ðŸ” Zoom (${Math.round(cropZoom*100)}%)</label>
+          <label id="avZoomLabel" style="font-size:0.82rem;font-weight:600;color:#8898a8">🔍 Zoom (${Math.round(cropZoom*100)}%)</label>
           <input type="range" id="avSliderZ" min="100" max="300" value="${Math.round(cropZoom*100)}" style="width:100%;accent-color:#cd7f32">
         </div>
-        <button id="avCropApply" style="padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#cd7f32,#b8732f);border:none;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">âœ… Utiliser cette photo</button>
+        <button id="avCropApply" style="padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#cd7f32,#b8732f);border:none;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">✅ Utiliser cette photo</button>
       </div>`;
   }
 
@@ -690,7 +690,7 @@ function showAvatarCropTool(img, src) {
     const avImg = overlay.querySelector('#avCropImg');
     if (avImg) avImg.style.cssText = `position:absolute;width:${bSize}px;height:${bSize}px;object-fit:cover;left:50%;top:50%;transform:translate(calc(-50% + ${bOffX}px),calc(-50% + ${bOffY}px))`;
     const lbl = overlay.querySelector('#avZoomLabel');
-    if (lbl) lbl.textContent = `ðŸ” Zoom (${Math.round(cropZoom*100)}%)`;
+    if (lbl) lbl.textContent = `🔍 Zoom (${Math.round(cropZoom*100)}%)`;
   }
 
   overlay.innerHTML = buildHTML();
@@ -759,13 +759,13 @@ function showAvatarCropTool(img, src) {
   });
 }
 
-// â”€â”€ Profil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Profil ────────────────────────────────────────────────────
 async function saveProfile() {
   const btn = document.getElementById('btnSaveProfile');
-  btn.disabled = true; btn.textContent = 'â³ Sauvegarde...';
+  btn.disabled = true; btn.textContent = '⏳ Sauvegarde...';
 
   try {
-    // Upload avatar si fichier sÃ©lectionnÃ© (envoi JSON base64 compressÃ©)
+    // Upload avatar si fichier sélectionné (envoi JSON base64 compressé)
     if (currentAvatarFile) {
       const dataURL = currentAvatarFile._isDataURL ? currentAvatarFile.dataURL : await new Promise((res, rej) => {
         const rd = new FileReader(); rd.onload = e => res(e.target.result); rd.onerror = rej;
@@ -779,7 +779,7 @@ async function saveProfile() {
       if (!d.success && !d.avatar_url) { toast(d.error || d.message || 'Erreur upload avatar', 'err'); btn.disabled=false; btn.textContent='Sauvegarder le profil'; return; }
     }
 
-    // Mettre Ã  jour profil (pseudo + bio + preset)
+    // Mettre à jour profil (pseudo + bio + preset)
     const body = {
       nickname: document.getElementById('nicknameInput').value.trim(),
       bio: document.getElementById('bioInput').value.trim(),
@@ -789,18 +789,18 @@ async function saveProfile() {
     const r = await fetch('/api/profile', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const d = await r.json();
     if (d.success || d.ok) {
-      toast('Profil mis Ã  jour âœ“', 'ok');
+      toast('Profil mis à jour ✓', 'ok');
       await loadProfile();
     } else {
       toast(d.message || 'Erreur', 'err');
     }
   } catch(e) {
-    toast('Erreur rÃ©seau', 'err');
+    toast('Erreur réseau', 'err');
   }
   btn.disabled = false; btn.textContent = 'Sauvegarder le profil';
 }
 
-// â”€â”€ Mot de passe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Mot de passe ──────────────────────────────────────────────
 function checkStrength(pw) {
   const bar = document.getElementById('strengthBar');
   const txt = document.getElementById('strengthText');
@@ -829,14 +829,14 @@ async function changePassword() {
   const cf = document.getElementById('confirmPw').value;
   if (!cur || !nw || !cf) { toast('Remplissez tous les champs', 'err'); return; }
   if (nw !== cf) { toast('Les mots de passe ne correspondent pas', 'err'); return; }
-  if (nw.length < 6) { toast('Minimum 6 caractÃ¨res', 'err'); return; }
+  if (nw.length < 6) { toast('Minimum 6 caractères', 'err'); return; }
   const btn = document.getElementById('btnChangePw');
-  btn.disabled = true; btn.textContent = 'â³ Mise Ã  jour...';
+  btn.disabled = true; btn.textContent = '⏳ Mise à jour...';
   try {
     const r = await fetch('/api/change_password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({current_password:cur, new_password:nw}) });
     const d = await r.json();
     if (d.success) {
-      toast('Mot de passe mis Ã  jour âœ“', 'ok');
+      toast('Mot de passe mis à jour ✓', 'ok');
       document.getElementById('curPw').value = '';
       document.getElementById('newPw').value = '';
       document.getElementById('confirmPw').value = '';
@@ -844,11 +844,11 @@ async function changePassword() {
     } else {
       toast(d.message || 'Erreur', 'err');
     }
-  } catch(e) { toast('Erreur rÃ©seau', 'err'); }
-  btn.disabled = false; btn.textContent = 'Mettre Ã  jour le mot de passe';
+  } catch(e) { toast('Erreur réseau', 'err'); }
+  btn.disabled = false; btn.textContent = 'Mettre à jour le mot de passe';
 }
 
-// â”€â”€ CosmÃ©tiques â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Cosmétiques ───────────────────────────────────────────────
 async function equipCosmetic(type, key) {
   try {
     const r = await fetch('/api/equip_cosmetic', {
@@ -858,7 +858,7 @@ async function equipCosmetic(type, key) {
     });
     const d = await r.json();
     if (d.success || d.ok) {
-      toast('CosmÃ©tique Ã©quipÃ© âœ“', 'ok');
+      toast('Cosmétique équipé ✓', 'ok');
       if (type === 'theme') equippedTheme = normalizeCosmeticKey('theme', d.key || key);
       if (type === 'frame') equippedFrame = normalizeCosmeticKey('frame', d.key || key);
       try {
@@ -882,7 +882,7 @@ async function equipCosmetic(type, key) {
     } else {
       toast(d.message || 'Erreur', 'err');
     }
-  } catch(e) { toast('Erreur rÃ©seau', 'err'); }
+  } catch(e) { toast('Erreur réseau', 'err'); }
 }
 
 function renderCosmeticSelectors() {
@@ -891,23 +891,23 @@ function renderCosmeticSelectors() {
   if (!themeGrid || !frameGrid) return;
 
   const THEMES = [
-    { key:'default',      name:'DÃ©faut', icon:'ðŸŒ‘', desc:'Sombre bronze',      cosmetic_key: null,           c1:'rgba(205,127,50,0.18)', c2:'rgba(16,18,28,0.82)' },
-    { key:'theme_fire',   name:'Fire',   icon:'ðŸ”¥', desc:'Rouge intense',      cosmetic_key: 'theme_fire',   c1:'rgba(235,95,53,0.34)',  c2:'rgba(62,19,12,0.86)' },
-    { key:'theme_night',  name:'Night',  icon:'ðŸŒŒ', desc:'Violet nocturne',    cosmetic_key: 'theme_night',  c1:'rgba(126,105,232,0.34)', c2:'rgba(26,20,42,0.84)' },
-    { key:'theme_gold',   name:'Gold',   icon:'âœ¨', desc:'Or brillant',        cosmetic_key: 'theme_gold',   c1:'rgba(222,178,61,0.36)',  c2:'rgba(42,31,7,0.86)' },
-    { key:'theme_royal',  name:'Royal',  icon:'ðŸ’™', desc:'Bleu royal',         cosmetic_key: 'theme_royal',  c1:'rgba(66,136,224,0.34)',  c2:'rgba(12,26,46,0.84)' },
-    { key:'theme_master', name:'Master', icon:'ðŸ†', desc:'Noir et or',         cosmetic_key: 'theme_master', c1:'rgba(208,161,56,0.32)',  c2:'rgba(16,16,16,0.88)' },
+    { key:'default',      name:'Défaut', icon:'🌑', desc:'Sombre bronze',      cosmetic_key: null,           c1:'rgba(205,127,50,0.18)', c2:'rgba(16,18,28,0.82)' },
+    { key:'theme_fire',   name:'Fire',   icon:'🔥', desc:'Rouge intense',      cosmetic_key: 'theme_fire',   c1:'rgba(235,95,53,0.34)',  c2:'rgba(62,19,12,0.86)' },
+    { key:'theme_night',  name:'Night',  icon:'🌌', desc:'Violet nocturne',    cosmetic_key: 'theme_night',  c1:'rgba(126,105,232,0.34)', c2:'rgba(26,20,42,0.84)' },
+    { key:'theme_gold',   name:'Gold',   icon:'✨', desc:'Or brillant',        cosmetic_key: 'theme_gold',   c1:'rgba(222,178,61,0.36)',  c2:'rgba(42,31,7,0.86)' },
+    { key:'theme_royal',  name:'Royal',  icon:'💙', desc:'Bleu royal',         cosmetic_key: 'theme_royal',  c1:'rgba(66,136,224,0.34)',  c2:'rgba(12,26,46,0.84)' },
+    { key:'theme_master', name:'Master', icon:'🏆', desc:'Noir et or',         cosmetic_key: 'theme_master', c1:'rgba(208,161,56,0.32)',  c2:'rgba(16,16,16,0.88)' },
   ];
   const FRAMES = [
-    { key:'none',          name:'Aucun',  icon:'âšª', desc:'Sans effet',           cosmetic_key: null },
-    { key:'frame_bronze',  name:'Bronze', icon:'ðŸŸ¤', desc:'Anneau sobre',         cosmetic_key: 'frame_bronze' },
-    { key:'frame_flame',   name:'Flamme', icon:'ðŸ”¥', desc:'Contour dynamique',    cosmetic_key: 'frame_flame' },
-    { key:'frame_phoenix', name:'PhÃ©nix', icon:'ðŸ¦…', desc:'Effet premium anime', cosmetic_key: 'frame_phoenix' },
+    { key:'none',          name:'Aucun',  icon:'⚪', desc:'Sans effet',           cosmetic_key: null },
+    { key:'frame_bronze',  name:'Bronze', icon:'🟤', desc:'Anneau sobre',         cosmetic_key: 'frame_bronze' },
+    { key:'frame_flame',   name:'Flamme', icon:'🔥', desc:'Contour dynamique',    cosmetic_key: 'frame_flame' },
+    { key:'frame_phoenix', name:'Phénix', icon:'🦅', desc:'Effet premium anime', cosmetic_key: 'frame_phoenix' },
   ];
 
   const previewSeed = {
     username: (currentUser && currentUser.username) || 'demo',
-    avatar_preset: currentAvatarPreset || (currentUser && currentUser.avatar_preset) || 'âš½',
+    avatar_preset: currentAvatarPreset || (currentUser && currentUser.avatar_preset) || '⚽',
     has_avatar: false,
     active_theme: equippedTheme || 'default',
     active_frame: 'none',
@@ -918,10 +918,10 @@ function renderCosmeticSelectors() {
     const isLocked = t.cosmetic_key && !unlockedCosmetics.includes(t.cosmetic_key);
     const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
     const clickHandler = isLocked
-      ? `toast('ðŸ”’ Complete des quetes pour debloquer ce theme', 'err')`
+      ? `toast('🔒 Complete des quetes pour debloquer ce theme', 'err')`
       : `equipCosmetic('theme','${t.key}')`;
     return `<button type="button" onclick="${clickHandler}" class="cosmetic-option theme-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" style="--theme-c1:${t.c1};--theme-c2:${t.c2}" aria-pressed="${isEquipped ? 'true' : 'false'}">
-      ${isLocked ? '<span class="cosmetic-lock">ðŸ”’</span>' : ''}
+      ${isLocked ? '<span class="cosmetic-lock">🔒</span>' : ''}
       <span class="theme-preview"><span class="theme-preview-icon">${t.icon}</span></span>
       <span class="cosmetic-label">${t.name}</span>
       <span class="cosmetic-desc">${t.desc}</span>
@@ -934,7 +934,7 @@ function renderCosmeticSelectors() {
     const isLocked = f.cosmetic_key && !unlockedCosmetics.includes(f.cosmetic_key);
     const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
     const clickHandler = isLocked
-      ? `toast('ðŸ”’ Complete des quetes pour debloquer ce cadre', 'err')`
+      ? `toast('🔒 Complete des quetes pour debloquer ce cadre', 'err')`
       : `equipCosmetic('frame','${f.key}')`;
     const frameUser = Object.assign({}, previewSeed, {
       active_theme: equippedTheme || 'default',
@@ -945,7 +945,7 @@ function renderCosmeticSelectors() {
       : `<span style="font-size:1.2rem">${f.icon}</span>`;
 
     return `<button type="button" onclick="${clickHandler}" class="cosmetic-option frame-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" aria-pressed="${isEquipped ? 'true' : 'false'}">
-      ${isLocked ? '<span class="cosmetic-lock">ðŸ”’</span>' : ''}
+      ${isLocked ? '<span class="cosmetic-lock">🔒</span>' : ''}
       <span class="frame-preview-wrap">${framePreview}</span>
       <span class="cosmetic-label">${f.icon} ${f.name}</span>
       <span class="cosmetic-desc">${f.desc}</span>
@@ -955,16 +955,16 @@ function renderCosmeticSelectors() {
   }).join('');
 }
 
-// â”€â”€ QuÃªtes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Quêtes ────────────────────────────────────────────────────
 async function loadQuests() {
   const el = document.getElementById('questsFullList');
   if (!el) return;
   try {
     const res = await fetch('/api/my_quests');
-    if (!res.ok) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Impossible de charger les quÃªtes</p>'; return; }
+    if (!res.ok) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Impossible de charger les quêtes</p>'; return; }
     const quests = await res.json();
     if (!quests || quests.error) { el.innerHTML = ''; return; }
-    if (!quests.length) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Aucune quÃªte disponible</p>'; return; }
+    if (!quests.length) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Aucune quête disponible</p>'; return; }
 
     el.innerHTML = quests.map(q => {
       const pct = q.condition_value > 0 ? Math.min(100, Math.round(q.progress / q.condition_value * 100)) : 0;
@@ -975,11 +975,11 @@ async function loadQuests() {
             <span style="font-size:1.2rem">${q.icon}</span>
             <div>
               <div style="font-weight:700;font-size:.9rem${q.completed ? ';text-decoration:line-through;opacity:.6' : ''}">${q.name}</div>
-              <div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">ðŸŽ ${q.reward_label}</div>
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">🎁 ${q.reward_label}</div>
             </div>
           </div>
           ${q.completed
-            ? '<span style="color:#2ecc71;font-weight:800;font-size:.85rem">âœ“ DÃ©bloquÃ©</span>'
+            ? '<span style="color:#2ecc71;font-weight:800;font-size:.85rem">✓ Débloqué</span>'
             : `<span style="font-size:.78rem;color:var(--text-muted)">${q.progress}/${q.condition_value}</span>`
           }
         </div>
@@ -991,7 +991,7 @@ async function loadQuests() {
   }
 }
 
-// â”€â”€ ELO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ELO ───────────────────────────────────────────────────────
 function renderElo(stats) {
   const elo = stats.elo || 1000;
   const tier = eloTier(elo);
@@ -1008,7 +1008,7 @@ function renderElo(stats) {
   if (elVal) elVal.textContent = elo;
   if (elTier) elTier.textContent = tier.name;
   if (elIcon) elIcon.textContent = tier.icon;
-  if (elDesc) elDesc.textContent = `${stats.wins || 0} victoires Â· ${stats.total_games || 0} parties`;
+  if (elDesc) elDesc.textContent = `${stats.wins || 0} victoires · ${stats.total_games || 0} parties`;
 
   // Barre de progression dans le niveau
   if (elBar && tier.max < 9999) {
@@ -1037,7 +1037,7 @@ function renderElo(stats) {
         <span style="font-size:1.25rem;flex-shrink:0">${t.icon}</span>
         <div style="flex:1">
           <div style="font-weight:${isMe ? '800' : '600'};font-size:.875rem;color:${isMe ? 'var(--bronze)' : 'var(--text-primary)'}">${t.name}</div>
-          <div style="font-size:.72rem;color:var(--text-muted)">${t.min} â€“ ${t.max < 9999 ? t.max : 'âˆž'} ELO</div>
+          <div style="font-size:.72rem;color:var(--text-muted)">${t.min} – ${t.max < 9999 ? t.max : '∞'} ELO</div>
         </div>
         ${isMe ? '<span style="font-size:.7rem;font-weight:700;color:var(--bronze);background:rgba(205,127,50,.15);padding:2px 8px;border-radius:99px">Vous</span>' : ''}
       </div>`;
@@ -1045,7 +1045,7 @@ function renderElo(stats) {
   }
 }
 
-// â”€â”€ Chargement profil â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Chargement profil ─────────────────────────────────────────
 async function loadProfile() {
   try {
     const profileResPromise = fetch('/api/profile');
@@ -1062,7 +1062,7 @@ async function loadProfile() {
     // Nav
     if (window.ProfileUtils) ProfileUtils.updateNav(user);
 
-    // En-tÃªte profil
+    // En-tête profil
     const avEl = document.getElementById('profileAv');
     const nameEl = document.getElementById('profileName');
     const roleEl = document.getElementById('profileRole');
@@ -1074,7 +1074,7 @@ async function loadProfile() {
       roleEl.style.display = 'block';
     }
 
-    // Avatar dans l'en-tÃªte
+    // Avatar dans l'en-tête
     if (avEl) {
       if (profile.avatar_url) {
         avEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
@@ -1121,7 +1121,7 @@ async function loadProfile() {
       document.querySelectorAll('.avatar-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === profile.avatar_preset));
     }
 
-    // CosmÃ©tiques Ã©quipÃ©s + dÃ©bloquÃ©s
+    // Cosmétiques équipés + débloqués
     equippedTheme = 'default';
     equippedFrame = 'none';
     try {
@@ -1149,7 +1149,7 @@ async function loadProfile() {
   } catch(e) { console.error('loadProfile error:', e); }
 }
 
-// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Init ──────────────────────────────────────────────────────
 loadProfile();
 loadQuests();
 </script>

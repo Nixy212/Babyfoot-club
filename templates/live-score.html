@@ -1,10 +1,10 @@
 ﻿{% extends "base.html" %}
 {% set active_page = "live" %}
-{% block title %}Partie Live â€” Baby-Foot Club{% endblock %}
+{% block title %}Partie Live — Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* â”€â”€ Zones d'Ã©tat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Zones d'état ─────────────────────────────────────────── */
     .state-badge {
       display: inline-flex;
       align-items: center;
@@ -21,7 +21,7 @@
     .badge-spectating { background: rgba(52,152,219,0.12); color: #3498db; border: 1px solid rgba(52,152,219,0.25); }
     .badge-setup { background: rgba(205,127,50,0.12); color: #cd7f32; border: 1px solid rgba(205,127,50,0.25); }
 
-    /* â”€â”€ Carte infos rÃ´le â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Carte infos rôle ─────────────────────────────────────── */
     .role-info {
       background: var(--bg-secondary);
       border: 1px solid var(--border-subtle);
@@ -36,7 +36,7 @@
     }
     .role-info i { color: var(--bronze); flex-shrink: 0; }
 
-    /* â”€â”€ Page no game â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Page no game ─────────────────────────────────────────── */
     .no-game-options {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -148,7 +148,7 @@
       .popup-card { padding: 1.2rem !important; border-radius: 14px !important; }
     }
 
-    /* â”€â”€ ThÃ¨mes cosmÃ©tiques â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Thèmes cosmétiques ──────────────────────────────────── */
     body.theme-fire {
       --bg-primary:    #0d0200;
       --bg-secondary:  #1a0400;
@@ -215,14 +215,14 @@
     body.theme-master .nav { background: rgba(8,6,0,0.95) !important; }
     body.theme-master .score-card { border-color: rgba(205,127,50,0.6) !important; box-shadow: 0 0 40px rgba(205,127,50,0.15) !important; }
 
-    /* â”€â”€ Cadres avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Cadres avatar ───────────────────────────────────────── */
     .frame-bronze  { box-shadow: 0 0 0 3px #cd7f32, 0 0 12px rgba(205,127,50,0.5) !important; }
     .frame-flame   { box-shadow: 0 0 0 3px #ff6b00, 0 0 16px rgba(255,107,0,0.6) !important; animation: framePulseFlame 2s ease infinite; }
     .frame-phoenix { box-shadow: 0 0 0 3px #ff4500, 0 0 0 6px rgba(255,69,0,0.3), 0 0 20px rgba(255,69,0,0.4) !important; animation: framePulsePhoenix 3s ease infinite; }
     @keyframes framePulseFlame   { 0%,100%{box-shadow:0 0 0 3px #ff6b00,0 0 12px rgba(255,107,0,0.5)} 50%{box-shadow:0 0 0 3px #ff9500,0 0 24px rgba(255,107,0,0.8)} }
     @keyframes framePulsePhoenix { 0%,100%{box-shadow:0 0 0 3px #ff4500,0 0 0 6px rgba(255,69,0,0.3),0 0 16px rgba(255,69,0,0.4)} 50%{box-shadow:0 0 0 3px #ff6500,0 0 0 8px rgba(255,69,0,0.5),0 0 32px rgba(255,100,0,0.6)} }
 
-    /* â”€â”€ Popup quÃªte dÃ©bloquÃ©e â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Popup quête débloquée ───────────────────────────────── */
     .quest-unlock-toast {
       position:fixed; bottom:5rem; left:50%; transform:translateX(-50%);
       z-index:10001; pointer-events:none;
@@ -259,12 +259,12 @@ if (typeof window.io === 'undefined') {
 {% block body %}
 <div id="questToastContainer" class="quest-unlock-toast"></div>
 
-<!-- â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ── Page ─────────────────────────────────────────────────── -->
 <div class="page">
   <div class="container" style="max-width:800px">
 
     <div class="page-header">
-      <h1>ðŸŽ® Partie Live</h1>
+      <h1>🎮 Partie Live</h1>
       <p id="pageSub">Chargement...</p>
     </div>
 
@@ -274,15 +274,15 @@ if (typeof window.io === 'undefined') {
       <p style="color:var(--text-tertiary)">Connexion au serveur...</p>
     </div>
 
-    <!-- Zone Setup (admin / joueur avec rÃ©sa) -->
+    <!-- Zone Setup (admin / joueur avec résa) -->
     <div id="setupArea" style="display:none">
       <div class="card">
-        <div class="card-header"><h3>âš™ï¸ Configurer la partie</h3></div>
+        <div class="card-header"><h3>⚙️ Configurer la partie</h3></div>
         <div class="card-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-            <!-- Ã‰quipe 1 -->
+            <!-- Équipe 1 -->
             <div>
-              <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bronze);margin-bottom:.75rem">Ã‰quipe 1</div>
+              <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bronze);margin-bottom:.75rem">Équipe 1</div>
               <select id="t1p1" class="form-select" style="width:100%;margin-bottom:.5rem">
                 <option value="">Joueur 1</option>
               </select>
@@ -290,9 +290,9 @@ if (typeof window.io === 'undefined') {
                 <option value="">(2v2) Joueur 2</option>
               </select>
             </div>
-            <!-- Ã‰quipe 2 -->
+            <!-- Équipe 2 -->
             <div>
-              <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3498db;margin-bottom:.75rem">Ã‰quipe 2</div>
+              <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#3498db;margin-bottom:.75rem">Équipe 2</div>
               <select id="t2p1" class="form-select" style="width:100%;margin-bottom:.5rem">
                 <option value="">Joueur 1</option>
               </select>
@@ -302,30 +302,30 @@ if (typeof window.io === 'undefined') {
             </div>
           </div>
           <button class="btn btn-primary" style="width:100%;margin-top:1.25rem;font-size:1rem;padding:.875rem" onclick="startGame()">
-            â–¶ Lancer la partie
+            ▶ Lancer la partie
           </button>
-          <!-- Zone reset admin (cachÃ©e par dÃ©faut, discrÃ¨te) -->
+          <!-- Zone reset admin (cachée par défaut, discrète) -->
           <div id="adminResetZone" style="display:none;margin-top:1rem;padding:.75rem 1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
-              <div style="font-size:.78rem;color:var(--text-muted)">ðŸ”§ <strong style="color:var(--text-secondary)">Admin</strong> â€” RÃ©initialiser l'Ã©tat de jeu si bloquÃ©</div>
+              <div style="font-size:.78rem;color:var(--text-muted)">🔧 <strong style="color:var(--text-secondary)">Admin</strong> — Réinitialiser l'état de jeu si bloqué</div>
               <button class="btn" style="font-size:.78rem;padding:.4rem .875rem;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="forceResetGame()">
-                ðŸ”„ Forcer le reset
+                🔄 Forcer le reset
               </button>
             </div>
           </div>
         </div>
       </div>
-      <!-- Bouton dÃ©bloquer servo (admin, cachÃ© par dÃ©faut) -->
+      <!-- Bouton débloquer servo (admin, caché par défaut) -->
       <button id="btnUnlockServo" style="display:none;width:100%;padding:.75rem;margin-top:.75rem;background:rgba(205,127,50,.1);border:1px solid rgba(205,127,50,.3);color:var(--bronze);border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit" onclick="unlockServo()">
-        ðŸ”“ DÃ©verrouiller les buts (servo)
+        🔓 Déverrouiller les buts (servo)
       </button>
     </div>
 
-    <!-- Zone Partie Active (contrÃ´leur) -->
+    <!-- Zone Partie Active (contrôleur) -->
     <div id="gameArea" style="display:none">
       <div class="card" id="liveScoreBody">
         <div class="card-header" style="justify-content:center">
-          <span class="state-badge badge-live">â— LIVE</span>
+          <span class="state-badge badge-live">● LIVE</span>
         </div>
         <div class="card-body">
           <!-- Scores -->
@@ -337,7 +337,7 @@ if (typeof window.io === 'undefined') {
                 +1 But
               </button>
             </div>
-            <div style="font-size:1.5rem;font-weight:900;color:var(--text-muted);flex-shrink:0">â€“</div>
+            <div style="font-size:1.5rem;font-weight:900;color:var(--text-muted);flex-shrink:0">–</div>
             <div class="team-score-col">
               <div id="team2Players" style="font-size:.85rem;color:var(--text-secondary);margin-bottom:.5rem;min-height:1.2em"></div>
               <div id="score2" style="font-family:'Space Mono',monospace;font-size:4rem;font-weight:900;color:#3498db;line-height:1">0</div>
@@ -349,7 +349,7 @@ if (typeof window.io === 'undefined') {
           <!-- Actions admin -->
           <div class="game-actions">
             <button id="btnStopGame" class="btn btn-ghost btn-stop-game" onclick="stopGame()">
-              â¹ Terminer
+              ⏹ Terminer
             </button>
           </div>
         </div>
@@ -360,7 +360,7 @@ if (typeof window.io === 'undefined') {
     <div id="spectatorArea" style="display:none">
       <div class="card">
         <div class="card-header" style="justify-content:center">
-          <span class="state-badge badge-spectating">ðŸ‘ Spectateur</span>
+          <span class="state-badge badge-spectating">👁 Spectateur</span>
         </div>
         <div class="card-body" style="text-align:center">
           <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-bottom:1rem">
@@ -368,13 +368,13 @@ if (typeof window.io === 'undefined') {
               <div id="specTeam1" style="font-size:.85rem;color:var(--text-secondary);margin-bottom:.5rem;min-height:1.2em"></div>
               <div id="specScore1" style="font-family:'Space Mono',monospace;font-size:3.5rem;font-weight:900;color:var(--bronze)">0</div>
             </div>
-            <div style="font-size:1.25rem;font-weight:900;color:var(--text-muted)">â€“</div>
+            <div style="font-size:1.25rem;font-weight:900;color:var(--text-muted)">–</div>
             <div style="flex:1">
               <div id="specTeam2" style="font-size:.85rem;color:var(--text-secondary);margin-bottom:.5rem;min-height:1.2em"></div>
               <div id="specScore2" style="font-family:'Space Mono',monospace;font-size:3.5rem;font-weight:900;color:#3498db">0</div>
             </div>
           </div>
-          <p style="color:var(--text-muted);font-size:.875rem">Score mis Ã  jour en temps rÃ©el</p>
+          <p style="color:var(--text-muted);font-size:.875rem">Score mis à jour en temps réel</p>
         </div>
       </div>
     </div>
@@ -382,42 +382,42 @@ if (typeof window.io === 'undefined') {
     <!-- Zone Aucune partie -->
     <div id="noGameArea" style="display:none">
       <div class="card" style="padding:2rem 1.5rem">
-        <!-- BanniÃ¨re "accÃ¨s conditionnel" -->
+        <!-- Bannière "accès conditionnel" -->
         <div style="display:flex;align-items:center;gap:.75rem;padding:.875rem 1.125rem;background:rgba(205,127,50,.07);border:1px solid rgba(205,127,50,.2);border-radius:12px;margin-bottom:1.5rem">
-          <span style="font-size:1.5rem">ðŸ”’</span>
+          <span style="font-size:1.5rem">🔒</span>
           <div>
-            <div style="font-weight:700;font-size:.9rem;color:var(--bronze)">AccÃ¨s conditionnel</div>
-            <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px">Pour configurer une partie, vous devez avoir une rÃ©servation active ou Ãªtre admin.</div>
+            <div style="font-weight:700;font-size:.9rem;color:var(--bronze)">Accès conditionnel</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px">Pour configurer une partie, vous devez avoir une réservation active ou être admin.</div>
           </div>
         </div>
         <div class="no-game-options">
           <a href="/reservation" class="no-game-option">
-            <div class="no-game-option-icon">ðŸ“…</div>
-            <div class="no-game-option-label">RÃ©server</div>
-            <div class="no-game-option-sub">Bloquer un crÃ©neau</div>
+            <div class="no-game-option-icon">📅</div>
+            <div class="no-game-option-label">Réserver</div>
+            <div class="no-game-option-sub">Bloquer un créneau</div>
           </a>
           <a href="/lobby" class="no-game-option">
-            <div class="no-game-option-icon">ðŸ‘¥</div>
+            <div class="no-game-option-icon">👥</div>
             <div class="no-game-option-label">Lobby</div>
-            <div class="no-game-option-sub">CrÃ©er une salle</div>
+            <div class="no-game-option-sub">Créer une salle</div>
           </a>
         </div>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:1.5rem">
-      <a href="/dashboard" class="btn btn-ghost" style="font-size:.85rem">â† Dashboard</a>
+      <a href="/dashboard" class="btn btn-ghost" style="font-size:.85rem">← Dashboard</a>
     </div>
   </div>
 </div>
 
 <!-- Popup Vainqueur -->
 <div id="winnerOverlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;padding:1.5rem;text-align:center">
-  <div style="font-size:3rem;margin-bottom:.75rem">ðŸ†</div>
+  <div style="font-size:3rem;margin-bottom:.75rem">🏆</div>
   <h2 id="winnerTitle" style="font-size:1.75rem;font-weight:900;color:#ffd700;margin-bottom:.5rem"></h2>
   <p id="winnerSub" style="color:var(--text-secondary);margin-bottom:1.5rem;font-size:1.1rem"></p>
   <div id="eloPopupContent" style="display:none;width:100%;max-width:360px;background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:16px;padding:1.25rem;margin:0 auto 1.25rem;text-align:left">
-    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.75rem">RÃ©sultat ELO</div>
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:.75rem">Résultat ELO</div>
     <div class="elo-progress-bar" style="height:4px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:.5rem">
       <div class="elo-progress-fill" id="eloFill" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#cd7f32,#ffd700);width:0%;transition:width 1s ease"></div>
     </div>
@@ -428,36 +428,36 @@ if (typeof window.io === 'undefined') {
 <!-- Popup Rematch -->
 <div id="rematchPopup" style="display:none;position:fixed;inset:0;z-index:9001;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:1.5rem">
   <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:2rem;width:100%;max-width:380px;text-align:center">
-    <div style="font-size:2rem;margin-bottom:.75rem">ðŸ”„</div>
+    <div style="font-size:2rem;margin-bottom:.75rem">🔄</div>
     <h3 style="margin-bottom:.5rem">Revanche ?</h3>
     <p id="voteStatus" style="color:var(--text-muted);font-size:.875rem;margin-bottom:1rem"></p>
     <div style="display:flex;gap:.75rem;justify-content:center;margin-bottom:1rem">
       <span style="background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);border-radius:8px;padding:.4rem .875rem;font-size:.85rem;font-weight:700;color:#2ecc71">
-        âœ… <span id="voteYesCount">0</span>
+        ✅ <span id="voteYesCount">0</span>
       </span>
       <span style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:8px;padding:.4rem .875rem;font-size:.85rem;font-weight:700;color:#e74c3c">
-        âŒ <span id="voteNoCount">0</span>
+        ❌ <span id="voteNoCount">0</span>
       </span>
     </div>
     <div id="myVoteButtons" style="display:flex;gap:.75rem">
-      <button class="btn" style="flex:1;background:rgba(39,174,96,.15);color:#2ecc71;border:1px solid rgba(39,174,96,.3)" onclick="voteRematch('yes')">âœ… Oui</button>
-      <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="voteRematch('no')">âŒ Non</button>
+      <button class="btn" style="flex:1;background:rgba(39,174,96,.15);color:#2ecc71;border:1px solid rgba(39,174,96,.3)" onclick="voteRematch('yes')">✅ Oui</button>
+      <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="voteRematch('no')">❌ Non</button>
     </div>
     <div id="myVoteConfirm" style="display:none;color:var(--text-secondary);font-size:.875rem;padding:.75rem;background:rgba(255,255,255,.04);border-radius:8px"></div>
     <div class="rematch-actions-secondary">
-      <button class="btn btn-ghost btn-rematch-exit" onclick="leaveRematch()">â†© Retour dashboard</button>
+      <button class="btn btn-ghost btn-rematch-exit" onclick="leaveRematch()">↩ Retour dashboard</button>
     </div>
   </div>
 </div>
 
-<!-- Popup DÃ©cision hÃ´te -->
+<!-- Popup Décision hôte -->
 <div id="hostDecisionPopup" style="display:none;position:fixed;inset:0;z-index:9002;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:1.5rem">
   <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:2rem;width:100%;max-width:360px;text-align:center">
-    <div style="font-size:1.75rem;margin-bottom:.75rem">ðŸ¤”</div>
+    <div style="font-size:1.75rem;margin-bottom:.75rem">🤔</div>
     <p id="hostDecisionMsg" style="color:var(--text-secondary);font-size:.9rem;margin-bottom:1.25rem"></p>
     <div style="display:flex;gap:.75rem">
-      <button class="btn btn-ghost" style="flex:1" onclick="hostReplacePlayer()">ðŸ‘¥ Remplacer</button>
-      <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="hostQuitRematch()">âœ• Quitter</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="hostReplacePlayer()">👥 Remplacer</button>
+      <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="hostQuitRematch()">✕ Quitter</button>
     </div>
   </div>
 </div>
@@ -466,13 +466,13 @@ if (typeof window.io === 'undefined') {
 <div id="replacePlayerPopup" style="display:none;position:fixed;inset:0;z-index:9003;background:rgba(0,0,0,.84);align-items:center;justify-content:center;padding:1.5rem">
   <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:1.5rem;width:100%;max-width:420px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem">
-      <h3 style="margin:0;font-size:1.05rem">ðŸ‘¥ Choisir un remplaÃ§ant</h3>
-      <button class="btn btn-ghost" style="font-size:.75rem;padding:.35rem .65rem" onclick="closeReplacePlayerPopup()">âœ•</button>
+      <h3 style="margin:0;font-size:1.05rem">👥 Choisir un remplaçant</h3>
+      <button class="btn btn-ghost" style="font-size:.75rem;padding:.35rem .65rem" onclick="closeReplacePlayerPopup()">✕</button>
     </div>
     <p id="replacePlayerHint" style="margin:.1rem 0 .6rem;color:var(--text-secondary);font-size:.82rem"></p>
     <div id="replacePlayerList" class="replace-list"></div>
     <div style="display:flex;gap:.6rem">
-      <button id="btnConfirmReplacement" class="btn btn-primary" style="flex:1" onclick="confirmReplacement()">âœ… Remplacer et relancer</button>
+      <button id="btnConfirmReplacement" class="btn btn-primary" style="flex:1" onclick="confirmReplacement()">✅ Remplacer et relancer</button>
       <button class="btn btn-ghost" style="flex:1" onclick="closeReplacePlayerPopup()">Annuler</button>
     </div>
   </div>
@@ -481,24 +481,24 @@ if (typeof window.io === 'undefined') {
 <!-- Popup Invitation remplacement -->
 <div id="replacementInvitePopup" style="display:none;position:fixed;inset:0;z-index:9004;background:rgba(0,0,0,.86);align-items:center;justify-content:center;padding:1.5rem">
   <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:1.5rem;width:100%;max-width:390px;text-align:center">
-    <div style="font-size:1.9rem;margin-bottom:.6rem">ðŸ“¨</div>
+    <div style="font-size:1.9rem;margin-bottom:.6rem">📨</div>
     <h3 style="margin:0 0 .5rem;font-size:1.1rem">Invitation de remplacement</h3>
     <p id="replacementInviteMsg" style="color:var(--text-secondary);font-size:.86rem;line-height:1.5;margin-bottom:1rem"></p>
     <div style="display:flex;gap:.6rem">
-      <button class="btn btn-primary" style="flex:1" onclick="respondReplacementInvite(true)">âœ… Accepter</button>
-      <button class="btn btn-ghost" style="flex:1" onclick="respondReplacementInvite(false)">âŒ Refuser</button>
+      <button class="btn btn-primary" style="flex:1" onclick="respondReplacementInvite(true)">✅ Accepter</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="respondReplacementInvite(false)">❌ Refuser</button>
     </div>
   </div>
 </div>
 
-<!-- Popup expiration rÃ©servation -->
+<!-- Popup expiration réservation -->
 <div id="resaExpiryPopup" style="display:none;position:fixed;bottom:5.5rem;right:1rem;left:1rem;max-width:340px;margin:0 auto;z-index:8999;background:var(--bg-elevated);border:1px solid rgba(231,152,0,.4);border-radius:14px;padding:1rem 1.25rem;align-items:center;gap:.875rem;box-shadow:0 4px 24px rgba(0,0,0,.5)">
-  <div id="resaExpiryIcon" style="font-size:1.5rem;flex-shrink:0">â±ï¸</div>
+  <div id="resaExpiryIcon" style="font-size:1.5rem;flex-shrink:0">⏱️</div>
   <div>
     <div id="resaExpiryTitle" style="font-weight:700;font-size:.875rem"></div>
     <div id="resaExpirySub" style="font-size:.78rem;color:var(--text-muted);margin-top:1px"></div>
   </div>
-  <button style="margin-left:auto;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;flex-shrink:0;padding:2px" onclick="hideResaExpiry()">âœ•</button>
+  <button style="margin-left:auto;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;flex-shrink:0;padding:2px" onclick="hideResaExpiry()">✕</button>
 </div>
 
 <style>
@@ -517,7 +517,7 @@ let isAdmin = false;
 let canControl = false;
 let lastGame = null;
 
-// Init socket â€” avec fallback si CDN pas encore chargÃ©
+// Init socket — avec fallback si CDN pas encore chargé
 function initSocket() {
   try {
     if (typeof io === 'undefined') throw new Error('io not loaded');
@@ -531,7 +531,7 @@ function initSocket() {
   } catch(e) {
     socket = { emit: () => {}, on: () => {}, once: () => {}, connected: false };
   }
-  // Enregistrer tous les Ã©vÃ©nements maintenant que socket existe
+  // Enregistrer tous les événements maintenant que socket existe
   registerSocketEvents();
 }
 
@@ -568,7 +568,7 @@ async function loadUsers() {
     const GUEST_RE = /^Joueur\d+$/i;
     ['t1p1','t1p2','t2p1','t2p2'].forEach(id => {
       const sel = document.getElementById(id);
-      // Vider sauf la premiÃ¨re option
+      // Vider sauf la première option
       while (sel.options.length > 1) sel.remove(1);
       rawUsers.forEach(u => {
         const username = typeof u === 'string' ? u : u.username;
@@ -579,8 +579,8 @@ async function loadUsers() {
         opt.textContent = nickname ? `${nickname} (${username})` : username;
         sel.appendChild(opt);
       });
-      // Ajouter les guests comme option sÃ©parÃ©e
-      const sep = document.createElement('option'); sep.disabled = true; sep.textContent = 'â”€â”€ Joueurs physiques â”€â”€'; sel.appendChild(sep);
+      // Ajouter les guests comme option séparée
+      const sep = document.createElement('option'); sep.disabled = true; sep.textContent = '── Joueurs physiques ──'; sel.appendChild(sep);
       rawUsers.forEach(u => {
         const username = typeof u === 'string' ? u : u.username;
         if (!GUEST_RE.test(username)) return;
@@ -631,7 +631,7 @@ async function checkActiveGame() {
 
       if (canControl) {
         showArea('gameArea');
-        document.getElementById('pageSub').textContent = 'Partie en cours â€” marquez les buts en temps rÃ©el';
+        document.getElementById('pageSub').textContent = 'Partie en cours — marquez les buts en temps réel';
         updateGameUI(lastGame);
         const s1 = document.getElementById('btnScore1');
         const s2 = document.getElementById('btnScore2');
@@ -641,14 +641,14 @@ async function checkActiveGame() {
         if (stopBtn) stopBtn.style.display = canStop ? '' : 'none';
       } else {
         showArea('spectatorArea');
-        document.getElementById('pageSub').textContent = 'Partie en direct â€” score mis Ã  jour automatiquement';
+        document.getElementById('pageSub').textContent = 'Partie en direct — score mis à jour automatiquement';
         updateSpectatorUI(lastGame);
       }
     } else {
       if (canSetup) {
         showArea('setupArea');
         document.getElementById('pageSub').textContent = hasResa
-          ? 'RÃ©servation active â€” configurez et lancez la partie'
+          ? 'Réservation active — configurez et lancez la partie'
           : 'Configurez la partie ci-dessous';
         await loadUsers();
         // Admin : afficher le bouton reset discret (pas d'alarme rouge)
@@ -656,15 +656,15 @@ async function checkActiveGame() {
           const z = document.getElementById('adminResetZone');
           if (z) z.style.display = 'block';
         }
-        // Pas de rÃ©servation mais accÃ¨s admin : info discrÃ¨te
+        // Pas de réservation mais accès admin : info discrète
         if (!hasResa && userIsAdmin) {
-          document.getElementById('pageSub').textContent = 'Mode admin â€” aucune rÃ©servation active';
+          document.getElementById('pageSub').textContent = 'Mode admin — aucune réservation active';
         }
       } else {
         showArea('noGameArea');
         // Feedback visuel selon la raison du blocage
         const sub = document.getElementById('pageSub');
-        if (sub) sub.textContent = 'Aucune partie en cours â€” rÃ©servez un crÃ©neau pour jouer';
+        if (sub) sub.textContent = 'Aucune partie en cours — réservez un créneau pour jouer';
         document.getElementById('noGameArea').dataset.reason = 'no_resa';
       }
     }
@@ -675,19 +675,19 @@ async function checkActiveGame() {
       const isTimeout = e.name === 'AbortError';
       loader.innerHTML = `
         <div style="color:var(--text-tertiary);padding:1rem;text-align:center">
-          <div style="font-size:2rem;margin-bottom:0.75rem">âš ï¸</div>
-          <div style="margin-bottom:1rem">${isTimeout ? 'Le serveur met trop de temps Ã  rÃ©pondre.' : 'Impossible de charger la partie.'}</div>
+          <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+          <div style="margin-bottom:1rem">${isTimeout ? 'Le serveur met trop de temps à répondre.' : 'Impossible de charger la partie.'}</div>
           <button onclick="location.reload()" style="padding:0.5rem 1.25rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;font-family:inherit;font-size:0.9rem">
-            ðŸ”„ RÃ©essayer
+            🔄 Réessayer
           </button>
-          <br><a href="/dashboard" style="display:inline-block;margin-top:1rem;color:var(--text-muted);font-size:0.85rem">â† Dashboard</a>
+          <br><a href="/dashboard" style="display:inline-block;margin-top:1rem;color:var(--text-muted);font-size:0.85rem">← Dashboard</a>
         </div>`;
       loader.style.display = 'block';
     }
   }
 }
 
-// Profils chargÃ©s en mÃ©moire
+// Profils chargés en mémoire
 let _profilesCache = {};
 async function ensureProfiles() {
   if (Object.keys(_profilesCache).length === 0 && window.ProfileUtils) {
@@ -701,7 +701,7 @@ function renderTeamPlayers(elId, players) {
     const p = _profilesCache[u] || { username: u };
     const name = (p.nickname && p.nickname.trim()) ? p.nickname.trim() : u;
 
-    // Avatar + cadres/thÃ¨mes
+    // Avatar + cadres/thèmes
     let avHtml = '';
     if (window.ProfileUtils) {
       avHtml = ProfileUtils.avatarWithCosmeticsHTML(p, 24);
@@ -758,22 +758,22 @@ function updateSpectatorUI(game) {
 function startGame() {
   const t1 = [document.getElementById('t1p1').value, document.getElementById('t1p2').value].filter(Boolean);
   const t2 = [document.getElementById('t2p1').value, document.getElementById('t2p2').value].filter(Boolean);
-  if (t1.length === 0 || t2.length === 0) { showToast('Il faut au moins 1 joueur par Ã©quipe', 'err'); return; }
+  if (t1.length === 0 || t2.length === 0) { showToast('Il faut au moins 1 joueur par équipe', 'err'); return; }
   const all = [...t1, ...t2];
-  if (new Set(all).size !== all.length) { showToast('Un joueur ne peut pas Ãªtre dans les deux Ã©quipes', 'err'); return; }
+  if (new Set(all).size !== all.length) { showToast('Un joueur ne peut pas être dans les deux équipes', 'err'); return; }
   if (!socket) { showToast('Socket indisponible', 'err'); return; }
   const payload = { team1: t1, team2: t2 };
   if (!socket.connected) {
     if (startGame._pendingReconnect) {
-      showToast('Reconnexion dÃ©jÃ  en cours...', 'warn');
+      showToast('Reconnexion déjà en cours...', 'warn');
       return;
     }
     startGame._pendingReconnect = true;
-    showToast('âš¡ Connexion perdue, reconnexion en cours...', 'warn');
+    showToast('⚡ Connexion perdue, reconnexion en cours...', 'warn');
     socket.once('connect', () => {
       startGame._pendingReconnect = false;
       socket.emit('start_game', payload);
-      showToast('Connexion rÃ©tablie, dÃ©marrage envoyÃ©', 'info');
+      showToast('Connexion rétablie, démarrage envoyé', 'info');
     });
     if (typeof socket.connect === 'function') socket.connect();
     setTimeout(() => { startGame._pendingReconnect = false; }, 6000);
@@ -799,23 +799,23 @@ function showToast(msg, type = 'info') {
 }
 
 function addPoint(team) {
-  if (!currentUser) { showToast('â³ Chargement en cours, rÃ©essaie dans un instant', 'warn'); return; }
-  if (!isAdmin) { showToast('â›” Seuls les admins peuvent marquer des points depuis l\'interface', 'err'); return; }
-  if (!socket || !socket.connected) { showToast('âš¡ Reconnexion en cours...', 'warn'); return; }
+  if (!currentUser) { showToast('⏳ Chargement en cours, réessaie dans un instant', 'warn'); return; }
+  if (!isAdmin) { showToast('⛔ Seuls les admins peuvent marquer des points depuis l\'interface', 'err'); return; }
+  if (!socket || !socket.connected) { showToast('⚡ Reconnexion en cours...', 'warn'); return; }
   const btnEl = document.getElementById(team === 'team1' ? 'btnScore1' : 'btnScore2');
   if (btnEl) { btnEl.disabled = true; setTimeout(() => btnEl.disabled = false, 800); }
   socket.emit('update_score', {team});
 }
 
 function stopGame() {
-  if (!socket || !socket.connected) { showToast('âš¡ Connexion perdue, impossible d\'arrÃªter', 'warn'); return; }
-  if (confirm('ArrÃªter la partie et enregistrer les scores dÃ©finitivement ?')) socket.emit('stop_game');
+  if (!socket || !socket.connected) { showToast('⚡ Connexion perdue, impossible d\'arrêter', 'warn'); return; }
+  if (confirm('Arrêter la partie et enregistrer les scores définitivement ?')) socket.emit('stop_game');
 }
 
 function unlockServo() { socket.emit('unlock_servo1'); setTimeout(() => socket.emit('unlock_servo2'), 100); }
 
 function forceResetGame() {
-  if (!confirm('Forcer le reset de la partie en cours ? Les scores ne seront pas sauvegardÃ©s.')) return;
+  if (!confirm('Forcer le reset de la partie en cours ? Les scores ne seront pas sauvegardés.')) return;
   socket.emit('stop_game');
   setTimeout(() => location.reload(), 800);
 }
@@ -837,18 +837,18 @@ function escHtml(s) {
 }
 
 function voteRematch(vote) {
-  if (myRematchVote) return; // dÃ©jÃ  votÃ©
+  if (myRematchVote) return; // déjà voté
   myRematchVote = vote;
   socket.emit('vote_rematch', {vote});
   // Cacher les boutons, montrer confirmation
   document.getElementById('myVoteButtons').style.display = 'none';
   document.getElementById('myVoteConfirm').style.display = 'block';
-  document.getElementById('myVoteConfirm').textContent = vote === 'yes' ? 'âœ“ Vote OUI enregistrÃ© â€” en attente des autres...' : "âœ• Vote NON enregistrÃ© â€” en attente de l'hÃ´te...";
+  document.getElementById('myVoteConfirm').textContent = vote === 'yes' ? '✓ Vote OUI enregistré — en attente des autres...' : "✕ Vote NON enregistré — en attente de l'hôte...";
 }
 
 async function hostReplacePlayer() {
   if (!declinedPlayer) {
-    showToast("Aucun joueur Ã  remplacer", 'warn');
+    showToast("Aucun joueur à remplacer", 'warn');
     return;
   }
   document.getElementById('hostDecisionPopup').style.display = 'none';
@@ -858,8 +858,8 @@ async function hostReplacePlayer() {
   const list = document.getElementById('replacePlayerList');
   const btn = document.getElementById('btnConfirmReplacement');
   if (btn) btn.disabled = true;
-  if (hint) hint.textContent = `${declinedPlayer} a votÃ© NON. Choisissez un remplaÃ§ant en ligne.`;
-  if (list) list.innerHTML = `<div style="padding:.9rem;color:var(--text-muted);text-align:center">Chargement des joueursâ€¦</div>`;
+  if (hint) hint.textContent = `${declinedPlayer} a voté NON. Choisissez un remplaçant en ligne.`;
+  if (list) list.innerHTML = `<div style="padding:.9rem;color:var(--text-muted);text-align:center">Chargement des joueurs…</div>`;
   document.getElementById('replacePlayerPopup').style.display = 'flex';
 
   try {
@@ -953,7 +953,7 @@ function renderReplacementCandidates() {
           <div class="replace-item-name">${escHtml(displayName)}</div>
           ${sub}
         </span>
-        <span class="replace-item-status">${isGuest ? 'INVITÃ‰' : 'EN LIGNE'}</span>
+        <span class="replace-item-status">${isGuest ? 'INVITÉ' : 'EN LIGNE'}</span>
       </button>
     `;
   }).join('');
@@ -962,11 +962,11 @@ function renderReplacementCandidates() {
 
 function confirmReplacement() {
   if (!selectedReplacementPlayer) {
-    showToast('Choisissez un remplaÃ§ant', 'warn');
+    showToast('Choisissez un remplaçant', 'warn');
     return;
   }
   if (!socket || !socket.connected) {
-    showToast('âš¡ Reconnexion en cours...', 'warn');
+    showToast('⚡ Reconnexion en cours...', 'warn');
     return;
   }
   socket.emit('rematch_invite_player', {
@@ -975,17 +975,17 @@ function confirmReplacement() {
   });
   const btn = document.getElementById('btnConfirmReplacement');
   if (btn) btn.disabled = true;
-  showToast(`Invitation envoyÃ©e Ã  ${selectedReplacementPlayer}...`, 'info');
+  showToast(`Invitation envoyée à ${selectedReplacementPlayer}...`, 'info');
 }
 
 function respondReplacementInvite(accept) {
   if (!incomingReplacementInvite) return;
   if (!socket || !socket.connected) {
-    showToast('âš¡ Reconnexion en cours...', 'warn');
+    showToast('⚡ Reconnexion en cours...', 'warn');
     return;
   }
   socket.emit('rematch_replacement_response', { accept: !!accept });
-  if (!accept) showToast('Invitation refusÃ©e', 'warn');
+  if (!accept) showToast('Invitation refusée', 'warn');
   closeReplacementInvitePopup();
 }
 
@@ -1022,8 +1022,8 @@ function showWinner(game) {
   const ws = game.winner === 'team1' ? game.team1_score : game.team2_score;
   const ls = game.winner === 'team1' ? game.team2_score : game.team1_score;
   document.getElementById('winnerTitle').textContent = `${winners.join(' & ')} gagnent !`;
-  document.getElementById('winnerSub').textContent = `Score final : ${ws} â€“ ${ls}`;
-  // RÃ©initialiser le bloc ELO (sera rempli par elo_updated)
+  document.getElementById('winnerSub').textContent = `Score final : ${ws} – ${ls}`;
+  // Réinitialiser le bloc ELO (sera rempli par elo_updated)
   const eloEl = document.getElementById('eloPopupContent');
   if (eloEl) { eloEl.style.display = 'none'; eloEl.innerHTML = ''; }
   document.getElementById('winnerOverlay').style.display = 'flex';
@@ -1036,7 +1036,7 @@ function showWinner(game) {
   winnerOverlayTimer = setTimeout(() => { document.getElementById('winnerOverlay').style.display = 'none'; }, 8000);
 }
 
-// â”€â”€ Socket events â€” enregistrÃ©s DANS initSocket() aprÃ¨s crÃ©ation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Socket events — enregistrés DANS initSocket() après création ───────────
 function registerSocketEvents() {
   socket.on('game_recovery', async (game) => {
     await ensureProfiles();
@@ -1087,7 +1087,7 @@ function registerSocketEvents() {
     if (canControl) updateGameUI(parsed); else updateSpectatorUI(parsed);
     const isParticipant = t1.includes(currentUser) || t2.includes(currentUser) || canControl || isAdmin;
     if (isParticipant) showWinner(parsed);
-    else { showToast('ðŸ† Partie terminÃ©e !', 'info'); setTimeout(() => showArea('noGameArea'), 3000); }
+    else { showToast('🏆 Partie terminée !', 'info'); setTimeout(() => showArea('noGameArea'), 3000); }
   });
 
   socket.on('game_stopped', () => { location.href = '/dashboard'; });
@@ -1100,7 +1100,7 @@ function registerSocketEvents() {
     const t2 = parsePlayers(lastGame ? lastGame.team2_players : []);
     const isInGame = t1.includes(currentUser) || t2.includes(currentUser) || canControl || isAdmin;
     if (isInGame) showRematchPopup();
-    else { showToast('Partie terminÃ©e â€” retour dashboard...', 'info'); setTimeout(() => location.href = '/dashboard', 2000); }
+    else { showToast('Partie terminée — retour dashboard...', 'info'); setTimeout(() => location.href = '/dashboard', 2000); }
   });
 
   socket.on('rematch_vote_update', (data) => {
@@ -1108,7 +1108,7 @@ function registerSocketEvents() {
     document.getElementById('voteNoCount').textContent = data.no;
     const remaining = data.total - data.yes - data.no;
     document.getElementById('voteStatus').textContent = remaining > 0 ? `En attente de ${remaining} joueur${remaining > 1 ? 's' : ''}...` : '';
-    if (data.no_player) showToast(`${data.no_player} a votÃ© NON`, 'err');
+    if (data.no_player) showToast(`${data.no_player} a voté NON`, 'err');
   });
 
   socket.on('host_replace_or_quit', (data) => {
@@ -1116,7 +1116,7 @@ function registerSocketEvents() {
     const isHost = currentUser === data.host || isAdmin;
     if (!isHost) {
       const status = document.getElementById('voteStatus');
-      if (status) status.textContent = "En attente de la dÃ©cision de l'hÃ´te...";
+      if (status) status.textContent = "En attente de la décision de l'hôte...";
       return;
     }
     document.getElementById('hostDecisionMsg').textContent = `${data.declined_player} ne veut pas rejouer. Que faire ?`;
@@ -1125,18 +1125,18 @@ function registerSocketEvents() {
 
   socket.on('rematch_invite_sent', (data) => {
     const target = data && data.to ? data.to : 'joueur';
-    showToast(`Invitation envoyÃ©e Ã  ${target}`, 'info');
+    showToast(`Invitation envoyée à ${target}`, 'info');
   });
 
   socket.on('rematch_invite_declined', (data) => {
     const target = data && data.replacement_player ? data.replacement_player : 'Le joueur';
-    showToast(`${target} a refusÃ© l'invitation`, 'warn');
+    showToast(`${target} a refusé l'invitation`, 'warn');
     document.getElementById('replacePlayerPopup').style.display = 'flex';
   });
 
   socket.on('rematch_replacement_invite', (data) => {
     incomingReplacementInvite = data || null;
-    const host = data && data.host ? data.host : 'L\'hÃ´te';
+    const host = data && data.host ? data.host : 'L\'hôte';
     const out = data && data.declined_player ? data.declined_player : 'un joueur';
     const msg = document.getElementById('replacementInviteMsg');
     if (msg) msg.textContent = `${host} vous propose de remplacer ${out} pour la revanche.`;
@@ -1145,13 +1145,13 @@ function registerSocketEvents() {
 
   socket.on('rematch_player_replaced', (data) => {
     const oldP = data && data.declined_player ? data.declined_player : 'Joueur';
-    const newP = data && data.replacement_player ? data.replacement_player : 'remplaÃ§ant';
+    const newP = data && data.replacement_player ? data.replacement_player : 'remplaçant';
     document.getElementById('replacePlayerPopup').style.display = 'none';
     document.getElementById('hostDecisionPopup').style.display = 'none';
     document.getElementById('replacementInvitePopup').style.display = 'none';
     incomingReplacementInvite = null;
     selectedReplacementPlayer = null;
-    showToast(`Remplacement validÃ©: ${oldP} â†’ ${newP}`, 'info');
+    showToast(`Remplacement validé: ${oldP} → ${newP}`, 'info');
   });
 
   socket.on('rematch_cancelled', () => {
@@ -1161,7 +1161,7 @@ function registerSocketEvents() {
     document.getElementById('replacementInvitePopup').style.display = 'none';
     document.getElementById('winnerOverlay').style.display = 'none';
     if (winnerOverlayTimer) { clearTimeout(winnerOverlayTimer); winnerOverlayTimer = null; }
-    showToast('Pas de revanche â€” retour dashboard...', 'info');
+    showToast('Pas de revanche — retour dashboard...', 'info');
     setTimeout(() => location.href = '/dashboard', 1500);
   });
 
@@ -1201,16 +1201,16 @@ function registerSocketEvents() {
         }
       }
 
-      // Bonus chips Ã  afficher
+      // Bonus chips à afficher
       let bonusHtml = '';
       if (isWin && strMult > 1.0) {
-        bonusHtml += `<span class="elo-bonus-chip streak">ðŸ”¥ Ã—${strMult.toFixed(2)} streak</span> `;
+        bonusHtml += `<span class="elo-bonus-chip streak">🔥 ×${strMult.toFixed(2)} streak</span> `;
       }
       if (isWin && me.score_l <= 1 && me.score_w === 10) {
-        bonusHtml += `<span class="elo-bonus-chip domination">ðŸ’¥ Domination +20%</span> `;
+        bonusHtml += `<span class="elo-bonus-chip domination">💥 Domination +20%</span> `;
       }
       if (isWin && delta > 0 && me.old_elo < (me.old_elo + delta - 10)) {
-        // upset approximÃ© cÃ´tÃ© frontend (si delta Ã©levÃ©)
+        // upset approximé côté frontend (si delta élevé)
       }
 
       let html = `
@@ -1227,7 +1227,7 @@ function registerSocketEvents() {
             </div>
           </div>`;
 
-      // Barre de progression (seulement si pas MaÃ®tre)
+      // Barre de progression (seulement si pas Maître)
       if (pct < 100) {
         html += `
           <div style="margin-bottom:0.75rem">
@@ -1248,18 +1248,18 @@ function registerSocketEvents() {
       // Winstreak
       if (isWin && streak >= 2) {
         html += `<div style="text-align:center;margin-bottom:0.75rem">
-          <span class="elo-popup-streak">ðŸ”¥ SÃ©rie de ${streak} victoires !</span>
+          <span class="elo-popup-streak">🔥 Série de ${streak} victoires !</span>
         </div>`;
       }
 
       // Tier up / down
       if (tierUp) {
         html += `<div class="elo-popup-tier-up" style="text-align:center;margin-bottom:0.5rem">
-          ðŸŽ‰ Nouveau palier ! <strong>${newTierIcon} ${newTier}</strong>
+          🎉 Nouveau palier ! <strong>${newTierIcon} ${newTier}</strong>
         </div>`;
       } else if (tierDown) {
         html += `<div style="text-align:center;font-size:0.85rem;color:#e74c3c;margin-bottom:0.5rem">
-          ðŸ“‰ Palier perdu â€” <strong>${newTierIcon} ${newTier}</strong>
+          📉 Palier perdu — <strong>${newTierIcon} ${newTier}</strong>
         </div>`;
       }
 
@@ -1278,13 +1278,13 @@ function registerSocketEvents() {
     const delta = me.delta;
     const sign  = delta >= 0 ? '+' : '';
     const color = delta >= 0 ? '#2ecc71' : '#e74c3c';
-    if (me.tier_up)       { showEloToast(`ðŸŽ‰ Palier supÃ©rieur ! ${me.new_tier_icon || ''} ${me.new_tier}`, color, true); }
-    else if (delta >= 20) { showEloToast(`ðŸ”¥ Belle victoire ! ${sign}${delta} pts ELO`, color, false); }
-    else if (delta > 0)   { showEloToast(`âœ… ${sign}${delta} pts ELO`, color, false); }
-    else if (me.tier_down){ showEloToast(`ðŸ“‰ Palier perdu ${sign}${delta} pts ELO`, '#e74c3c', false); }
-    else if (delta < 0)   { showEloToast(`${sign}${delta} pts ELO â€” revanche ?`, '#e67e22', false); }
+    if (me.tier_up)       { showEloToast(`🎉 Palier supérieur ! ${me.new_tier_icon || ''} ${me.new_tier}`, color, true); }
+    else if (delta >= 20) { showEloToast(`🔥 Belle victoire ! ${sign}${delta} pts ELO`, color, false); }
+    else if (delta > 0)   { showEloToast(`✅ ${sign}${delta} pts ELO`, color, false); }
+    else if (me.tier_down){ showEloToast(`📉 Palier perdu ${sign}${delta} pts ELO`, '#e74c3c', false); }
+    else if (delta < 0)   { showEloToast(`${sign}${delta} pts ELO — revanche ?`, '#e67e22', false); }
 
-    // QuÃªtes complÃ©tÃ©es pendant la partie
+    // Quêtes complétées pendant la partie
     if (me.quests_completed && me.quests_completed.length > 0) {
       setTimeout(() => showQuestUnlockToasts(me.quests_completed), 1500);
       // Afficher aussi dans le popup victoire
@@ -1294,16 +1294,16 @@ function registerSocketEvents() {
           <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;
                background:linear-gradient(135deg,rgba(205,127,50,0.12),rgba(205,127,50,0.04));
                border:1px solid rgba(205,127,50,0.3);margin-bottom:5px">
-            <span style="font-size:1.1rem">${q.icon || 'ðŸ†'}</span>
+            <span style="font-size:1.1rem">${q.icon || '🏆'}</span>
             <div>
               <div style="font-size:0.78rem;font-weight:800;color:#ffd700">${q.name}</div>
-              <div style="font-size:0.7rem;color:rgba(255,215,0,0.7)">ðŸŽ ${q.reward_label}</div>
+              <div style="font-size:0.7rem;color:rgba(255,215,0,0.7)">🎁 ${q.reward_label}</div>
             </div>
           </div>`).join('');
         const questSection = document.createElement('div');
         questSection.innerHTML = `
           <div style="border-top:1px solid var(--border-subtle);padding-top:0.75rem;margin-top:0.5rem">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px">ðŸ… QuÃªtes dÃ©bloquÃ©es</div>
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px">🏅 Quêtes débloquées</div>
             ${questsHtml}
           </div>`;
         eloEl.appendChild(questSection);
@@ -1333,7 +1333,7 @@ function showEloToast(msg, color, isBig) {
   }, isBig ? 4000 : 3000);
 }
 
-// â”€â”€ Surveillance expiration rÃ©sa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Surveillance expiration résa ───────────────────────────────────────────
 let resaExpiryWarned2min = false, resaExpiryWarned0min = false, resaExpiryInterval = null;
 function startResaExpiryWatch() {
   if (resaExpiryInterval) clearInterval(resaExpiryInterval);
@@ -1353,7 +1353,7 @@ async function checkResaExpiry() {
     if (!current) {
       if (!resaExpiryWarned0min) {
         resaExpiryWarned0min = true;
-        showResaExpiry('âš ï¸','RÃ©servation expirÃ©e','Votre crÃ©neau est terminÃ© â€” finissez ou arrÃªtez la partie','rgba(231,76,60,0.5)');
+        showResaExpiry('⚠️','Réservation expirée','Votre créneau est terminé — finissez ou arrêtez la partie','rgba(231,76,60,0.5)');
         setTimeout(() => hideResaExpiry(), 10000);
       }
       return;
@@ -1362,7 +1362,7 @@ async function checkResaExpiry() {
     const minLeft = Math.floor(msLeft / 60000);
     if (minLeft <= 2 && minLeft > 0 && !resaExpiryWarned2min) {
       resaExpiryWarned2min = true;
-      showResaExpiry('â°','RÃ©servation bientÃ´t terminÃ©e',`Il vous reste environ ${minLeft} minute${minLeft > 1 ? 's' : ''} â€” pensez Ã  conclure !`,'rgba(231,152,0,0.5)');
+      showResaExpiry('⏰','Réservation bientôt terminée',`Il vous reste environ ${minLeft} minute${minLeft > 1 ? 's' : ''} — pensez à conclure !`,'rgba(231,152,0,0.5)');
       setTimeout(() => hideResaExpiry(), 8000);
     } else if (minLeft > 2) { resaExpiryWarned2min = false; resaExpiryWarned0min = false; }
   } catch(e) {}
@@ -1377,7 +1377,7 @@ function showResaExpiry(icon, title, sub, borderColor) {
 }
 function hideResaExpiry() { document.getElementById('resaExpiryPopup').style.display = 'none'; }
 
-// â”€â”€ Chargement thÃ¨me cosmÃ©tique â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Chargement thème cosmétique ────────────────────────────────────────────
 async function loadPlayerTheme(userData) {
   try {
     if (window.ThemeManager && ThemeManager.setUserData && userData) {
@@ -1404,10 +1404,10 @@ function applyTheme(theme) {
   if (theme && theme !== 'default') body.classList.add('theme-' + theme.replace('theme_', ''));
 }
 
-// â”€â”€ Toast quÃªte dÃ©bloquÃ©e â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Toast quête débloquée ──────────────────────────────────────────────────
 function showQuestUnlockToasts(quests) {
   if (!quests || !quests.length) return;
-  // CrÃ©er le conteneur s'il n'existe pas
+  // Créer le conteneur s'il n'existe pas
   let container = document.getElementById('questToastContainer');
   if (!container) {
     container = document.createElement('div');
@@ -1420,11 +1420,11 @@ function showQuestUnlockToasts(quests) {
       const item = document.createElement('div');
       item.className = 'quest-unlock-item';
       item.innerHTML = `
-        <div class="quest-unlock-icon">${q.icon || 'ðŸ†'}</div>
+        <div class="quest-unlock-icon">${q.icon || '🏆'}</div>
         <div class="quest-unlock-text">
-          <div class="quest-unlock-title">QuÃªte dÃ©bloquÃ©e !</div>
+          <div class="quest-unlock-title">Quête débloquée !</div>
           <div class="quest-unlock-name">${q.name}</div>
-          <div class="quest-unlock-reward">ðŸŽ ${q.reward_label || 'CosmÃ©tique dÃ©bloquÃ©'}</div>
+          <div class="quest-unlock-reward">🎁 ${q.reward_label || 'Cosmétique débloqué'}</div>
         </div>
       `;
       container.appendChild(item);
@@ -1438,7 +1438,7 @@ function showQuestUnlockToasts(quests) {
   });
 }
 
-// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   try {
     let user = window._baseUserData || null;
@@ -1452,7 +1452,7 @@ async function init() {
     isAdmin = user.is_admin || false;
     window._currentUsername = user.username;
 
-    // Mettre Ã  jour la nav via ProfileUtils
+    // Mettre à jour la nav via ProfileUtils
     if (window.ProfileUtils) ProfileUtils.updateNav(user);
 
     if (isAdmin) {
@@ -1461,7 +1461,7 @@ async function init() {
       const mm = document.getElementById('mobileMenu');
       if (mm && !mm.querySelector('a[href="/admin"]')) {
         const a = document.createElement('a');
-        a.href = '/admin'; a.textContent = 'ðŸ›¡ï¸ Admin';
+        a.href = '/admin'; a.textContent = '🛡️ Admin';
         const firstLink = mm.querySelector('a');
         if (firstLink) mm.insertBefore(a, firstLink);
       }
@@ -1469,7 +1469,7 @@ async function init() {
 
     await checkActiveGame();
     startResaExpiryWatch();
-    // Charger et appliquer le thÃ¨me cosmÃ©tique du joueur
+    // Charger et appliquer le thème cosmétique du joueur
     loadPlayerTheme(user);
 
   } catch(e) {
@@ -1479,18 +1479,18 @@ async function init() {
       const isTimeout = e.name === 'AbortError';
       loader.innerHTML = `
         <div style="color:var(--text-tertiary);padding:1rem;text-align:center">
-          <div style="font-size:2rem;margin-bottom:0.75rem">âš ï¸</div>
-          <div style="margin-bottom:1rem">${isTimeout ? 'Le serveur ne rÃ©pond pas.' : 'Erreur : ' + (e.message || e)}</div>
+          <div style="font-size:2rem;margin-bottom:0.75rem">⚠️</div>
+          <div style="margin-bottom:1rem">${isTimeout ? 'Le serveur ne répond pas.' : 'Erreur : ' + (e.message || e)}</div>
           <button onclick="location.reload()" style="padding:0.5rem 1.25rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;font-family:inherit;font-size:0.9rem">
-            ðŸ”„ RÃ©essayer
+            🔄 Réessayer
           </button>
-          <br><a href="/dashboard" style="display:inline-block;margin-top:1rem;color:var(--text-muted);font-size:0.85rem">â† Dashboard</a>
+          <br><a href="/dashboard" style="display:inline-block;margin-top:1rem;color:var(--text-muted);font-size:0.85rem">← Dashboard</a>
         </div>`;
       loader.style.display = 'block';
     }
   }
 }
-// â”€â”€ DÃ©marrage robuste â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Démarrage robuste ──────────────────────────────────────────────────────
 let _initDone = false;
 
 function _safeInit() {
@@ -1500,25 +1500,25 @@ function _safeInit() {
   // Initialiser le socket en premier
   initSocket();
 
-  // Lancer init() â€” ProfileUtils est synchrone (pas de defer), donc disponible
+  // Lancer init() — ProfileUtils est synchrone (pas de defer), donc disponible
   init();
 }
 
-// StratÃ©gie 1 : page entiÃ¨rement chargÃ©e (cas normal)
+// Stratégie 1 : page entièrement chargée (cas normal)
 window.addEventListener('load', _safeInit);
 
-// StratÃ©gie 2 : dÃ©jÃ  chargÃ© au moment oÃ¹ ce script s'exÃ©cute
+// Stratégie 2 : déjà chargé au moment où ce script s'exécute
 if (document.readyState === 'complete') {
   _safeInit();
 } else {
-  // StratÃ©gie 3 : DOM prÃªt mais ressource externe bloquante (CDN, font...)
-  // On attend 1.5s aprÃ¨s DOMContentLoaded puis on force si load n'est pas passÃ©
+  // Stratégie 3 : DOM prêt mais ressource externe bloquante (CDN, font...)
+  // On attend 1.5s après DOMContentLoaded puis on force si load n'est pas passé
   document.addEventListener('DOMContentLoaded', function() {
     setTimeout(_safeInit, 1500);
   });
 }
 
-// StratÃ©gie 4 : filet de sÃ©curitÃ© absolu â€” 6s max peu importe ce qui bloque
+// Stratégie 4 : filet de sécurité absolu — 6s max peu importe ce qui bloque
 setTimeout(_safeInit, 6000);
 </script>
 
