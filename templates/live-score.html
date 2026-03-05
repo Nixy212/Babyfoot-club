@@ -709,17 +709,9 @@ function renderTeamPlayers(elId, players) {
       avHtml = `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.08);font-size:0.7rem;font-weight:700;vertical-align:middle;margin-right:5px">${u[0].toUpperCase()}</span>`;
     }
 
-    // Badges (max 3)
-    // Badges image uniquement — plus gros, sans texte
     const badges = Array.isArray(p.badges) ? p.badges : [];
-    const badgesHtml = badges.length
-      ? `<span style="display:inline-flex;gap:3px;vertical-align:middle;margin-left:4px;align-items:center">${
-          badges.slice(0, 3).map(b =>
-            b.image_url
-              ? `<span title="${b.name}" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${b.color}22;border:1.5px solid ${b.color}55;overflow:hidden;flex-shrink:0"><img src="${b.image_url}" style="width:17px;height:17px;border-radius:50%;object-fit:cover"></span>`
-              : `<span title="${b.name}" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${b.color}22;border:1.5px solid ${b.color}55;font-size:13px">${b.icon||'🏅'}</span>`
-          ).join('')
-        }</span>`
+    const badgesHtml = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML && badges.length)
+      ? `<span style="display:inline-flex;gap:3px;vertical-align:middle;margin-left:4px;align-items:center">${ProfileUtils.badgesOnlyHTML({ badges: badges.slice(0, 3) }, 17)}</span>`
       : '';
 
     return `<span title="${u}" style="display:inline-flex;align-items:center;gap:5px">${avHtml}<span>${name}</span>${badgesHtml}</span>`;

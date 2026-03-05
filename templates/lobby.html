@@ -366,14 +366,10 @@ function makePlayerCard(username, amHost, color) {
     av = `<span style="width:32px;height:32px;border-radius:50%;background:${color}22;border:1px solid ${color}44;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:${color}">${username[0].toUpperCase()}</span>`;
   }
 
-  // Badges
-  // Badges image uniquement, plus gros — sans texte
-  const badgesHtml = (prof.badges || []).slice(0, 4).map(b => {
-    const img = b.image_url
-      ? `<img src="${b.image_url}" style="width:18px;height:18px;border-radius:50%;object-fit:cover" alt="">`
-      : `<span style="font-size:14px;line-height:1">${b.icon||'🏅'}</span>`;
-    return `<span title="${esc(b.name)}" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:${b.color}22;border:1.5px solid ${b.color}55;flex-shrink:0">${img}</span>`;
-  }).join('');
+  // Badges (affichage harmonise)
+  const badgesHtml = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML)
+    ? ProfileUtils.badgesOnlyHTML(prof, 20)
+    : '';
 
   const onlineDot = ONLINE.has(username) ? '<span class="online-dot-lobby"></span>' : '';
 

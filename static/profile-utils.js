@@ -76,12 +76,23 @@ window.ProfileUtils = (() => {
     return user.nickname && user.nickname.trim() ? user.nickname.trim() : (user.username || '?');
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function avatarHTML(user, size) {
     const s = size || 36;
     if (!user) return '<span>?</span>';
     if ((user.has_avatar || user.avatar_url) && user.username) {
       const src = '/api/avatar/' + encodeURIComponent(user.username);
-      return `<img src="${src}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;" alt="" onerror="this.style.display='none'">`;
+      const ox = Number.isFinite(Number(user.avatar_crop_x)) ? Number(user.avatar_crop_x) : 50;
+      const oy = Number.isFinite(Number(user.avatar_crop_y)) ? Number(user.avatar_crop_y) : 50;
+      return `<img src="${src}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;object-position:${ox}% ${oy}%;" alt="" onerror="this.style.display='none'">`;
     }
     if (user.avatar_preset) {
       return `<span style="font-size:${Math.round(s * 0.55)}px;line-height:1">${user.avatar_preset}</span>`;
@@ -102,29 +113,41 @@ window.ProfileUtils = (() => {
 
   // badgesOnlyHTML — affiche uniquement les images des badges (sans nom), taille configurable
   // Gère crop_x / crop_y / crop_scale si stockés dans le badge
+  function badgeHTML(badge, opts) {
+    const b = badge || {};
+    const options = opts || {};
+    const size = options.size || 22;
+    const innerSize = options.innerSize || Math.max(12, Math.round(size * 0.78));
+    const borderWidth = options.borderWidth || 1.5;
+    const showRing = options.showRing !== false;
+    const color = b.color || '#888';
+    const name = escapeHtml(b.name || '');
+
+    let inner = '';
+    if (b.image_url) {
+      const cx = Number.isFinite(Number(b.crop_x)) ? Number(b.crop_x) : 50;
+      const cy = Number.isFinite(Number(b.crop_y)) ? Number(b.crop_y) : 50;
+      const cs = Number.isFinite(Number(b.crop_scale)) ? Number(b.crop_scale) : 1;
+      const imgSize = Math.max(innerSize, Math.round(innerSize * cs));
+      inner = `<img src="${b.image_url}" alt="${name}" style="width:${imgSize}px;height:${imgSize}px;border-radius:50%;object-fit:cover;object-position:${cx}% ${cy}%">`;
+    } else if (b.icon) {
+      inner = `<span style="font-size:${Math.max(10, Math.round(innerSize * 0.8))}px;line-height:1;user-select:none">${escapeHtml(b.icon)}</span>`;
+    } else {
+      inner = `<span style="font-size:${Math.max(10, Math.round(innerSize * 0.62))}px;font-weight:800;line-height:1;color:${color}">${escapeHtml((b.name || '?')[0].toUpperCase())}</span>`;
+    }
+
+    const shellSize = size + 6;
+    const ring = showRing
+      ? `box-shadow:inset 0 0 0 ${borderWidth}px ${color}66,0 0 0 1px rgba(255,255,255,.05),0 4px 12px rgba(0,0,0,.28);`
+      : `border:${borderWidth}px solid ${color}66;`;
+    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${shellSize}px;height:${shellSize}px;border-radius:50%;background:radial-gradient(circle at 30% 25%,${color}30 0%,${color}16 48%,rgba(0,0,0,.15) 100%);${ring}overflow:hidden;flex-shrink:0">${inner}</span>`;
+  }
+
   function badgesOnlyHTML(user, imgSize) {
     const s = imgSize || 22;
     const badges = (user && user.badges) || [];
     if (!badges.length) return '';
-    return badges.slice(0, 5).map(b => {
-      const c = b.color || '#888';
-      const name = (b.name || '').replace(/"/g, '&quot;');
-      let inner;
-      if (b.image_url) {
-        // Recadrage personnalisé (crop_x, crop_y, crop_scale stockés en JSON dans le badge)
-        const cx = b.crop_x != null ? b.crop_x : 50;
-        const cy = b.crop_y != null ? b.crop_y : 50;
-        const cs = b.crop_scale != null ? b.crop_scale : 1;
-        const imgSize2 = Math.round(s * cs);
-        inner = `<img src="${b.image_url}" style="width:${imgSize2}px;height:${imgSize2}px;border-radius:50%;object-fit:cover;object-position:${cx}% ${cy}%;flex-shrink:0" alt="${name}">`;
-      } else if (b.icon) {
-        inner = `<span style="font-size:${Math.round(s*.82)}px;line-height:1;user-select:none">${b.icon}</span>`;
-      } else {
-        // Fallback : initiale du nom (jamais la photo de profil)
-        inner = `<span style="font-size:${Math.round(s*.6)}px;font-weight:700;color:${c};line-height:1">${(b.name||'?')[0].toUpperCase()}</span>`;
-      }
-      return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${s+6}px;height:${s+6}px;border-radius:50%;background:${c}1a;border:1.5px solid ${c}66;flex-shrink:0;overflow:hidden">${inner}</span>`;
-    }).join('');
+    return badges.slice(0, 5).map((b) => badgeHTML(b, { size: s, showRing: true })).join('');
   }
 
   function playerCardHTML(user, opts) {
@@ -218,6 +241,7 @@ window.ProfileUtils = (() => {
     normalizeFrameKey,
     avatarHTML,
     avatarWithCosmeticsHTML,
+    badgeHTML,
     badgesOnlyHTML,
     playerCardHTML,
     applyAvatarCosmetics,

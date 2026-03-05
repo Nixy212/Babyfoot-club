@@ -116,8 +116,9 @@
     }
 
     // Afficher les scores récents du plus récent au plus ancien
-    const total = s.recent_scores.length;
-    h.innerHTML = s.recent_scores.map((sc, i) => {
+    const orderedScores = [...s.recent_scores].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const total = orderedScores.length;
+    h.innerHTML = orderedScores.map((sc, i) => {
       const num = total - i;
       const dateStr = sc.date ? new Date(sc.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : '—';
       const pts = sc.score ?? sc.points ?? '?';

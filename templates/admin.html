@@ -153,18 +153,39 @@
   background:rgba(205,127,50,0.15);border-color:rgba(205,127,50,0.4);color:#cd7f32;
 }
 .theme-preview-card {
-  border-radius:12px;overflow:hidden;border:2px solid transparent;
-  cursor:pointer;transition:all .2s;
+  border-radius:14px;overflow:hidden;border:1px solid var(--border-normal);
+  cursor:pointer;transition:all .2s;background:var(--bg-tertiary);
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
 }
-.theme-preview-card:hover { transform:translateY(-3px); border-color:rgba(205,127,50,0.5); }
-.theme-preview-card.active-theme { border-color:#ffd700; box-shadow:0 0 20px rgba(255,215,0,0.3); }
+.theme-preview-card:hover { transform:translateY(-3px); border-color:rgba(205,127,50,0.5); box-shadow:0 14px 28px rgba(0,0,0,.34); }
+.theme-preview-card.active-theme { border-color:#ffd700; box-shadow:0 0 0 1px rgba(255,215,0,.5),0 0 26px rgba(255,215,0,0.3); }
 .theme-preview-swatch {
-  height:80px;display:flex;align-items:center;justify-content:center;
-  font-size:2rem;position:relative;overflow:hidden;
+  height:92px;display:flex;align-items:center;justify-content:center;
+  font-size:2rem;position:relative;overflow:hidden;padding:10px;
 }
 .theme-preview-swatch::after {
   content:'';position:absolute;inset:0;
   background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.5));
+}
+.theme-preview-mock {
+  position:relative;z-index:1;width:100%;max-width:164px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.18);padding:8px;background:rgba(0,0,0,.22);backdrop-filter:blur(4px);
+}
+.theme-preview-mock-top {
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;
+}
+.theme-preview-mock-dot {
+  width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.75);opacity:.9;
+}
+.theme-preview-mock-pill {
+  width:42px;height:8px;border-radius:999px;background:rgba(255,255,255,.22);
+}
+.theme-preview-mock-line {
+  width:100%;height:7px;border-radius:999px;background:rgba(255,255,255,.15);margin-bottom:5px;
+}
+.theme-preview-mock-btn {
+  width:54px;height:14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.16);
 }
 .theme-preview-info {
   padding:8px 12px;background:var(--bg-tertiary);
@@ -174,13 +195,28 @@
 }
 .frame-demo-wrap {
   display:flex;flex-direction:column;align-items:center;gap:10px;
-  padding:1.5rem;background:var(--bg-tertiary);border-radius:12px;
+  padding:1.1rem;background:var(--bg-tertiary);border-radius:12px;border:1px solid var(--border-subtle);
 }
 .frame-demo-av {
   width:70px;height:70px;border-radius:50%;
   background:linear-gradient(135deg,#cd7f32,#b8732f);
   display:flex;align-items:center;justify-content:center;
   font-size:1.8rem;font-weight:800;color:white;
+}
+.admin-user-row {
+  display:flex;align-items:center;gap:0.5rem;padding:0.75rem 0.875rem;
+  background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle);flex-wrap:wrap;
+}
+.admin-user-main { display:flex;align-items:center;gap:0.625rem;flex:1;min-width:0; }
+.admin-user-actions { display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;flex-shrink:0; }
+.admin-role-select {
+  font-size:0.75rem;padding:0.3rem 0.5rem;border-radius:6px;
+  border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;
+}
+@media (max-width: 680px) {
+  .admin-user-row { flex-direction:column; align-items:stretch; gap:0.6rem; }
+  .admin-user-actions { width:100%; justify-content:flex-end; flex-wrap:wrap; }
+  .admin-role-select { flex:1; min-width:150px; }
 }
 </style>
 
@@ -523,6 +559,8 @@ fetch('/current_user').then(r => {
   if (!d || !d.username) { location.href = '/login'; return; }
   if (!d.is_admin) { location.href = '/dashboard'; return; }
   if (window.ProfileUtils) ProfileUtils.updateNav(d);
+  window.__adminActiveTheme = d.active_theme || 'default';
+  window.__adminActiveFrame = d.active_frame || 'none';
   isSuperAdmin = d.is_super_admin || false;
   currentAdminUser = d.username;
   const dangerZone = document.getElementById('dangerZone');
@@ -625,17 +663,21 @@ async function loadUsers() {
       const elo = u.elo || 1000;
       const GUEST_RE = /^Joueur\d+$/i;
       const isGuest = GUEST_RE.test(username);
-      // Avatar
+      // Avatar harmonise (photo/preset/initiale + cosmetics)
       let avHtml = '';
-      if (u.avatar_url) avHtml = `<img src="${u.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`;
-      else if (u.avatar_preset) avHtml = `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:1.2rem">${u.avatar_preset}</div>`;
-      else avHtml = `<div style="width:36px;height:36px;border-radius:50%;background:var(--gradient-bronze);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem;color:white">${username[0].toUpperCase()}</div>`;
+      if (window.ProfileUtils) {
+        avHtml = ProfileUtils.avatarWithCosmeticsHTML(u, 36);
+      } else if (u.avatar_preset) {
+        avHtml = `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;font-size:1.2rem">${u.avatar_preset}</div>`;
+      } else {
+        avHtml = `<div style="width:36px;height:36px;border-radius:50%;background:var(--gradient-bronze);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.875rem;color:white">${username[0].toUpperCase()}</div>`;
+      }
 
       // Role selector (super admin only, can't change guests)
       let roleSel = '';
       if (isSuperAdmin && !isGuest) {
         const r = u.role || 0;
-        roleSel = `<select onchange="setUserRole('${username}', parseInt(this.value))" style="font-size:0.75rem;padding:0.3rem 0.5rem;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer">
+        roleSel = `<select onchange="setUserRole('${username}', parseInt(this.value))" class="admin-role-select">
           <option value="0"${r===0?' selected':''}>Joueur</option>
           <option value="2"${r===2?' selected':''}>Responsable</option>
           <option value="1"${r===1?' selected':''}>Responsable+</option>
@@ -643,8 +685,8 @@ async function loadUsers() {
       }
 
       return `
-      <div style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 0.875rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle);flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:0.625rem;flex:1;min-width:0">
+      <div class="admin-user-row">
+        <div class="admin-user-main">
           ${avHtml}
           <div style="min-width:0;flex:1">
             <div style="font-weight:700;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${nickname || username}</div>
@@ -652,7 +694,7 @@ async function loadUsers() {
             <div style="font-size:0.68rem;color:var(--text-muted)">ELO ${elo}${isGuest ? ' · Guest' : ''}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;flex-shrink:0">
+        <div class="admin-user-actions">
           ${roleSel}
           <a href="/stats/${username}" class="btn btn-secondary" style="padding:0.35rem 0.6rem;font-size:0.75rem;text-decoration:none;white-space:nowrap">📊</a>
           ${!isGuest ? `<button onclick="deleteUser('${username}')" class="btn" style="padding:0.35rem 0.6rem;font-size:0.75rem;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);font-weight:600">🗑️</button>` : ''}
@@ -1056,10 +1098,14 @@ async function loadBadgeCatalogue() {
       el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Aucun badge créé pour l\'instant</div>';
       return;
     }
-    el.innerHTML = badges.map(b => `
+    el.innerHTML = badges.map(b => {
+      const badgeVisual = (window.ProfileUtils && ProfileUtils.badgeHTML)
+        ? ProfileUtils.badgeHTML(b, { size: 18, innerSize: 14 })
+        : `<span style="font-size:14px">${b.icon||'🏅'}</span>`;
+      return `
       <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle)">
         <span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color};flex-shrink:0;display:inline-flex;align-items:center;gap:5px">
-          ${b.image_url ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;overflow:hidden;background:${b.color||'#888'}22;border:1px solid ${b.color||'#888'}55;flex-shrink:0"><img src="${b.image_url}" style="width:18px;height:18px;border-radius:50%;object-fit:cover"></span>` : `<span style="font-size:16px">${b.icon||'🏅'}</span>`} ${b.name}
+          ${badgeVisual} ${b.name}
         </span>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.description || '—'}</div>
@@ -1069,7 +1115,8 @@ async function loadBadgeCatalogue() {
           style="padding:4px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:0.78rem;cursor:pointer;font-family:inherit;flex-shrink:0">
           🗑️
         </button>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch(e) { el.innerHTML = '<div style="color:#e74c3c;font-size:0.85rem">Erreur chargement</div>'; }
 }
 
@@ -1173,10 +1220,14 @@ async function loadPlayerBadges() {
       el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Aucun badge attribué</span>';
       return;
     }
-    el.innerHTML = badges.map(b => `
-      <span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color}" title="${b.description || b.name}">
-        ${b.icon} ${b.name}
-      </span>`).join('');
+    el.innerHTML = badges.map((b) => {
+      const visual = (window.ProfileUtils && ProfileUtils.badgeHTML)
+        ? ProfileUtils.badgeHTML(b, { size: 18, innerSize: 14 })
+        : `<span>${b.icon || '🏅'}</span>`;
+      return `<span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color}" title="${b.description || b.name}">
+        ${visual} ${b.name}
+      </span>`;
+    }).join('');
   } catch(e) { el.innerHTML = '<span style="color:#e74c3c;font-size:0.85rem">Erreur</span>'; }
 }
 
@@ -1186,11 +1237,14 @@ updateBadgePreview();
 // ── Cosmétiques + Init ──────────────────────────────────────────────────────
 let catalogData = null;
 let currentTestTheme = null;
+let currentTestFrame = null;
 
 async function loadCatalog() {
   try {
     const res = await fetch('/api/cosmetics_catalog').then(r => r.json());
     catalogData = res;
+    currentTestTheme = window.__adminActiveTheme || 'default';
+    currentTestFrame = window.__adminActiveFrame || 'none';
     renderThemesGrid();
     renderFramesGrid();
     renderQuestsTestGrid();
@@ -1206,33 +1260,44 @@ function switchTestTab(tab) {
 }
 
 const THEME_SWATCHES = {
-  theme_fire:   { bg:'linear-gradient(135deg,#3d0a00,#7a1500)', score:'#ff6b00', label:'Fire 🔥' },
-  theme_night:  { bg:'linear-gradient(135deg,#0d0020,#1e0050)', score:'#9b59b6', label:'Nuit 🌙' },
-  theme_gold:   { bg:'linear-gradient(135deg,#2d2200,#5a4300)', score:'#ffd700', label:'Gold ✨' },
-  theme_royal:  { bg:'linear-gradient(135deg,#040b24,#0c1a5a)', score:'#4a90d9', label:'Royal 👑' },
-  theme_master: { bg:'linear-gradient(135deg,#0f0f0f,#1a1200)', score:'#ffd700', label:'Maître 🏆' },
+  default:      { bg:'linear-gradient(135deg,#151820,#232840)', accent:'#cd7f32', soft:'rgba(205,127,50,.35)', label:'Defaut' },
+  theme_fire:   { bg:'linear-gradient(135deg,#250802,#5f1408)', accent:'#ff6b2c', soft:'rgba(255,107,44,.35)', label:'Fire' },
+  theme_night:  { bg:'linear-gradient(135deg,#0e0b25,#21164b)', accent:'#8e7dff', soft:'rgba(142,125,255,.35)', label:'Night' },
+  theme_gold:   { bg:'linear-gradient(135deg,#221702,#4d360c)', accent:'#e3b33b', soft:'rgba(227,179,59,.35)', label:'Gold' },
+  theme_royal:  { bg:'linear-gradient(135deg,#071126,#133263)', accent:'#4a93eb', soft:'rgba(74,147,235,.35)', label:'Royal' },
+  theme_master: { bg:'linear-gradient(135deg,#1a170e,#3a301d)', accent:'#d7a43a', soft:'rgba(215,164,58,.35)', label:'Master' },
 };
 
 function renderThemesGrid() {
   const grid = document.getElementById('themesGrid');
   if (!grid || !catalogData) return;
   const themes = Object.entries(catalogData.catalog).filter(([k]) => k.startsWith('theme_'));
-  grid.innerHTML = [['default', {label:'Défaut', icon:'⬛'}], ...themes].map(([key, info]) => {
-    const sw = THEME_SWATCHES[key] || { bg:'linear-gradient(135deg,#1a1a1a,#333)', score:'#cd7f32', label: info.label };
+  const activeTheme = window.__adminActiveTheme || (window.ThemeManager && ThemeManager.getActiveTheme ? ThemeManager.getActiveTheme() : 'default') || 'default';
+  grid.innerHTML = [['default', {label:'Defaut', icon:'*'}], ...themes].map(([key, info]) => {
+    const sw = THEME_SWATCHES[key] || { bg:'linear-gradient(135deg,#1a1a1a,#333)', accent:'#cd7f32', soft:'rgba(205,127,50,.35)', label: info.label };
+    const isPreview = (currentTestTheme || activeTheme) === key;
+    const isActive = activeTheme === key;
     return `
-      <div class="theme-preview-card" id="themeCard_${key}">
+      <div class="theme-preview-card${isPreview ? ' active-theme' : ''}" id="themeCard_${key}">
         <div class="theme-preview-swatch" style="background:${sw.bg}">
-          <span style="font-size:2.2rem;position:relative;z-index:1">${info.icon || '🎨'}</span>
+          <div class="theme-preview-mock">
+            <div class="theme-preview-mock-top">
+              <span class="theme-preview-mock-dot" style="background:${sw.accent}"></span>
+              <span class="theme-preview-mock-pill" style="box-shadow:0 0 0 1px ${sw.soft}"></span>
+            </div>
+            <div class="theme-preview-mock-line"></div>
+            <div class="theme-preview-mock-line" style="width:68%"></div>
+            <div class="theme-preview-mock-btn" style="background:${sw.soft};border-color:${sw.accent}66"></div>
+          </div>
         </div>
         <div class="theme-preview-info">
-          <div style="font-weight:700;font-size:0.85rem;margin-bottom:6px">${sw.label || info.label}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
+            <div style="font-weight:700;font-size:0.85rem">${sw.label || info.label}</div>
+            ${isActive ? `<span style="font-size:0.67rem;padding:2px 7px;border-radius:99px;background:${sw.soft};color:${sw.accent};font-weight:800;letter-spacing:.03em">ACTIF</span>` : ''}
+          </div>
           <div class="theme-preview-actions">
-            <button onclick="previewTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit">
-              👁 Tester
-            </button>
-            <button onclick="equipTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:rgba(205,127,50,0.1);color:#cd7f32;font-size:0.75rem;cursor:pointer;font-family:inherit">
-              ✅ Activer
-            </button>
+            <button onclick="previewTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit">Tester</button>
+            <button onclick="equipTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:rgba(205,127,50,0.1);color:#cd7f32;font-size:0.75rem;cursor:pointer;font-family:inherit">Activer</button>
           </div>
         </div>
       </div>`;
@@ -1240,18 +1305,14 @@ function renderThemesGrid() {
 }
 
 function previewTheme(themeKey) {
-  // Applique le thème sur toute la page admin pour un vrai aperçu
   if (typeof ThemeManager !== 'undefined') {
     ThemeManager.applyTheme(themeKey, { persist: false });
   }
-  const sw = THEME_SWATCHES[themeKey] || { bg:'#111', score:'#cd7f32', label: themeKey };
+  currentTestTheme = themeKey;
+  renderThemesGrid();
+  const sw = THEME_SWATCHES[themeKey] || { bg:'#111', accent:'#cd7f32', label: themeKey };
   const label = sw.label || themeKey;
-  // Mini toast d'info
-  showToast(`👁 Aperçu : ${label} — Clique Activer pour équiper`, 'ok');
-  // Mettre en évidence la carte
-  document.querySelectorAll('.theme-preview-card').forEach(c => c.classList.remove('active-theme'));
-  const card = document.getElementById('themeCard_' + themeKey);
-  if (card) card.classList.add('active-theme');
+  showToast(`Apercu : ${label} - Clique Activer pour equiper`, 'ok');
 }
 
 async function equipTheme(themeKey) {
@@ -1261,35 +1322,40 @@ async function equipTheme(themeKey) {
       body: JSON.stringify({ key: themeKey, slot: 'theme' })
     }).then(r => r.json());
     if (res.success) {
-      showToast(`✓ Thème "${themeKey}" activé`, 'ok');
-      // Mettre en évidence la carte active
-      document.querySelectorAll('.theme-preview-card').forEach(c => c.classList.remove('active-theme'));
-      const card = document.getElementById('themeCard_' + themeKey);
-      if (card) card.classList.add('active-theme');
+      showToast(`Theme "${themeKey}" active`, 'ok');
+      window.__adminActiveTheme = themeKey;
+      currentTestTheme = themeKey;
+      renderThemesGrid();
     } else {
-      showToast('✕ ' + (res.message || 'Erreur'), 'err');
+      showToast('Erreur: ' + (res.message || 'inconnue'), 'err');
     }
-  } catch(e) { showToast('Erreur réseau', 'err'); }
+  } catch(e) { showToast('Erreur reseau', 'err'); }
 }
 
 function renderFramesGrid() {
   const grid = document.getElementById('framesGrid');
   if (!grid || !catalogData) return;
   const frames = Object.entries(catalogData.catalog).filter(([k]) => k.startsWith('frame_'));
-  const CSS_FRAMES = {
-    frame_bronze:  'box-shadow:0 0 0 3px #cd7f32,0 0 12px rgba(205,127,50,0.5)',
-    frame_flame:   'box-shadow:0 0 0 3px #ff6b00,0 0 16px rgba(255,107,0,0.7)',
-    frame_phoenix: 'box-shadow:0 0 0 3px #ff4500,0 0 0 6px rgba(255,69,0,0.3),0 0 20px rgba(255,69,0,0.5)',
-  };
-  grid.innerHTML = [['none', {label:'Aucun cadre', icon:'○'}], ...frames].map(([key, info]) => {
-    const css = CSS_FRAMES[key] || '';
+  const activeFrame = window.__adminActiveFrame || 'none';
+  const activeTheme = window.__adminActiveTheme || 'default';
+  grid.innerHTML = [['none', {label:'Aucun cadre', icon:'*'}], ...frames].map(([key, info]) => {
+    const isActive = key === activeFrame || (activeFrame === 'none' && key === 'none');
+    const demoUser = {
+      username: 'demo',
+      avatar_preset: 'J',
+      has_avatar: false,
+      active_theme: activeTheme,
+      active_frame: key === 'none' ? 'none' : key
+    };
+    const avatar = (window.ProfileUtils && ProfileUtils.avatarWithCosmeticsHTML)
+      ? ProfileUtils.avatarWithCosmeticsHTML(demoUser, 64)
+      : `<div class="frame-demo-av">${info.icon || 'J'}</div>`;
     return `
-      <div class="frame-demo-wrap">
-        <div class="frame-demo-av" style="${css}">🧑</div>
+      <div class="frame-demo-wrap" style="${isActive ? 'border-color:rgba(205,127,50,.45);box-shadow:0 0 18px rgba(205,127,50,.18);' : ''}">
+        <div class="frame-demo-av" style="background:transparent;box-shadow:none;border:none;width:74px;height:74px">${avatar}</div>
         <div style="font-weight:700;font-size:0.85rem;text-align:center">${info.label || key}</div>
-        <button onclick="equipFrame('${key}')" style="padding:4px 14px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:rgba(205,127,50,0.1);color:#cd7f32;font-size:0.78rem;cursor:pointer;font-family:inherit;width:100%">
-          ✅ Activer
-        </button>
+        ${isActive ? '<div style="font-size:0.68rem;color:#cd7f32;font-weight:800;letter-spacing:.04em">ACTIF</div>' : ''}
+        <button onclick="equipFrame('${key}')" style="padding:4px 14px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:${isActive ? 'rgba(205,127,50,0.18)' : 'rgba(205,127,50,0.1)'};color:#cd7f32;font-size:0.78rem;cursor:pointer;font-family:inherit;width:100%">${isActive ? 'Equipe' : 'Activer'}</button>
       </div>`;
   }).join('');
 }
@@ -1300,8 +1366,15 @@ async function equipFrame(frameKey) {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ key: frameKey, slot: 'frame' })
     }).then(r => r.json());
-    showToast(res.success ? `✓ Cadre "${frameKey}" activé` : '✕ ' + res.message, res.success ? 'ok' : 'err');
-  } catch(e) { showToast('Erreur réseau', 'err'); }
+    if (res.success) {
+      window.__adminActiveFrame = frameKey;
+      currentTestFrame = frameKey;
+      renderFramesGrid();
+      showToast(`Cadre "${frameKey}" active`, 'ok');
+    } else {
+      showToast('Erreur: ' + (res.message || 'inconnue'), 'err');
+    }
+  } catch(e) { showToast('Erreur reseau', 'err'); }
 }
 
 function renderQuestsTestGrid() {

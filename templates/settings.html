@@ -163,7 +163,7 @@
       transition:all .15s; flex-shrink:0;
     }
     .avatar-preset-btn:hover { border-color:var(--border-accent); transform:scale(1.1); }
-    .avatar-preset-btn.selected { border-color:#cd7f32; background:rgba(205,127,50,0.15); }
+    .avatar-preset-btn.selected, .avatar-preset-btn.active { border-color:#cd7f32; background:rgba(205,127,50,0.15); }
     /* ELO badge */
     .elo-badge {
       display:inline-flex; align-items:center; gap:0.5rem;
@@ -556,8 +556,8 @@ function showAvatarCropTool(img, src) {
   overlay.querySelector('#avCropClose').addEventListener('click', () => overlay.remove());
 
   overlay.querySelector('#avCropApply').addEventListener('click', () => {
-    // Générer canvas 400x400 avec crop
-    const SIZE = 400;
+    // Generer une image optimisee pour mobile (evite erreur "image trop lourde")
+    const SIZE = 360;
     const canvas = document.createElement('canvas');
     canvas.width = SIZE; canvas.height = SIZE;
     const ctx = canvas.getContext('2d');
@@ -565,15 +565,24 @@ function showAvatarCropTool(img, src) {
     const srcX = (cropX / 100) * (img.naturalWidth  - srcSize);
     const srcY = (cropY / 100) * (img.naturalHeight - srcSize);
     ctx.drawImage(img, Math.max(0, srcX), Math.max(0, srcY), Math.min(srcSize, img.naturalWidth), Math.min(srcSize, img.naturalHeight), 0, 0, SIZE, SIZE);
-    const compressed = canvas.toDataURL('image/jpeg', 0.85);
+    let quality = 0.86;
+    let compressed = canvas.toDataURL('image/jpeg', quality);
+    while (compressed.length > 850000 && quality > 0.46) {
+      quality -= 0.08;
+      compressed = canvas.toDataURL('image/jpeg', quality);
+    }
+    if (compressed.length > 1300000) {
+      toast('Photo trop lourde: essaye un recadrage plus serre', 'err');
+      return;
+    }
     currentAvatarFile = { _isDataURL: true, dataURL: compressed };
-    // Prévisualisation
+    // Previsualisation
     const prevImg = document.getElementById('avatarPreviewImg');
     const em = document.getElementById('avatarPreviewEmoji');
     if (prevImg) { prevImg.src = compressed; prevImg.style.display = 'block'; }
     if (em) em.style.display = 'none';
     overlay.remove();
-    toast('Photo recadrée ✓ — Sauvegarde pour appliquer', 'ok');
+    toast('Photo recadree - Sauvegarde pour appliquer', 'ok');
   });
 }
 
@@ -902,13 +911,11 @@ async function loadProfile() {
         const br = await fetch(`/api/badges/user/${encodeURIComponent(user.username)}`);
         const bd = br.ok ? await br.json() : [];
         const badges = bd.badges || bd || [];
-        // Badges image uniquement — plus gros, sans texte
-        badgesEl.innerHTML = badges.slice(0,6).map(b => {
-          const imgContent = b.image_url
-            ? `<img src="${b.image_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover" alt="${(b.name||'').replace(/"/g,'&quot;')}">`
-            : `<span style="font-size:22px;line-height:1">${b.icon||'🏅'}</span>`;
-          return `<span title="${(b.name||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${b.color||'#888'}22;border:2px solid ${b.color||'#888'}55;flex-shrink:0;cursor:default;transition:transform .15s" onmouseenter="this.style.transform='scale(1.15)'" onmouseleave="this.style.transform=''">${imgContent}</span>`;
-        }).join('');
+        const shortBadges = badges.slice(0, 6);
+        const badgeMarkup = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML)
+          ? ProfileUtils.badgesOnlyHTML({ badges: shortBadges }, 26)
+          : '';
+        badgesEl.innerHTML = badgeMarkup + (badges.length > 6 ? `<span style="display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 10px;border-radius:999px;background:var(--bg-tertiary);border:1px solid var(--border-subtle);font-size:0.75rem;color:var(--text-muted);font-weight:700">+${badges.length - 6}</span>` : '');
       } catch(e) {}
     }
 

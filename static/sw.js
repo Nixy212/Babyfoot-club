@@ -2,7 +2,7 @@
 // Met en cache les ressources statiques pour fonctionner
 // même avec une connexion faible ou intermittente.
 
-const CACHE_NAME = 'babyfoot-v41';
+const CACHE_NAME = 'babyfoot-v42';
 
 // Ressources mises en cache au premier chargement (shell de l'app)
 const STATIC_ASSETS = [
@@ -67,32 +67,34 @@ self.addEventListener('fetch', (e) => {
   // Socket.IO CDN : jamais en cache, toujours réseau
   if (url.hostname.includes('cdn.socket.io')) return;
 
-  // Ressources statiques (CSS, JS, images) : cache d'abord
+  // Ressources statiques (CSS, JS, images) : stale-while-revalidate
   if (
     url.pathname.startsWith('/static/') ||
     url.hostname.includes('fonts.googleapis') ||
     url.hostname.includes('fonts.gstatic') ||
     url.hostname.includes('cdnjs.cloudflare')
   ) {
-    e.respondWith(cacheFirst(e.request));
+    e.respondWith(staleWhileRevalidate(e.request));
     return;
   }
 });
 
-// ── Stratégie : Cache d'abord (statique) ─────────────────────
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
+// Strategie : Stale-while-revalidate (statique)
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const networkPromise = fetch(request, { cache: 'no-cache' })
+    .then((response) => {
+      if (response && response.ok) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => null);
+
   if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    return new Response('Ressource non disponible hors ligne', { status: 503 });
-  }
+  const response = await networkPromise;
+  if (response) return response;
+  return new Response('Ressource non disponible hors ligne', { status: 503 });
 }
 
 // ── Stratégie : Réseau d'abord (dynamique) ───────────────────

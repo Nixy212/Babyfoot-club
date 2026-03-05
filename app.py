@@ -1372,7 +1372,18 @@ def reservations_all():
         return jsonify({"error": "Non connecte"}), 401
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT day, time, mode, reserved_by FROM reservations")
+    if USE_POSTGRES:
+        cur.execute("""
+            SELECT day, time, mode, reserved_by, start_time
+            FROM reservations
+            ORDER BY COALESCE(start_time, NOW()) DESC, day DESC, time DESC
+        """)
+    else:
+        cur.execute("""
+            SELECT day, time, mode, reserved_by, start_time
+            FROM reservations
+            ORDER BY COALESCE(start_time, '') DESC, day DESC, time DESC
+        """)
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -2304,14 +2315,16 @@ def api_avatar(username):
     # Si c'est une data URL base64, servir l'image directement
     avatar_url = row.get("avatar_url") or ""
     if avatar_url.startswith("data:"):
-        header, data = avatar_url.split(",", 1)
-        mime = header.split(":")[1].split(";")[0]
-        img_bytes = _base64.b64decode(data)
-        return Response(img_bytes, mimetype=mime, headers={"Cache-Control": "public, max-age=3600"})
-    return jsonify({
-        "avatar_url": avatar_url,
-        "avatar_preset": row.get("avatar_preset") or "",
-    })
+        try:
+            header, data = avatar_url.split(",", 1)
+            mime = header.split(":")[1].split(";")[0]
+            img_bytes = _base64.b64decode(data)
+            return Response(img_bytes, mimetype=mime, headers={"Cache-Control": "public, max-age=3600"})
+        except Exception:
+            return Response(status=404)
+    if avatar_url.startswith("http://") or avatar_url.startswith("https://") or avatar_url.startswith("/"):
+        return redirect(avatar_url, code=302)
+    return Response(status=404)
 
 @app.route("/api/profile", methods=["GET"])
 def api_get_profile():
@@ -2337,24 +2350,27 @@ def api_get_profile():
     # Badges du joueur
     if USE_POSTGRES:
         cur.execute("""
-            SELECT b.id, b.name, b.description, b.icon, b.color, ub.awarded_at
+            SELECT b.id, b.name, b.description, b.icon, b.color, b.image_url, ub.awarded_at
             FROM user_badges ub JOIN badges b ON b.id = ub.badge_id
             WHERE ub.username = %s ORDER BY ub.awarded_at DESC
         """, (username,))
     else:
         cur.execute("""
-            SELECT b.id, b.name, b.description, b.icon, b.color, ub.awarded_at
+            SELECT b.id, b.name, b.description, b.icon, b.color, b.image_url, ub.awarded_at
             FROM user_badges ub JOIN badges b ON b.id = ub.badge_id
             WHERE ub.username = ? ORDER BY ub.awarded_at DESC
         """, (username,))
     badges = [row_to_dict(r) for r in cur.fetchall()]
+    avatar_raw = user.get("avatar_url") or ""
+    avatar_public_url = f"/api/avatar/{username}" if avatar_raw else ""
     cur.close(); conn.close()
     return jsonify({
         "username":    user["username"],
         "nickname":    user.get("nickname") or "",
         "bio":         user.get("bio") or "",
         "avatar_preset": user.get("avatar_preset") or "",
-        "avatar_url":  user.get("avatar_url") or "",
+        "avatar_url":  avatar_public_url,
+        "has_avatar":  bool(avatar_raw),
         "equipped_theme": user.get("active_theme") or "default",
         "equipped_frame": user.get("active_frame") or "none",
         "elo":         elo,
@@ -2460,9 +2476,9 @@ def api_upload_avatar():
             return jsonify({"error": "Erreur lors de l'upload — réessayez"}), 500
     else:
         # ── Fallback base64 en DB (max ~500 Ko image réelle) ──
-        MAX_LEN = 700_000
+        MAX_LEN = 1_400_000
         if len(img_data) > MAX_LEN:
-            return jsonify({"error": "Image trop grande. Configurez CLOUDINARY_URL dans Render → Environment pour lever cette limite."}), 413
+            return jsonify({"error": "Image trop grande. Recadrez/compressez la photo ou configurez CLOUDINARY_URL dans Render → Environment."}), 413
         conn = get_db_connection()
         cur = conn.cursor()
         try:
@@ -3012,7 +3028,7 @@ def api_user_badges(username):
     cur  = conn.cursor()
     if USE_POSTGRES:
         cur.execute("""
-            SELECT b.id, b.name, b.description, b.icon, b.color, ub.awarded_by, ub.awarded_at
+            SELECT b.id, b.name, b.description, b.icon, b.color, b.image_url, ub.awarded_by, ub.awarded_at
             FROM user_badges ub
             JOIN badges b ON b.id = ub.badge_id
             WHERE ub.username = %s
@@ -3020,7 +3036,7 @@ def api_user_badges(username):
         """, (username,))
     else:
         cur.execute("""
-            SELECT b.id, b.name, b.description, b.icon, b.color, ub.awarded_by, ub.awarded_at
+            SELECT b.id, b.name, b.description, b.icon, b.color, b.image_url, ub.awarded_by, ub.awarded_at
             FROM user_badges ub
             JOIN badges b ON b.id = ub.badge_id
             WHERE ub.username = ?
@@ -3043,14 +3059,14 @@ def api_badges_all_users():
     cur  = conn.cursor()
     if USE_POSTGRES:
         cur.execute("""
-            SELECT ub.username, b.id AS badge_id, b.name, b.icon, b.color, ub.awarded_at
+            SELECT ub.username, b.id AS badge_id, b.name, b.icon, b.color, b.image_url, ub.awarded_at
             FROM user_badges ub
             JOIN badges b ON b.id = ub.badge_id
             ORDER BY ub.username, ub.awarded_at DESC
         """)
     else:
         cur.execute("""
-            SELECT ub.username, b.id AS badge_id, b.name, b.icon, b.color, ub.awarded_at
+            SELECT ub.username, b.id AS badge_id, b.name, b.icon, b.color, b.image_url, ub.awarded_at
             FROM user_badges ub
             JOIN badges b ON b.id = ub.badge_id
             ORDER BY ub.username, ub.awarded_at DESC
@@ -4396,4 +4412,3 @@ def save_game_results(game):
 
 # ── Point d'entree WSGI ───────────────────────────────────────
 # Commande : gunicorn --config gunicorn_config.py app:app
-
