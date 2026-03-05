@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f111a">
+  <meta name="color-scheme" content="dark">
   <title>{% block title %}Baby-Foot Club{% endblock %}</title>
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json', v=asset_version) }}">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BabyFoot">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.svg', v=asset_version) }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css', v=asset_version) }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
@@ -88,7 +91,7 @@
       </div>
       <div class="onboarding-item">
         <div class="onboarding-item-title">Avatar et cadres</div>
-        <div class="onboarding-item-sub">Recadrez et zoomez votre photo dans Parametres pour un rendu uniforme.</div>
+        <div class="onboarding-item-sub">Recadrez et zoomez votre photo dans Parametres pour un rendu uniforme. Les cadres premium sont plus legers mais restent visibles.</div>
       </div>
       <div class="onboarding-item">
         <div class="onboarding-item-title">Mise a jour mobile</div>
@@ -219,7 +222,9 @@ async function loadBaseUser() {
 
 function initBaseUX() {
   try {
-    const compact = localStorage.getItem(BF_COMPACT_KEY) === '1';
+    const storedCompact = localStorage.getItem(BF_COMPACT_KEY);
+    const autoCompact = document.body.classList.contains('network-saver');
+    const compact = storedCompact === null ? autoCompact : (storedCompact === '1');
     setCompactMode(compact, false);
   } catch(e) {}
 
@@ -269,6 +274,28 @@ window.addEventListener('pageshow', (ev) => {
 });
 </script>
 {% block extra_scripts %}{% endblock %}
-<script src="{{ url_for('static', filename='particles-bg.js', v=asset_version) }}"></script>
+<script>
+(function () {
+  function shouldLoadParticles() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const t = String((c && c.effectiveType) || '').toLowerCase();
+    if ((c && c.saveData) || ['slow-2g', '2g', '3g'].includes(t)) return false;
+    return true;
+  }
+  function injectParticles() {
+    if (!shouldLoadParticles()) return;
+    const s = document.createElement('script');
+    s.src = "{{ url_for('static', filename='particles-bg.js', v=asset_version) }}";
+    s.defer = true;
+    document.body.appendChild(s);
+  }
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(injectParticles, { timeout: 1800 });
+  } else {
+    setTimeout(injectParticles, 900);
+  }
+})();
+</script>
 </body>
 </html>

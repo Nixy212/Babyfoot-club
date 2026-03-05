@@ -4,7 +4,11 @@
   function shouldReduceVisualEffects() {
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-    return prefersReduced || isMobile;
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const t = String((c && c.effectiveType) || '').toLowerCase();
+    const lowBandwidth = !!((c && c.saveData) || ['slow-2g', '2g', '3g'].includes(t));
+    const saverClass = document.body && document.body.classList && document.body.classList.contains('network-saver');
+    return prefersReduced || isMobile || lowBandwidth || saverClass;
   }
 
   // ── Animations flottantes ──────────────────────────────────────────────────

@@ -102,7 +102,18 @@
   document.getElementById('username').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('password').focus();});
 </script>
 <script>window.__assetVersion = "{{ asset_version }}";</script>
-<script src="{{ url_for('static', filename='particles-bg.js', v=asset_version) }}" defer></script>
+<script>
+(function () {
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const t = String((c && c.effectiveType) || '').toLowerCase();
+  const slow = (c && c.saveData) || ['slow-2g', '2g', '3g'].includes(t);
+  if (slow || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  const s = document.createElement('script');
+  s.src = "{{ url_for('static', filename='particles-bg.js', v=asset_version) }}";
+  s.defer = true;
+  document.body.appendChild(s);
+})();
+</script>
 <script src="{{ url_for('static', filename='pwa.js', v=asset_version) }}" defer></script>
 </body>
 </html>

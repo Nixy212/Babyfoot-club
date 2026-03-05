@@ -9,6 +9,7 @@
       border: 1px solid var(--border-normal);
       border-radius: 16px;
       overflow: hidden;
+      padding: 0;
       margin-bottom: 1.5rem;
     }
     .settings-section-title {
@@ -19,9 +20,11 @@
       color: var(--text-tertiary);
       padding: 1.25rem 1.5rem 0.75rem;
       border-bottom: 1px solid var(--border-subtle);
+      margin: 0;
     }
     .settings-row {
       padding: 1.25rem 1.5rem;
+      display: block;
     }
     .pw-group {
       display: flex;
@@ -185,8 +188,143 @@
     .perso-input:focus { outline:none; border-color:#cd7f32; }
     .perso-label { font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.4rem; }
     .char-count { font-size:0.72rem; color:var(--text-muted); text-align:right; margin-top:0.3rem; }
+
+    /* Section cosmetiques premium */
+    .cosmetic-help {
+      margin-bottom: 1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(205,127,50,0.24);
+      background: linear-gradient(135deg, rgba(205,127,50,0.11), rgba(205,127,50,0.03));
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+    .cosmetic-block-title {
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .cosmetic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .frame-grid {
+      grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+    }
+    .cosmetic-option {
+      border: 1px solid var(--border-normal);
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      padding: 0.72rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s, background 0.16s;
+      position: relative;
+      min-height: 124px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .cosmetic-option:hover {
+      transform: translateY(-1px);
+      border-color: rgba(205,127,50,0.35);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+    }
+    .cosmetic-option.is-active {
+      border-color: rgba(205,127,50,0.5);
+      box-shadow: 0 0 0 1px rgba(205,127,50,0.18), 0 10px 24px rgba(205,127,50,0.12);
+      background: linear-gradient(145deg, rgba(205,127,50,0.13), rgba(205,127,50,0.04));
+    }
+    .cosmetic-option.is-locked {
+      opacity: 0.55;
+      filter: grayscale(35%);
+      cursor: not-allowed;
+    }
+    .cosmetic-option:focus-visible {
+      outline: 2px solid rgba(205,127,50,0.45);
+      outline-offset: 1px;
+    }
+    .cosmetic-lock {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 0.82rem;
+    }
+    .cosmetic-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .cosmetic-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+      min-height: 1.9em;
+    }
+    .cosmetic-state {
+      margin-top: auto;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .cosmetic-option.is-active .cosmetic-state { color: #cd7f32; }
+    .theme-preview {
+      height: 42px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(circle at 82% 24%, rgba(255,255,255,0.12), transparent 45%),
+        linear-gradient(135deg, var(--theme-c1, rgba(205,127,50,0.25)), var(--theme-c2, rgba(205,127,50,0.06)));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .theme-preview-icon {
+      font-size: 1.05rem;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+    }
+    .frame-preview-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+    }
+    .frame-preview-wrap .avatar-shell {
+      width: 50px !important;
+      height: 50px !important;
+    }
+    .frame-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid rgba(205,127,50,0.3);
+      color: #cd7f32;
+      background: rgba(205,127,50,0.08);
+    }
+    @media (max-width: 640px) {
+      .cosmetic-grid {
+        grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+      }
+      .frame-grid {
+        grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+      }
+    }
   </style>
-<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -279,10 +417,14 @@
 
         <!-- CosmÃ©tiques actifs -->
         <div style="margin-bottom:1.5rem">
-          <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">ðŸŽ¨ ThÃ¨me actif</div>
-          <div id="themeSelectorGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:0.75rem;margin-bottom:1rem"></div>
-          <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;margin-bottom:0.75rem">ðŸ–¼ï¸ Cadre avatar actif</div>
-          <div id="frameSelectorGrid" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem"></div>
+          <div class="cosmetic-help">
+            Le systeme d'aide reste identique, mais la partie premium a ete retravaillee:
+            cadres plus lisibles, rendu plus propre et verrouillage plus clair.
+          </div>
+          <div class="cosmetic-block-title">ðŸŽ¨ ThÃ¨me actif</div>
+          <div id="themeSelectorGrid" class="cosmetic-grid"></div>
+          <div class="cosmetic-block-title">ðŸ–¼ï¸ Cadre avatar actif</div>
+          <div id="frameSelectorGrid" class="cosmetic-grid frame-grid"></div>
         </div>
 
         <!-- Liste des quÃªtes -->
@@ -744,65 +886,73 @@ async function equipCosmetic(type, key) {
 }
 
 function renderCosmeticSelectors() {
-  // ThÃ¨mes
   const themeGrid = document.getElementById('themeSelectorGrid');
   const frameGrid = document.getElementById('frameSelectorGrid');
   if (!themeGrid || !frameGrid) return;
 
   const THEMES = [
-    { key:'default', name:'DÃ©faut', icon:'ðŸŒ‘', desc:'ThÃ¨me sombre bronze', cosmetic_key: null },
-    { key:'theme_fire',   name:'Fire',   icon:'ðŸ”¥', desc:'Rouge intense',       cosmetic_key: 'theme_fire' },
-    { key:'theme_night',  name:'Night',  icon:'ðŸŒŒ', desc:'Violet nocturne',     cosmetic_key: 'theme_night' },
-    { key:'theme_gold',   name:'Gold',   icon:'âœ¨', desc:'Or brillant',         cosmetic_key: 'theme_gold' },
-    { key:'theme_royal',  name:'Royal',  icon:'ðŸ’™', desc:'Bleu royal',          cosmetic_key: 'theme_royal' },
-    { key:'theme_master', name:'Master', icon:'ðŸ†', desc:'Noir & or',           cosmetic_key: 'theme_master' },
+    { key:'default',      name:'DÃ©faut', icon:'ðŸŒ‘', desc:'Sombre bronze',      cosmetic_key: null,           c1:'rgba(205,127,50,0.18)', c2:'rgba(16,18,28,0.82)' },
+    { key:'theme_fire',   name:'Fire',   icon:'ðŸ”¥', desc:'Rouge intense',      cosmetic_key: 'theme_fire',   c1:'rgba(235,95,53,0.34)',  c2:'rgba(62,19,12,0.86)' },
+    { key:'theme_night',  name:'Night',  icon:'ðŸŒŒ', desc:'Violet nocturne',    cosmetic_key: 'theme_night',  c1:'rgba(126,105,232,0.34)', c2:'rgba(26,20,42,0.84)' },
+    { key:'theme_gold',   name:'Gold',   icon:'âœ¨', desc:'Or brillant',        cosmetic_key: 'theme_gold',   c1:'rgba(222,178,61,0.36)',  c2:'rgba(42,31,7,0.86)' },
+    { key:'theme_royal',  name:'Royal',  icon:'ðŸ’™', desc:'Bleu royal',         cosmetic_key: 'theme_royal',  c1:'rgba(66,136,224,0.34)',  c2:'rgba(12,26,46,0.84)' },
+    { key:'theme_master', name:'Master', icon:'ðŸ†', desc:'Noir et or',         cosmetic_key: 'theme_master', c1:'rgba(208,161,56,0.32)',  c2:'rgba(16,16,16,0.88)' },
   ];
   const FRAMES = [
-    { key:'none',    name:'Aucun',  icon:'âšª', cosmetic_key: null },
-    { key:'frame_bronze',  name:'Bronze', icon:'ðŸŸ¤', cosmetic_key: 'frame_bronze' },
-    { key:'frame_flame',   name:'Flamme', icon:'ðŸ”¥', cosmetic_key: 'frame_flame' },
-    { key:'frame_phoenix', name:'PhÃ©nix', icon:'ðŸ¦…', cosmetic_key: 'frame_phoenix' },
+    { key:'none',          name:'Aucun',  icon:'âšª', desc:'Sans effet',           cosmetic_key: null },
+    { key:'frame_bronze',  name:'Bronze', icon:'ðŸŸ¤', desc:'Anneau sobre',         cosmetic_key: 'frame_bronze' },
+    { key:'frame_flame',   name:'Flamme', icon:'ðŸ”¥', desc:'Contour dynamique',    cosmetic_key: 'frame_flame' },
+    { key:'frame_phoenix', name:'PhÃ©nix', icon:'ðŸ¦…', desc:'Effet premium anime', cosmetic_key: 'frame_phoenix' },
   ];
 
-  themeGrid.innerHTML = THEMES.map(t => {
+  const previewSeed = {
+    username: (currentUser && currentUser.username) || 'demo',
+    avatar_preset: currentAvatarPreset || (currentUser && currentUser.avatar_preset) || 'âš½',
+    has_avatar: false,
+    active_theme: equippedTheme || 'default',
+    active_frame: 'none',
+  };
+
+  themeGrid.innerHTML = THEMES.map((t) => {
     const isEquipped = equippedTheme === t.key || (!equippedTheme && t.key === 'default');
     const isLocked = t.cosmetic_key && !unlockedCosmetics.includes(t.cosmetic_key);
-    const lockStyle = isLocked ? 'opacity:.4;cursor:not-allowed;filter:grayscale(60%);' : 'cursor:pointer;';
-    const borderColor = isEquipped ? 'var(--bronze)' : isLocked ? 'rgba(255,255,255,0.08)' : 'var(--border-normal)';
-    const bgColor = isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)';
-    const clickHandler = isLocked ? `showToast('ðŸ”’ ComplÃ¨te des quÃªtes pour dÃ©bloquer ce thÃ¨me', 'err')` : `equipCosmetic('theme','${t.key}')`;
-    return `<button onclick="${clickHandler}" style="padding:.75rem .875rem;border-radius:10px;border:2px solid ${borderColor};background:${bgColor};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};${lockStyle}text-align:center;font-family:inherit;transition:all .15s;position:relative">
-      ${isLocked ? '<div style="position:absolute;top:6px;right:8px;font-size:.8rem">ðŸ”’</div>' : ''}
-      <div style="font-size:1.4rem;margin-bottom:.3rem">${t.icon}</div>
-      <div>${t.name}</div>
-      ${isEquipped ? '<div style="font-size:.68rem;color:var(--bronze);margin-top:2px">âœ“ Actif</div>' : ''}
-      ${isLocked ? '<div style="font-size:.65rem;color:var(--text-muted);margin-top:2px">VerrouillÃ©</div>' : ''}
+    const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
+    const clickHandler = isLocked
+      ? `toast('ðŸ”’ Complete des quetes pour debloquer ce theme', 'err')`
+      : `equipCosmetic('theme','${t.key}')`;
+    return `<button type="button" onclick="${clickHandler}" class="cosmetic-option theme-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" style="--theme-c1:${t.c1};--theme-c2:${t.c2}" aria-pressed="${isEquipped ? 'true' : 'false'}">
+      ${isLocked ? '<span class="cosmetic-lock">ðŸ”’</span>' : ''}
+      <span class="theme-preview"><span class="theme-preview-icon">${t.icon}</span></span>
+      <span class="cosmetic-label">${t.name}</span>
+      <span class="cosmetic-desc">${t.desc}</span>
+      <span class="cosmetic-state">${stateLabel}</span>
     </button>`;
   }).join('');
 
-  frameGrid.innerHTML = FRAMES.map(f => {
+  frameGrid.innerHTML = FRAMES.map((f) => {
     const isEquipped = equippedFrame === f.key || (!equippedFrame && f.key === 'none');
     const isLocked = f.cosmetic_key && !unlockedCosmetics.includes(f.cosmetic_key);
-    const lockStyle = isLocked ? 'opacity:.4;cursor:not-allowed;filter:grayscale(60%);' : 'cursor:pointer;';
-    const borderColor = isEquipped ? 'var(--bronze)' : isLocked ? 'rgba(255,255,255,0.08)' : 'var(--border-normal)';
-    const clickHandler = isLocked ? `showToast('ðŸ”’ ComplÃ¨te des quÃªtes pour dÃ©bloquer ce cadre', 'err')` : `equipCosmetic('frame','${f.key}')`;
-    return `<button onclick="${clickHandler}" style="padding:.65rem 1rem;border-radius:10px;border:2px solid ${borderColor};background:${isEquipped ? 'rgba(205,127,50,.12)' : 'var(--bg-tertiary)'};color:var(--text-primary);font-size:.82rem;font-weight:${isEquipped ? '700' : '500'};${lockStyle}font-family:inherit;display:flex;align-items:center;gap:.5rem;transition:all .15s;position:relative">
-      ${isLocked ? '<span style="position:absolute;top:4px;right:6px;font-size:.75rem">ðŸ”’</span>' : ''}
-      <span style="font-size:1.1rem">${f.icon}</span>${f.name}
-      ${isEquipped ? ' <span style="font-size:.68rem;color:var(--bronze);margin-left:auto">âœ“ Actif</span>' : ''}
-      ${isLocked ? '<span style="font-size:.65rem;color:var(--text-muted);margin-left:auto">VerrouillÃ©</span>' : ''}
+    const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
+    const clickHandler = isLocked
+      ? `toast('ðŸ”’ Complete des quetes pour debloquer ce cadre', 'err')`
+      : `equipCosmetic('frame','${f.key}')`;
+    const frameUser = Object.assign({}, previewSeed, {
+      active_theme: equippedTheme || 'default',
+      active_frame: f.key === 'none' ? 'none' : f.key,
+    });
+    const framePreview = (window.ProfileUtils && ProfileUtils.avatarWithCosmeticsHTML)
+      ? ProfileUtils.avatarWithCosmeticsHTML(frameUser, 50)
+      : `<span style="font-size:1.2rem">${f.icon}</span>`;
+
+    return `<button type="button" onclick="${clickHandler}" class="cosmetic-option frame-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" aria-pressed="${isEquipped ? 'true' : 'false'}">
+      ${isLocked ? '<span class="cosmetic-lock">ðŸ”’</span>' : ''}
+      <span class="frame-preview-wrap">${framePreview}</span>
+      <span class="cosmetic-label">${f.icon} ${f.name}</span>
+      <span class="cosmetic-desc">${f.desc}</span>
+      ${f.key !== 'none' ? '<span class="frame-tag">Premium</span>' : ''}
+      <span class="cosmetic-state">${stateLabel}</span>
     </button>`;
   }).join('');
-}
-
-function showToast(msg, type) {
-  const wrap = document.querySelector('.toast-settings');
-  if (!wrap) return;
-  const t = document.createElement('div');
-  t.className = 'toast-s ' + (type || '');
-  t.textContent = msg;
-  wrap.appendChild(t);
-  setTimeout(() => t.remove(), 2800);
 }
 
 // â”€â”€ QuÃªtes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -117,10 +117,11 @@ window.ProfileUtils = (() => {
     const b = badge || {};
     const options = opts || {};
     const size = options.size || 22;
-    const innerSize = options.innerSize || Math.max(12, Math.round(size * 0.8));
-    const borderWidth = options.borderWidth || 1.6;
     const showRing = options.showRing !== false;
-    const withHalo = options.halo !== false;
+    const withHalo = options.halo === true;
+    const borderWidth = Number.isFinite(Number(options.borderWidth))
+      ? Math.max(1, Number(options.borderWidth))
+      : Math.max(1, Math.round(size * 0.07));
     const color = b.color || '#888';
     const name = escapeHtml(b.name || '');
 
@@ -128,27 +129,30 @@ window.ProfileUtils = (() => {
     if (b.image_url) {
       const cx = Number.isFinite(Number(b.crop_x)) ? Number(b.crop_x) : 50;
       const cy = Number.isFinite(Number(b.crop_y)) ? Number(b.crop_y) : 50;
-      const cs = Number.isFinite(Number(b.crop_scale)) ? Number(b.crop_scale) : 1;
-      const imgSize = Math.max(innerSize, Math.round(innerSize * cs));
-      inner = `<img src="${b.image_url}" alt="${name}" style="width:${imgSize}px;height:${imgSize}px;border-radius:50%;object-fit:cover;object-position:${cx}% ${cy}%">`;
+      const cs = Number.isFinite(Number(b.crop_scale)) ? Math.max(1, Number(b.crop_scale)) : 1;
+      const imgSize = Math.max(size, Math.round(size * cs));
+      inner = `<img src="${b.image_url}" alt="${name}" style="width:${imgSize}px;height:${imgSize}px;display:block;flex-shrink:0;object-fit:cover;object-position:${cx}% ${cy}%">`;
     } else if (b.icon) {
-      inner = `<span style="font-size:${Math.max(10, Math.round(innerSize * 0.8))}px;line-height:1;user-select:none">${escapeHtml(b.icon)}</span>`;
+      inner = `<span style="font-size:${Math.max(10, Math.round(size * 0.56))}px;line-height:1;user-select:none">${escapeHtml(b.icon)}</span>`;
     } else {
-      inner = `<span style="font-size:${Math.max(10, Math.round(innerSize * 0.62))}px;font-weight:800;line-height:1;color:${color}">${escapeHtml((b.name || '?')[0].toUpperCase())}</span>`;
+      inner = `<span style="font-size:${Math.max(10, Math.round(size * 0.5))}px;font-weight:800;line-height:1;color:${color}">${escapeHtml((b.name || '?')[0].toUpperCase())}</span>`;
     }
 
-    const shellSize = size + Math.max(8, Math.round(size * 0.28));
     const ring = showRing
-      ? `box-shadow:inset 0 0 0 ${borderWidth}px ${color}88,inset 0 0 0 ${Math.max(1, borderWidth - 0.5)}px rgba(255,255,255,.2),0 0 0 1px rgba(255,255,255,.08),0 8px 16px rgba(0,0,0,.32)${withHalo ? `,0 0 14px ${color}66` : ''};`
-      : `border:${borderWidth}px solid ${color}66;`;
-    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${shellSize}px;height:${shellSize}px;border-radius:50%;background:radial-gradient(circle at 28% 22%,${color}3a 0%,${color}18 44%,rgba(0,0,0,.2) 100%);${ring}overflow:hidden;flex-shrink:0;transform:translateZ(0)"><span style="display:inline-flex;align-items:center;justify-content:center;width:${innerSize}px;height:${innerSize}px;border-radius:50%;overflow:hidden;background:rgba(0,0,0,.14)">${inner}</span></span>`;
+      ? `box-shadow:inset 0 0 0 ${borderWidth}px ${color}66,inset 0 0 0 ${Math.max(1, borderWidth - 0.4)}px rgba(255,255,255,.1)${withHalo ? `,0 0 10px ${color}3f` : ''};`
+      : `border:1px solid rgba(255,255,255,.14);`;
+    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 28% 22%,${color}2e 0%,${color}14 52%,rgba(10,12,18,.82) 100%);${ring}overflow:hidden;flex-shrink:0;transform:translateZ(0)"><span style="display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;overflow:hidden;background:rgba(0,0,0,.1)">${inner}</span></span>`;
   }
 
   function badgesOnlyHTML(user, imgSize) {
     const s = imgSize || 22;
     const badges = (user && user.badges) || [];
     if (!badges.length) return '';
-    return badges.slice(0, 5).map((b) => badgeHTML(b, { size: s, showRing: true })).join('');
+    return badges.slice(0, 5).map((b) => badgeHTML(b, {
+      size: s,
+      showRing: true,
+      borderWidth: Math.max(1, Math.round(s * 0.07)),
+    })).join('');
   }
 
   function playerCardHTML(user, opts) {

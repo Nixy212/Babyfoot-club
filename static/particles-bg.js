@@ -7,6 +7,12 @@
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) return;
 
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const effectiveType = String((conn && conn.effectiveType) || '').toLowerCase();
+  const saveData = !!(conn && conn.saveData);
+  const slowNetwork = saveData || ['slow-2g', '2g', '3g'].includes(effectiveType);
+  if (slowNetwork || (window.__bfNetworkProfile && window.__bfNetworkProfile.slow)) return;
+
   const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
   const PARTICLE_COUNT = isMobile ? 10 : 24;
 

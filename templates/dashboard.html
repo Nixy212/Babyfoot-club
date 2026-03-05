@@ -4,8 +4,14 @@
 
 {% block extra_head %}
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
-<script>if(typeof window.io==='undefined'){document.write('<script src="/socket.io/socket.io.js"><\\/script>');}</script>
-<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
+<script>
+if (typeof window.io === 'undefined') {
+  const _s = document.createElement('script');
+  _s.src = '/socket.io/socket.io.js';
+  _s.async = false;
+  document.head.appendChild(_s);
+}
+</script>
 <style>
 .lobby-card { border-radius:16px; padding:1.5rem; border:2px solid; position:relative; overflow:hidden; transition:all .25s; height:100%; display:flex; flex-direction:column; gap:.625rem; }
 .lobby-card-active  { background:linear-gradient(135deg,rgba(205,127,50,.15) 0%,rgba(255,215,0,.06) 100%); border-color:rgba(205,127,50,.5); }

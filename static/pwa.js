@@ -4,6 +4,39 @@
   const ASSET_VERSION = String(window.__assetVersion || '');
   const SW_URL = '/sw.js' + (ASSET_VERSION ? ('?v=' + encodeURIComponent(ASSET_VERSION)) : '');
   let hasReloadedOnController = false;
+  let deferredPrompt = null;
+
+  function readConnectionProfile() {
+    const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const effectiveType = String((c && c.effectiveType) || '').toLowerCase();
+    const saveData = !!(c && c.saveData);
+    const slowByType = ['slow-2g', '2g', '3g'].includes(effectiveType);
+    return {
+      effectiveType,
+      saveData,
+      slow: saveData || slowByType,
+    };
+  }
+
+  function applyConnectionClass() {
+    const profile = readConnectionProfile();
+    window.__bfNetworkProfile = profile;
+    if (document.body) {
+      document.body.classList.toggle('network-saver', profile.slow);
+    }
+    return profile;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyConnectionClass, { once: true });
+  } else {
+    applyConnectionClass();
+  }
+
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (connection && typeof connection.addEventListener === 'function') {
+    connection.addEventListener('change', applyConnectionClass);
+  }
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -12,7 +45,7 @@
       location.reload();
     });
 
-    window.addEventListener('load', () => {
+    const registerServiceWorker = () => {
       navigator.serviceWorker.register(SW_URL, { scope: '/' })
         .then((reg) => {
           if (reg.waiting) showUpdateToast(reg.waiting);
@@ -27,7 +60,13 @@
           });
         })
         .catch(() => {});
-    });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', registerServiceWorker, { once: true });
+    } else {
+      registerServiceWorker();
+    }
   }
 
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -40,8 +79,6 @@
     const btn = document.getElementById('pwa-install-trigger');
     if (btn) btn.style.display = 'block';
   }
-
-  let deferredPrompt = null;
 
   window.triggerPwaInstall = function () {
     if (isIos) {
@@ -67,7 +104,11 @@
     deferredPrompt = e;
     showInstallButton();
 
-    const dismissed = localStorage.getItem('pwa_dismissed');
+    const net = window.__bfNetworkProfile || readConnectionProfile();
+    if (net.slow) return;
+
+    let dismissed = null;
+    try { dismissed = localStorage.getItem('pwa_dismissed'); } catch(e) {}
     if (!dismissed || Date.now() - parseInt(dismissed, 10) > 7 * 24 * 3600 * 1000) {
       setTimeout(showInstallBanner, 3000);
     }
@@ -138,7 +179,7 @@
     });
     document.getElementById('pwa-do-dismiss').addEventListener('click', () => {
       banner.remove();
-      localStorage.setItem('pwa_dismissed', Date.now().toString());
+      try { localStorage.setItem('pwa_dismissed', Date.now().toString()); } catch(e) {}
     });
   }
 
