@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% set active_page = "lobby" %}
-{% block title %}Lobby — Baby-Foot Club{% endblock %}
+{% block title %}Lobby â€” Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
@@ -24,37 +24,37 @@
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="display:flex;align-items:center;gap:.75rem;font-weight:600;color:var(--text-primary)">
             <div style="width:14px;height:14px;border-radius:50%;background:#ffd700;animation:pulse 2s infinite;box-shadow:0 0 10px rgba(255,215,0,.5);flex-shrink:0"></div>
-            <span><strong id="acceptedCount">0</strong> joueur<span id="pluralS">s</span> prêt<span id="pluralS2">s</span></span>
+            <span><strong id="acceptedCount">0</strong> joueur<span id="pluralS">s</span> prÃªt<span id="pluralS2">s</span></span>
           </div>
           <div style="font-weight:600;color:var(--text-tertiary);font-size:.875rem">
-            Hôte : <span id="hostName" style="color:var(--bronze)"></span>
+            HÃ´te : <span id="hostName" style="color:var(--bronze)"></span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Demandes à rejoindre (hôte seulement) -->
+    <!-- Demandes Ã  rejoindre (hÃ´te seulement) -->
     <div class="section-block section-block-blue" id="joinReqSection" style="display:none">
-      <div class="section-block-header"><span class="section-block-title">👥 Demandes à rejoindre</span></div>
+      <div class="section-block-header"><span class="section-block-title">ðŸ‘¥ Demandes Ã  rejoindre</span></div>
       <div class="section-block-body" id="joinReqList"></div>
     </div>
 
-    <!-- Composition des équipes -->
+    <!-- Composition des Ã©quipes -->
     <div class="section-block">
-      <div class="section-block-header"><span class="section-block-title">⚽ Composition des équipes</span></div>
+      <div class="section-block-header"><span class="section-block-title">âš½ Composition des Ã©quipes</span></div>
       <div class="section-block-body">
         <div class="team-container" style="margin:0">
           <div class="team-box team1-box">
             <h3>
               <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e8a06a;margin-right:4px"></span>
-              Équipe 1
+              Ã‰quipe 1
             </h3>
             <div id="team1List"></div>
           </div>
           <div class="team-box team2-box">
             <h3>
               <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e8b84a;margin-right:4px"></span>
-              Équipe 2
+              Ã‰quipe 2
             </h3>
             <div id="team2List"></div>
           </div>
@@ -62,12 +62,12 @@
       </div>
     </div>
 
-    <!-- Inviter des joueurs (hôte seulement) -->
+    <!-- Inviter des joueurs (hÃ´te seulement) -->
     <div class="section-block" id="inviteSection" style="display:none">
-      <div class="section-block-header"><span class="section-block-title">📨 Inviter des joueurs</span></div>
+      <div class="section-block-header"><span class="section-block-title">ðŸ“¨ Inviter des joueurs</span></div>
       <div class="section-block-body">
         <p style="color:var(--text-muted);font-size:.875rem;margin-bottom:1rem">
-          Sélectionnez des joueurs et envoyez-leur une invitation — ils pourront l'accepter ou la refuser depuis n'importe quelle page
+          SÃ©lectionnez des joueurs et envoyez-leur une invitation â€” ils pourront l'accepter ou la refuser depuis n'importe quelle page
         </p>
         <div style="position:relative;margin-bottom:1rem">
           <input type="text" id="searchInput" placeholder="Rechercher un joueur..."
@@ -83,7 +83,7 @@
       </div>
     </div>
 
-    <!-- Invitations refusées -->
+    <!-- Invitations refusÃ©es -->
     <div id="declinedSection" style="display:none;padding:1rem;border-radius:8px;background:rgba(231,76,60,.1);border:2px solid #e74c3c;margin-bottom:1.5rem">
       <p id="declinedMsg" style="color:#e74c3c;font-weight:600;margin:0 0 .75rem"></p>
       <div style="display:flex;gap:.75rem">
@@ -96,16 +96,16 @@
     <div class="section-block">
       <div class="section-block-body" style="display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem">
         <button id="startBtn" class="btn btn-primary btn-lg" style="display:none;width:100%;max-width:400px" onclick="socket.emit('start_game_from_lobby')">
-          🚀 Lancer la partie
+          ðŸš€ Lancer la partie
         </button>
         <div id="startLocked" style="display:none;width:100%;max-width:400px;text-align:center">
           <button class="btn btn-lg" style="width:100%;opacity:.4;cursor:not-allowed;background:var(--bg-tertiary);border:1px dashed var(--border-normal);color:var(--text-muted)" disabled>
-            🔒 Lancer la partie
+            ðŸ”’ Lancer la partie
           </button>
           <div id="startLockedMsg" style="font-size:.78rem;color:var(--text-muted);margin-top:.5rem"></div>
         </div>
         <button id="leaveBtn" class="btn btn-danger" onclick="leaveLobby()" style="width:100%;max-width:400px">
-          ✕ Quitter le lobby
+          âœ• Quitter le lobby
         </button>
       </div>
     </div>
@@ -113,21 +113,21 @@
   </div>
 </div>
 
-<!-- Popup échange d'équipe -->
+<!-- Popup Ã©change d'Ã©quipe -->
 <div id="swapPopup" style="display:none;position:fixed;top:80px;right:20px;background:var(--bg-elevated);padding:1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:300px;border:2px solid var(--border-accent);z-index:9999">
   <p id="swapMsg" style="margin:0;color:var(--text-primary);font-weight:600"></p>
   <div style="display:flex;gap:.5rem;margin-top:1rem">
-    <button class="btn btn-primary" style="flex:1" onclick="acceptSwap()">✓ Accepter</button>
-    <button class="btn" style="flex:1;background:#e74c3c;color:white" onclick="declineSwap()">✕ Refuser</button>
+    <button class="btn btn-primary" style="flex:1" onclick="acceptSwap()">âœ“ Accepter</button>
+    <button class="btn" style="flex:1;background:#e74c3c;color:white" onclick="declineSwap()">âœ• Refuser</button>
   </div>
 </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SOCKET
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let socket;
 try {
   socket = io({ reconnection:true, reconnectionDelay:1000, reconnectionDelayMax:10000,
@@ -138,17 +138,17 @@ try {
   socket = { emit:()=>{}, on:()=>{}, connected:false, once:()=>{} };
 }
 
-// Socket prêt automatiquement via Socket.IO queue interne
+// Socket prÃªt automatiquement via Socket.IO queue interne
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ÉTAT GLOBAL
-// ─────────────────────────────────────────────────────────────────────────────
-let ME          = null;   // username connecté
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã‰TAT GLOBAL
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let ME          = null;   // username connectÃ©
 let IS_ADMIN    = false;
-let LOBBY       = null;   // état complet du lobby
+let LOBBY       = null;   // Ã©tat complet du lobby
 let ALL_USERS   = [];     // vrais joueurs (sans guests, sans moi)
 let ONLINE      = new Set();
-let SELECTED    = [];     // joueurs sélectionnés pour invitation
+let SELECTED    = [];     // joueurs sÃ©lectionnÃ©s pour invitation
 let SWAP_ID     = null;
 let JOIN_REQS   = {};
 let _redirecting = false; // verrou anti double-redirect
@@ -162,11 +162,11 @@ function saferedirect(url) {
 const GUESTS  = ['Joueur1', 'Joueur2', 'Joueur3'];
 const isGuest = u => GUESTS.includes(u);
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // INIT
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function init() {
-  // 1. Charger l'utilisateur connecté
+  // 1. Charger l'utilisateur connectÃ©
   try {
     let u = window._baseUserData || null;
     if (!u || !u.username) {
@@ -178,12 +178,12 @@ async function init() {
     IS_ADMIN = !!u.is_admin;
     if (window.ProfileUtils) {
       ProfileUtils.updateNav(u);
-      // Mettre ME dans le cache pour que makePlayerCard affiche la photo de l'hôte
+      // Mettre ME dans le cache pour que makePlayerCard affiche la photo de l'hÃ´te
       ProfileUtils._cache_set(u.username, u);
     }
   } catch(e) { location.href = '/login'; return; }
 
-  // 2. Vérifier partie en cours
+  // 2. VÃ©rifier partie en cours
   try {
     const r = await fetch('/api/current_game');
     if (r.ok) { const g = await r.json(); if (g && g.active) { location.href = '/live-score'; return; } }
@@ -197,7 +197,7 @@ async function init() {
 
     if (!data.active) { location.href = '/dashboard'; return; }
 
-    // Vérifier l'accès
+    // VÃ©rifier l'accÃ¨s
     const amHost     = data.host === ME;
     const amInvited  = (data.invited  || []).includes(ME);
     const amAccepted = (data.accepted || []).includes(ME);
@@ -210,7 +210,7 @@ async function init() {
     LOBBY = data;
     render();
 
-    // Auto-accepter si invité
+    // Auto-accepter si invitÃ©
     if (amInvited && !amInTeam) socket.emit('accept_lobby');
   } catch(e) { location.href = '/dashboard'; return; }
 
@@ -241,9 +241,9 @@ async function refreshOnline() {
   } catch(e) {}
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // RENDU PRINCIPAL
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function render() {
   if (!LOBBY || !ME) return;
 
@@ -260,7 +260,7 @@ function render() {
   document.getElementById('inviteSection').style.display = amHost ? 'block' : 'none';
 
   // Bouton quitter
-  document.getElementById('leaveBtn').textContent = amHost ? '✕ Fermer le lobby' : '✕ Quitter le lobby';
+  document.getElementById('leaveBtn').textContent = amHost ? 'âœ• Fermer le lobby' : 'âœ• Quitter le lobby';
 
   // Bouton lancer
   const team1Ok = (LOBBY.team1 || []).length > 0;
@@ -269,9 +269,9 @@ function render() {
   document.getElementById('startBtn').style.display    = canStart  ? 'block' : 'none';
   document.getElementById('startLocked').style.display = (amHost && !canStart) ? 'block' : 'none';
   if (amHost && !canStart) {
-    let msg = `⚠️ Il faut au moins 2 joueurs acceptés (${accepted.length}/2)`;
+    let msg = `âš ï¸ Il faut au moins 2 joueurs acceptÃ©s (${accepted.length}/2)`;
     if (accepted.length >= 2 && (!team1Ok || !team2Ok)) {
-      msg = '⚠️ Chaque équipe doit avoir au moins un joueur';
+      msg = 'âš ï¸ Chaque Ã©quipe doit avoir au moins un joueur';
     }
     document.getElementById('startLockedMsg').textContent = msg;
   }
@@ -280,7 +280,7 @@ function render() {
   if ((LOBBY.declined || []).length > 0) {
     document.getElementById('declinedSection').style.display = 'block';
     document.getElementById('declinedMsg').textContent =
-      `${LOBBY.declined.join(', ')} ${LOBBY.declined.length > 1 ? 'ont' : 'a'} refusé l'invitation`;
+      `${LOBBY.declined.join(', ')} ${LOBBY.declined.length > 1 ? 'ont' : 'a'} refusÃ© l'invitation`;
   }
 
   renderTeams();
@@ -288,20 +288,20 @@ function render() {
   if (amHost) renderPlayerSelector();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ÉQUIPES
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã‰QUIPES
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderTeams() {
   const team1 = LOBBY.team1 || [];
   const team2 = LOBBY.team2 || [];
 
-  // Guests déjà placés
+  // Guests dÃ©jÃ  placÃ©s
   const placed = [...team1, ...team2].filter(isGuest);
   // Guests libres dans l'ordre
   const free = GUESTS.filter(g => !placed.includes(g));
 
-  // Nombre de slots fantômes par équipe
-  // Si team1 est vide mais qu'il y a un hôte → on affiche l'hôte virtuellement = 1 slot occupé
+  // Nombre de slots fantÃ´mes par Ã©quipe
+  // Si team1 est vide mais qu'il y a un hÃ´te â†’ on affiche l'hÃ´te virtuellement = 1 slot occupÃ©
   const hostVirtual = team1.length === 0 && !!LOBBY.host;
   const t1Occupied  = hostVirtual ? 1 : team1.length;
   const t1Ghosts    = Math.max(0, 2 - t1Occupied);
@@ -321,7 +321,7 @@ function buildTeam(id, players, ghosts, addVirtualHost, color) {
   el.innerHTML = '';
   const amHost = LOBBY.host === ME || IS_ADMIN;
 
-  // Si aucun joueur et hôte virtuel → afficher l'hôte
+  // Si aucun joueur et hÃ´te virtuel â†’ afficher l'hÃ´te
   const toShow = (players.length === 0 && addVirtualHost)
     ? [LOBBY.host]
     : players;
@@ -329,7 +329,7 @@ function buildTeam(id, players, ghosts, addVirtualHost, color) {
   toShow.forEach(u => el.appendChild(makePlayerCard(u, amHost, color)));
   ghosts.forEach(g  => el.appendChild(makeGhostCard(g, amHost, id === 'team1List' ? 'team1' : 'team2')));
 
-  // Slots vides restants (quand tous les guests sont déjà ajoutés)
+  // Slots vides restants (quand tous les guests sont dÃ©jÃ  ajoutÃ©s)
   const totalShown = toShow.length + ghosts.length;
   for (let i = totalShown; i < 2; i++) el.appendChild(makeEmptyCard(amHost));
 }
@@ -345,7 +345,7 @@ function makePlayerCard(username, amHost, color) {
   const cached = window.ProfileUtils ? ProfileUtils.fetchAllProfiles && null : null; // on utilise le cache synchrone
   let prof = null;
   if (window.ProfileUtils && ProfileUtils._cache_set) {
-    // Accéder au cache interne via fetchUserProfile (synchrone si déjà en cache)
+    // AccÃ©der au cache interne via fetchUserProfile (synchrone si dÃ©jÃ  en cache)
     const allCache = window.ProfileUtils._getAllCache ? window.ProfileUtils._getAllCache() : null;
     if (allCache && allCache[username]) prof = allCache[username];
   }
@@ -354,7 +354,7 @@ function makePlayerCard(username, amHost, color) {
 
   const dname = (prof.nickname && prof.nickname.trim()) ? prof.nickname.trim() : username;
 
-  // Avatar via ProfileUtils.avatarHTML si disponible (gère has_avatar, avatar_url, preset, initiale)
+  // Avatar via ProfileUtils.avatarHTML si disponible (gÃ¨re has_avatar, avatar_url, preset, initiale)
   let av = '';
   if (window.ProfileUtils) {
     av = ProfileUtils.avatarWithCosmeticsHTML(prof, 32);
@@ -375,38 +375,38 @@ function makePlayerCard(username, amHost, color) {
 
   // Boutons
   let btns = '';
-  // Bouton déplacer vers l'autre équipe (hôte uniquement)
+  // Bouton dÃ©placer vers l'autre Ã©quipe (hÃ´te uniquement)
   if (amHost && username !== LOBBY.host) {
     const inT1 = (LOBBY.team1 || []).includes(username);
     const targetTeam = inT1 ? 'team2' : 'team1';
-    const targetLabel = inT1 ? '→ Éq.2' : '← Éq.1';
+    const targetLabel = inT1 ? 'â†’ Ã‰q.2' : 'â† Ã‰q.1';
     const otherTeamFull = inT1
       ? (LOBBY.team2 || []).length >= 2
       : (LOBBY.team1 || []).length >= 2;
     if (!otherTeamFull) {
-      btns += `<button onclick="moveToTeam('${esc(username)}','${targetTeam}')" title="Déplacer vers ${targetTeam === 'team1' ? 'Équipe 1' : 'Équipe 2'}" style="font-size:.75rem;padding:.25rem .6rem;border:1px solid var(--border-normal);border-radius:6px;background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;white-space:nowrap">${targetLabel}</button>`;
+      btns += `<button onclick="moveToTeam('${esc(username)}','${targetTeam}')" title="DÃ©placer vers ${targetTeam === 'team1' ? 'Ã‰quipe 1' : 'Ã‰quipe 2'}" style="font-size:.75rem;padding:.25rem .6rem;border:1px solid var(--border-normal);border-radius:6px;background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;white-space:nowrap">${targetLabel}</button>`;
     }
   }
-  // Bouton swap équipe (joueur lui-même avec un adversaire)
+  // Bouton swap Ã©quipe (joueur lui-mÃªme avec un adversaire)
   if (!isGuestUser && username !== ME && LOBBY && !amHost) {
     const inT1 = (LOBBY.team1 || []).includes(username);
     const meT1 = (LOBBY.team1 || []).includes(ME);
     if (inT1 !== meT1) {
-      btns += `<button onclick="socket.emit('request_team_swap',{with:'${esc(username)}'})" title="Proposer échange d'équipe" style="font-size:.8rem;padding:.3rem .7rem">↔️</button>`;
+      btns += `<button onclick="socket.emit('request_team_swap',{with:'${esc(username)}'})" title="Proposer Ã©change d'Ã©quipe" style="font-size:.8rem;padding:.3rem .7rem">â†”ï¸</button>`;
     }
   }
   if (amHost && username !== LOBBY.host) {
     const kickFn = isGuestUser
       ? `socket.emit('kick_from_lobby',{user:'${esc(username)}'})`
       : `kickPlayer('${esc(username)}')`;
-    btns += `<button class="btn-kick" onclick="${kickFn}" style="font-size:.8rem;padding:.3rem .7rem">✕</button>`;
+    btns += `<button class="btn-kick" onclick="${kickFn}" style="font-size:.8rem;padding:.3rem .7rem">âœ•</button>`;
   }
 
   card.innerHTML = `
     <span style="display:flex;align-items:center;gap:8px">
       ${onlineDot}${av}
       <span>
-        <span style="font-weight:700;font-size:.9rem">${esc(dname)}${isHostUser ? ' <span style="color:var(--bronze);font-size:.72rem">★ hôte</span>' : ''}</span>
+        <span style="font-weight:700;font-size:.9rem">${esc(dname)}${isHostUser ? ' <span style="color:var(--bronze);font-size:.72rem">â˜… hÃ´te</span>' : ''}</span>
         ${dname !== username ? `<span style="display:block;font-size:.68rem;color:var(--text-muted)">${esc(username)}</span>` : ''}
         ${badgesHtml ? `<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px">${badgesHtml}</div>` : ''}
       </span>
@@ -414,7 +414,7 @@ function makePlayerCard(username, amHost, color) {
     <div style="display:flex;gap:.4rem">${btns}</div>
   `;
 
-  // Si le profil n'était pas encore en cache, le charger async et mettre à jour la carte
+  // Si le profil n'Ã©tait pas encore en cache, le charger async et mettre Ã  jour la carte
   if (!prof.has_avatar && !prof.avatar_preset && !isGuestUser && window.ProfileUtils) {
     ProfileUtils.fetchUserProfile(username).then(p => {
       if (!p || p === prof) return;
@@ -439,10 +439,10 @@ function addGuestToLobby(guestName, targetTeam) {
     socket.emit('invite_to_lobby', payload);
     return;
   }
-  // Force une reconnexion explicite puis envoie l'invitation dès que possible.
+  // Force une reconnexion explicite puis envoie l'invitation dÃ¨s que possible.
   socket.once('connect', () => socket.emit('invite_to_lobby', payload));
   if (typeof socket.connect === 'function') socket.connect();
-  toast('Reconnexion au lobby…', 'inf');
+  toast('Reconnexion au lobbyâ€¦', 'inf');
 }
 
 function makeGhostCard(guestName, amHost, targetTeam) {
@@ -476,7 +476,7 @@ function makeEmptyCard(amHost) {
       </div>
       <div>
         <span style="font-size:.85rem;color:var(--text-muted)">Slot libre</span>
-        ${amHost ? '<div style="font-size:.72rem;color:rgba(205,127,50,.55)">Invitez un joueur →</div>' : ''}
+        ${amHost ? '<div style="font-size:.72rem;color:rgba(205,127,50,.55)">Invitez un joueur â†’</div>' : ''}
       </div>
     </div>
     ${amHost
@@ -486,9 +486,9 @@ function makeEmptyCard(amHost) {
   return el;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // INVITATION
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderPlayerSelector() {
   if (!LOBBY) return;
   const sel = document.getElementById('playerSelector');
@@ -502,7 +502,7 @@ function renderPlayerSelector() {
 
   sel.innerHTML = '';
   if (filtered.length === 0) {
-    sel.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;font-size:.875rem">Tous les joueurs disponibles sont déjà dans le lobby</p>';
+    sel.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;font-size:.875rem">Tous les joueurs disponibles sont dÃ©jÃ  dans le lobby</p>';
     return;
   }
   filtered.forEach(u => {
@@ -540,9 +540,9 @@ function filterPlayers() { renderPlayerSelector(); }
 
 
 function inviteSelected() {
-  if (LOBBY.host !== ME && !IS_ADMIN) { toast("Seul l'hôte peut inviter", 'err'); return; }
-  if (SELECTED.length === 0) { toast('Sélectionnez au moins un joueur', 'err'); return; }
-  // Placement automatique côté serveur (équipe la moins remplie)
+  if (LOBBY.host !== ME && !IS_ADMIN) { toast("Seul l'hÃ´te peut inviter", 'err'); return; }
+  if (SELECTED.length === 0) { toast('SÃ©lectionnez au moins un joueur', 'err'); return; }
+  // Placement automatique cÃ´tÃ© serveur (Ã©quipe la moins remplie)
   SELECTED.forEach(u => socket.emit('invite_to_lobby', { user: u, team: '' }));
   SELECTED = [];
   setTimeout(loadAllUsers, 500);
@@ -553,9 +553,9 @@ function focusInvite() {
   document.getElementById('inviteSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DEMANDES À REJOINDRE
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// DEMANDES Ã€ REJOINDRE
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderJoinReqs() {
   const amHost  = LOBBY && (LOBBY.host === ME || IS_ADMIN);
   const section = document.getElementById('joinReqSection');
@@ -572,31 +572,31 @@ function renderJoinReqs() {
     item.innerHTML = `
       <span style="color:var(--text-primary);font-weight:600"><span style="color:#3498db">${esc(req.from)}</span> veut rejoindre</span>
       <div style="display:flex;gap:.5rem">
-        <button onclick="acceptJoin('${rid}','${esc(req.from)}')" style="padding:.35rem .8rem;border:none;border-radius:6px;background:linear-gradient(135deg,#2980b9,#3498db);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">✓ Accepter</button>
-        <button onclick="declineJoin('${rid}','${esc(req.from)}')" style="padding:.35rem .8rem;border:1px solid rgba(231,76,60,.4);border-radius:6px;background:rgba(231,76,60,.1);color:#e74c3c;font-weight:700;font-size:.82rem;cursor:pointer">✕ Refuser</button>
+        <button onclick="acceptJoin('${rid}')" style="padding:.35rem .8rem;border:none;border-radius:6px;background:linear-gradient(135deg,#2980b9,#3498db);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">âœ“ Accepter</button>
+        <button onclick="declineJoin('${rid}')" style="padding:.35rem .8rem;border:1px solid rgba(231,76,60,.4);border-radius:6px;background:rgba(231,76,60,.1);color:#e74c3c;font-weight:700;font-size:.82rem;cursor:pointer">âœ• Refuser</button>
       </div>
     `;
     list.appendChild(item);
   });
 }
 
-function acceptJoin(rid, from) {
-  socket.emit('accept_join_request', { from, request_id: rid });
+function acceptJoin(rid) {
+  socket.emit('accept_join_request', { request_id: rid });
   delete JOIN_REQS[rid]; renderJoinReqs();
 }
-function declineJoin(rid, from) {
-  socket.emit('decline_join_request', { from, request_id: rid });
+function declineJoin(rid) {
+  socket.emit('decline_join_request', { request_id: rid });
   delete JOIN_REQS[rid]; renderJoinReqs();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // ACTIONS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function leaveLobby() {
   if (!LOBBY) return;
   const amHost = LOBBY.host === ME || IS_ADMIN;
   const msg = amHost
-    ? 'Fermer le lobby ? Un autre joueur sera promu hôte ou le lobby sera annulé.'
+    ? 'Fermer le lobby ? Un autre joueur sera promu hÃ´te ou le lobby sera annulÃ©.'
     : 'Quitter le lobby ?';
   if (confirm(msg)) socket.emit('leave_lobby');
 }
@@ -622,9 +622,9 @@ function declineSwap() {
   SWAP_ID = null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // SOCKET EVENTS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 socket.on('lobby_update', data => {
   if (_redirecting) return;
   const amHost     = data.host === ME;
@@ -635,25 +635,29 @@ socket.on('lobby_update', data => {
     saferedirect('/dashboard'); return;
   }
   LOBBY = data;
+  JOIN_REQS = {};
+  Object.entries(data.join_requests || {}).forEach(([rid, req]) => {
+    if (req && req.from) JOIN_REQS[rid] = { from: req.from };
+  });
   render();
 });
 
 socket.on('lobby_host_changed', data => {
   if (_redirecting) return;
   if (data.old_host === ME && data.new_host !== ME) {
-    toast('Vous avez quitté le lobby', 'inf');
+    toast('Vous avez quittÃ© le lobby', 'inf');
     setTimeout(() => saferedirect('/dashboard'), 1200);
     return;
   }
-  if (data.new_host === ME) toast("🎉 Vous êtes maintenant l'hôte !", 'ok');
-  else toast(`${data.old_host} a quitté — ${data.new_host} est hôte`, 'inf');
+  if (data.new_host === ME) toast("ðŸŽ‰ Vous Ãªtes maintenant l'hÃ´te !", 'ok');
+  else toast(`${data.old_host} a quittÃ© â€” ${data.new_host} est hÃ´te`, 'inf');
   if (LOBBY) { LOBBY.host = data.new_host; render(); }
 });
 
 socket.on('team_swap_request', data => {
   if (data.to === ME) {
     SWAP_ID = data.request_id;
-    document.getElementById('swapMsg').textContent = `${data.from} veut échanger d'équipe avec vous`;
+    document.getElementById('swapMsg').textContent = `${data.from} veut Ã©changer d'Ã©quipe avec vous`;
     document.getElementById('swapPopup').style.display = 'block';
   }
 });
@@ -665,12 +669,13 @@ socket.on('join_request', data => {
   }
 });
 
-// Résultat d'une demande à rejoindre (pour le demandeur)
+// RÃ©sultat d'une demande Ã  rejoindre (pour le demandeur)
 socket.on('join_request_result', data => {
   if (_redirecting) return;
-  if (data.from !== ME) return;
+  const recipient = data.to || data.from;
+  if (recipient !== ME) return;
   if (data.accepted) {
-    toast('Votre demande a été acceptée !', 'ok');
+    toast('Votre demande a Ã©tÃ© acceptÃ©e !', 'ok');
     fetch('/api/active_lobby').then(r => r.json()).then(d => {
       if (!d.active) { saferedirect('/dashboard'); return; }
       LOBBY = d;
@@ -678,7 +683,7 @@ socket.on('join_request_result', data => {
       socket.emit('accept_lobby');
     }).catch(() => saferedirect('/dashboard'));
   } else {
-    toast('Votre demande a été refusée', 'err');
+    toast('Votre demande a Ã©tÃ© refusÃ©e', 'err');
   }
 });
 
@@ -686,11 +691,11 @@ socket.on('lobby_cancelled', () => saferedirect('/dashboard'));
 socket.on('game_started',    () => saferedirect('/live-score'));
 socket.on('kicked_from_lobby', data => {
   if (data && data.kicked_user === ME) {
-    toast('Vous avez été exclu du lobby', 'err');
+    toast('Vous avez Ã©tÃ© exclu du lobby', 'err');
     setTimeout(() => saferedirect('/dashboard'), 1500);
   }
 });
-socket.on('error', data => toast('✕ ' + (data?.message || 'Erreur'), 'err'));
+socket.on('error', data => toast('âœ• ' + (data?.message || 'Erreur'), 'err'));
 
 // Rechargement au reconnect socket
 socket.on('connect', () => {
@@ -709,9 +714,9 @@ socket.on('connect', () => {
   }).catch(() => {});
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // UTILS
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function esc(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -732,10 +737,11 @@ if (typeof window.logout !== 'function') {
   window.logout = () => fetch('/api/logout', { method: 'POST' }).then(() => { location.href = '/'; });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GO
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 init();
 </script>
 
 {% endblock %}
+

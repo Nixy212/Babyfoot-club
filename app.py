@@ -230,6 +230,9 @@ def emit_to_user(username, event_name, payload):
             delivered = True
     return delivered
 
+def is_user_online(username):
+    return any(user == username for user in connected_users.values())
+
 # ── Rate limiting login (anti brute-force) ────────────────────
 
 _login_attempts = collections.defaultdict(list)  # ip -> [timestamps]
@@ -3299,6 +3302,26 @@ def handle_connect():
         if _time.time() - inv.get('timestamp', 0) < 300:
             emit('lobby_invitation', {'from': inv['from'], 'to': username})
 
+    # Rejouer les demandes de join en attente pour l'hôte/admin qui se reconnecte.
+    if active_lobby.get('active') and (username == active_lobby.get('host') or is_admin(username)):
+        for req_id, req in list(active_lobby.get('join_requests', {}).items()):
+            from_user = req.get('from')
+            if from_user:
+                emit('join_request', {
+                    'from': from_user,
+                    'host': active_lobby.get('host'),
+                    'request_id': req_id
+                })
+
+    # Rejouer une éventuelle demande d'échange en attente destinée à cet utilisateur.
+    for req_id, req in list(team_swap_requests.items()):
+        if req.get('to') == username:
+            emit('team_swap_request', {
+                'from': req.get('from'),
+                'to': username,
+                'request_id': req_id
+            })
+
 def _remove_player_from_lobby(username):
     """
     Retire un joueur de toutes les listes du lobby de façon atomique.
@@ -3307,7 +3330,7 @@ def _remove_player_from_lobby(username):
       - ou annule le lobby si personne d'autre n'est présent.
     Retourne un dict {'action': 'left'|'host_promoted'|'cancelled', 'new_host': ...}
     """
-    global active_lobby, pending_invitations
+    global active_lobby, pending_invitations, team_swap_requests
     if not active_lobby.get('active'):
         return {'action': 'none'}
 
@@ -3351,6 +3374,10 @@ def _remove_player_from_lobby(username):
     for rid in to_del:
         join_requests.pop(rid, None)
     pending_invitations.pop(username, None)
+    # Nettoyer les demandes d'échange d'équipe obsolètes.
+    stale_swaps = [rid for rid, v in team_swap_requests.items() if username in (v.get('from'), v.get('to'))]
+    for rid in stale_swaps:
+        team_swap_requests.pop(rid, None)
     return result
 
 
@@ -3358,14 +3385,16 @@ def _remove_player_from_lobby(username):
 def handle_disconnect():
     username = connected_users.pop(request.sid, None)
     logger.info(f"WS deconnecte: {request.sid} ({username})")
-    if username and username in pending_rematch_replacements:
+    # Un utilisateur peut avoir plusieurs sockets ouverts (plusieurs onglets/appareils).
+    # On ne le considère "hors ligne" que si plus aucun SID ne correspond.
+    if username and username in pending_rematch_replacements and not is_user_online(username):
         inv = pending_rematch_replacements.pop(username, None) or {}
         emit_to_user(inv.get('host'), 'rematch_invite_declined', {
             'replacement_player': username,
             'declined_player': inv.get('declined_player'),
             'reason': 'offline'
         })
-    if username and active_lobby.get('active'):
+    if username and active_lobby.get('active') and not is_user_online(username):
         # Délai de grâce : on attend avant de retirer le joueur du lobby
         # (navigation entre pages = déconnexion + reconnexion rapide)
         _lobby_grace[username] = _time.time()
@@ -3376,6 +3405,9 @@ def handle_disconnect():
             if _lobby_grace.get(uname) != disc_time:
                 return
             _lobby_grace.pop(uname, None)
+            # Entre temps, l'utilisateur a pu garder/reprendre une autre connexion active.
+            if is_user_online(uname):
+                return
             if not active_lobby.get('active'):
                 return
             with _lobby_lock:
@@ -3420,7 +3452,7 @@ def handle_create_lobby(data):
         }
     socketio.emit('lobby_created', {'host': username, 'invited': invited_users}, namespace='/')
     for user in invited_users:
-        socketio.emit('lobby_invitation', {'from': username, 'to': user}, namespace='/')
+        emit_to_user(user, 'lobby_invitation', {'from': username, 'to': user})
 
 @socketio.on('invite_to_lobby')
 def handle_invite_to_lobby(data):
@@ -3475,7 +3507,11 @@ def handle_invite_to_lobby(data):
         target_team = data.get('team', '')
         if target_team in ('team1', 'team2'):
             active_lobby.setdefault('team_pref', {})[invited_user] = target_team
-        socketio.emit('lobby_invitation', {'from': active_lobby['host'], 'to': invited_user, 'team': target_team}, namespace='/')
+        emit_to_user(invited_user, 'lobby_invitation', {
+            'from': active_lobby['host'],
+            'to': invited_user,
+            'team': target_team
+        })
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 @socketio.on('leave_lobby')
@@ -3576,22 +3612,37 @@ def handle_request_join_lobby():
     if already_in:
         emit('error', {'message': 'Vous etes deja dans ce lobby'})
         return
-    request_id = str(_uuid.uuid4())[:8]
-    if 'join_requests' not in active_lobby:
-        active_lobby['join_requests'] = {}
-    active_lobby['join_requests'][request_id] = {'from': username}
-    socketio.emit('join_request', {
+    with _lobby_lock:
+        if 'join_requests' not in active_lobby:
+            active_lobby['join_requests'] = {}
+        # Eviter les doublons de demande pour un même joueur.
+        already_requested = any(v.get('from') == username for v in active_lobby['join_requests'].values())
+        if already_requested:
+            emit('error', {'message': 'Demande deja envoyee'})
+            return
+        request_id = str(_uuid.uuid4())[:8]
+        active_lobby['join_requests'][request_id] = {'from': username}
+
+    payload = {
         'from': username,
         'host': host,
         'request_id': request_id
-    }, namespace='/')
+    }
+    # Envoi ciblé: hôte + éventuels admins connectés.
+    approvers = {host}
+    for user in set(connected_users.values()):
+        if user != host and is_admin(user):
+            approvers.add(user)
+    for approver in approvers:
+        emit_to_user(approver, 'join_request', payload)
 
 @socketio.on('accept_join_request')
 def handle_accept_join_request(data):
     global active_lobby
     host = get_socket_user()
-    from_user = data.get('from')
-    request_id = data.get('request_id')
+    request_id = str((data or {}).get('request_id') or '').strip()
+    if not request_id:
+        return
     if not active_lobby.get('active'):
         return
     if host != active_lobby['host'] and not is_admin(host):
@@ -3599,10 +3650,18 @@ def handle_accept_join_request(data):
         return
     with _lobby_lock:
         join_requests = active_lobby.get('join_requests', {})
-        if request_id not in join_requests:
+        req = join_requests.get(request_id)
+        if not req:
             # Requête déjà traitée (race condition) → ignorer silencieusement
             return
+        from_user = req.get('from')
         join_requests.pop(request_id, None)
+        if not from_user:
+            return
+        # Nettoyer les autres demandes éventuelles du même joueur.
+        dup = [rid for rid, v in join_requests.items() if v.get('from') == from_user]
+        for rid in dup:
+            join_requests.pop(rid, None)
         # Vérifier que l'utilisateur n'est pas déjà dans le lobby (toutes listes)
         already_in = (
             from_user in active_lobby.get('invited', []) or
@@ -3613,62 +3672,132 @@ def handle_accept_join_request(data):
         if not already_in:
             active_lobby.setdefault('invited', []).append(from_user)
             pending_invitations[from_user] = {'from': active_lobby['host'], 'timestamp': _time.time()}
-    socketio.emit('join_request_result', {
+    emit_to_user(from_user, 'join_request_result', {
         'accepted': True,
         'host': host,
-        'from': from_user
-    }, namespace='/')
+        'from': from_user,
+        'to': from_user,
+        'request_id': request_id
+    })
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 @socketio.on('decline_join_request')
 def handle_decline_join_request(data):
     global active_lobby
     host = get_socket_user()
-    from_user = data.get('from')
-    request_id = data.get('request_id')
-    if not active_lobby['active']:
+    request_id = str((data or {}).get('request_id') or '').strip()
+    if not request_id or not active_lobby.get('active'):
         return
-    join_requests = active_lobby.get('join_requests', {})
-    join_requests.pop(request_id, None)
-    socketio.emit('join_request_result', {
+    if host != active_lobby['host'] and not is_admin(host):
+        emit('error', {'message': 'Seul l hote peut refuser les demandes'})
+        return
+    with _lobby_lock:
+        join_requests = active_lobby.get('join_requests', {})
+        req = join_requests.pop(request_id, None)
+        if not req:
+            return
+        from_user = req.get('from')
+        if not from_user:
+            return
+        # Nettoyer les autres demandes éventuelles du même joueur.
+        dup = [rid for rid, v in join_requests.items() if v.get('from') == from_user]
+        for rid in dup:
+            join_requests.pop(rid, None)
+    emit_to_user(from_user, 'join_request_result', {
         'accepted': False,
         'host': host,
-        'from': from_user
-    }, namespace='/')
+        'from': from_user,
+        'to': from_user,
+        'request_id': request_id
+    })
 
 @socketio.on('request_team_swap')
 def handle_request_team_swap(data):
     from_user = get_socket_user()
-    to_user = data.get('with')
-    request_id = f"{from_user}_{to_user}"
-    team_swap_requests[request_id] = {'from': from_user, 'to': to_user}
-    socketio.emit('team_swap_request', {'from': from_user, 'to': to_user, 'request_id': request_id}, namespace='/')
+    to_user = str((data or {}).get('with') or '').strip()
+    if not from_user or not to_user or from_user == to_user:
+        return
+    if not active_lobby.get('active'):
+        emit('error', {'message': 'Aucun lobby actif'})
+        return
+    with _lobby_lock:
+        t1 = active_lobby.get('team1', [])
+        t2 = active_lobby.get('team2', [])
+        valid_pair = (
+            (from_user in t1 and to_user in t2) or
+            (from_user in t2 and to_user in t1)
+        )
+        if not valid_pair:
+            emit('error', {'message': "Echange d'equipe invalide"})
+            return
+        request_id = str(_uuid.uuid4())[:8]
+        # Supprimer les demandes identiques précédentes.
+        stale = [rid for rid, v in team_swap_requests.items()
+                 if v.get('from') == from_user and v.get('to') == to_user]
+        for rid in stale:
+            team_swap_requests.pop(rid, None)
+        team_swap_requests[request_id] = {'from': from_user, 'to': to_user, 'timestamp': _time.time()}
+    delivered = emit_to_user(to_user, 'team_swap_request', {
+        'from': from_user,
+        'to': to_user,
+        'request_id': request_id
+    })
+    if not delivered:
+        with _lobby_lock:
+            team_swap_requests.pop(request_id, None)
+        emit('error', {'message': 'Le joueur cible est hors ligne'})
 
 @socketio.on('accept_team_swap')
 def handle_accept_team_swap(data):
     global active_lobby
-    request_id = data.get('request_id')
-    if request_id not in team_swap_requests:
+    username = get_socket_user()
+    request_id = str((data or {}).get('request_id') or '').strip()
+    if not username or not request_id:
         return
-    swap = team_swap_requests.pop(request_id)
-    fu, tu = swap['from'], swap['to']
-    if fu in active_lobby['team1'] and tu in active_lobby['team2']:
-        active_lobby['team1'].remove(fu)
-        active_lobby['team2'].remove(tu)
-        active_lobby['team1'].append(tu)
-        active_lobby['team2'].append(fu)
-    elif fu in active_lobby['team2'] and tu in active_lobby['team1']:
-        active_lobby['team2'].remove(fu)
-        active_lobby['team1'].remove(tu)
-        active_lobby['team2'].append(tu)
-        active_lobby['team1'].append(fu)
-    socketio.emit('lobby_update', active_lobby, namespace='/')
+    swapped = False
+    with _lobby_lock:
+        swap = team_swap_requests.get(request_id)
+        if not swap:
+            return
+        if not active_lobby.get('active'):
+            team_swap_requests.pop(request_id, None)
+            return
+        if username != swap.get('to'):
+            emit('error', {'message': "Seul le joueur cible peut accepter l'echange"})
+            return
+        fu, tu = swap['from'], swap['to']
+        if fu in active_lobby['team1'] and tu in active_lobby['team2']:
+            active_lobby['team1'].remove(fu)
+            active_lobby['team2'].remove(tu)
+            active_lobby['team1'].append(tu)
+            active_lobby['team2'].append(fu)
+            swapped = True
+        elif fu in active_lobby['team2'] and tu in active_lobby['team1']:
+            active_lobby['team2'].remove(fu)
+            active_lobby['team1'].remove(tu)
+            active_lobby['team2'].append(tu)
+            active_lobby['team1'].append(fu)
+            swapped = True
+        team_swap_requests.pop(request_id, None)
+    if swapped:
+        socketio.emit('lobby_update', active_lobby, namespace='/')
+    else:
+        emit('error', {'message': "Echange impossible (equipes modifiees)"})
 
 @socketio.on('decline_team_swap')
 def handle_decline_team_swap(data):
-    request_id = data.get('request_id')
-    if request_id in team_swap_requests:
-        team_swap_requests.pop(request_id)
+    username = get_socket_user()
+    request_id = str((data or {}).get('request_id') or '').strip()
+    if not username or not request_id:
+        return
+    with _lobby_lock:
+        swap = team_swap_requests.get(request_id)
+        if not swap:
+            return
+        if username not in (swap.get('to'), swap.get('from')):
+            emit('error', {'message': "Action non autorisee"})
+            return
+        team_swap_requests.pop(request_id, None)
 
 @socketio.on('kick_from_lobby')
 def handle_kick_from_lobby(data):
@@ -3687,7 +3816,7 @@ def handle_kick_from_lobby(data):
         if kicked_user in active_lobby[lst]:
             active_lobby[lst].remove(kicked_user)
     pending_invitations.pop(kicked_user, None)
-    socketio.emit('kicked_from_lobby', {'kicked_user': kicked_user}, namespace='/')
+    emit_to_user(kicked_user, 'kicked_from_lobby', {'kicked_user': kicked_user})
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 

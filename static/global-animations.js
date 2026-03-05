@@ -177,12 +177,12 @@
     const timer = autoClose(notif, 20000);
     notif.querySelector('.g-btn-accept').onclick = () => {
       clearTimeout(timer);
-      socket.emit('accept_join_request', { from: data.from, request_id: data.request_id });
+      socket.emit('accept_join_request', { request_id: data.request_id });
       dismissNotif(notif);
     };
     notif.querySelector('.g-btn-decline').onclick = () => {
       clearTimeout(timer);
-      socket.emit('decline_join_request', { from: data.from, request_id: data.request_id });
+      socket.emit('decline_join_request', { request_id: data.request_id });
       dismissNotif(notif);
     };
     bar.appendChild(notif);
@@ -272,8 +272,15 @@
       }
     });
 
-    socket.on('join_request_result', (data) => {
-      window._globalShowJoinResult(data.accepted, data.host);
+    socket.on('join_request_result', async (data) => {
+      let me = window._currentUsername;
+      if (!me) {
+        try { const r = await fetch('/current_user'); const u = await r.json(); me = u && u.username; window._currentUsername = me; } catch(e) {}
+      }
+      const recipient = data && (data.to || data.from);
+      if (me && recipient === me) {
+        window._globalShowJoinResult(!!data.accepted, data.host);
+      }
     });
 
     socket.on('rematch_replacement_invite', (data) => {

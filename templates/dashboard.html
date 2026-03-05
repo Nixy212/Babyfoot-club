@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% set active_page = "dashboard" %}
-{% block title %}Dashboard — Baby-Foot Club{% endblock %}
+{% block title %}Dashboard â€” Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
@@ -71,10 +71,10 @@
       <p>Tout ce qu'il vous faut pour jouer au baby-foot</p>
     </div>
 
-    <!-- Actions rapides : Réservation + Lobby -->
+    <!-- Actions rapides : RÃ©servation + Lobby -->
     <div class="card">
       <div class="card-header">
-        <h3>⚡ Actions rapides</h3>
+        <h3>âš¡ Actions rapides</h3>
       </div>
       <div class="card-body">
         <div id="main-action-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:stretch">
@@ -84,19 +84,19 @@
               <div class="resa-icon-wrap" style="background:linear-gradient(135deg,rgba(205,127,50,.2),rgba(205,127,50,.08))">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#cd7f32" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
               </div>
-              <span id="resaTitle">Réserver un créneau</span>
+              <span id="resaTitle">RÃ©server un crÃ©neau</span>
             </div>
-            <div class="lobby-desc" id="resaDesc">Bloquez votre heure à l'avance pour garantir l'accès au baby-foot</div>
+            <div class="lobby-desc" id="resaDesc">Bloquez votre heure Ã  l'avance pour garantir l'accÃ¨s au baby-foot</div>
             <div id="resaSlotDisplay" style="display:none" class="resa-slot-display">
               <div>
-                <div class="resa-slot-time" id="resaSlotTime">—</div>
-                <div class="resa-slot-label">votre créneau</div>
+                <div class="resa-slot-time" id="resaSlotTime">â€”</div>
+                <div class="resa-slot-label">votre crÃ©neau</div>
               </div>
               <div style="flex:1;font-size:.82rem;color:var(--text-tertiary)" id="resaSlotDetail"></div>
             </div>
             <a href="/reservation" class="lobby-main-btn btn-gold" id="resaBtn" style="text-decoration:none;margin-top:.75rem">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              Réserver maintenant
+              RÃ©server maintenant
             </a>
           </div>
 
@@ -105,12 +105,12 @@
               <div class="lobby-title-icon" id="lobbyTitleIcon" style="background:rgba(255,255,255,.05)">
                 <i class="fas fa-lock" style="color:var(--text-muted)"></i>
               </div>
-              <span id="lobbyTitle">Créer un Lobby</span>
+              <span id="lobbyTitle">CrÃ©er un Lobby</span>
             </div>
-            <div class="lobby-badge badge-unavailable" id="lobbyBadge"><span>🔴</span> Réservation requise</div>
-            <div class="lobby-desc" id="lobbyDesc">Réservez d'abord un créneau pour déverrouiller la création de lobby</div>
+            <div class="lobby-badge badge-unavailable" id="lobbyBadge"><span>ðŸ”´</span> RÃ©servation requise</div>
+            <div class="lobby-desc" id="lobbyDesc">RÃ©servez d'abord un crÃ©neau pour dÃ©verrouiller la crÃ©ation de lobby</div>
             <button class="lobby-main-btn btn-ghost-grey" id="lobbyBtn" onclick="handleLobbyBtn()">
-              <i class="fas fa-lock"></i> Créer un Lobby
+              <i class="fas fa-lock"></i> CrÃ©er un Lobby
             </button>
           </div>
 
@@ -121,27 +121,27 @@
     <!-- Partie Live -->
     <div class="card">
       <div class="card-header">
-        <h3>🎮 Partie Live</h3>
-        <a href="/live-score" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Voir →</a>
+        <h3>ðŸŽ® Partie Live</h3>
+        <a href="/live-score" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Voir â†’</a>
       </div>
       <div class="card-body">
-        <p style="color:var(--text-tertiary);font-size:.875rem;margin:0 0 1rem">Suivez ou rejoignez les parties en cours — scores mis à jour en temps réel</p>
+        <p style="color:var(--text-tertiary);font-size:.875rem;margin:0 0 1rem">Suivez ou rejoignez les parties en cours â€” scores mis Ã  jour en temps rÃ©el</p>
         <a href="/live-score" class="btn btn-primary" style="text-decoration:none">
           <i class="fas fa-eye" style="margin-right:.4rem"></i>Voir la partie en cours
         </a>
       </div>
     </div>
 
-    <!-- Mes Quêtes -->
+    <!-- Mes QuÃªtes -->
     <div class="card" id="questsWidget">
       <div class="card-header">
-        <h3>🏅 Mes Quêtes</h3>
-        <a href="/settings#quests" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Tout voir →</a>
+        <h3>ðŸ… Mes QuÃªtes</h3>
+        <a href="/settings#quests" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Tout voir â†’</a>
       </div>
       <div class="card-body" style="padding:0">
         <div id="questsWidgetList" style="padding:.875rem">
           <div style="text-align:center;padding:1.25rem;color:var(--text-muted);font-size:.875rem">
-            <div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…
+            <div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦
           </div>
         </div>
       </div>
@@ -150,25 +150,25 @@
     <!-- Top 3 -->
     <div class="card">
       <div class="card-header">
-        <h3>🏆 Top 3 du club</h3>
-        <a href="/top" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Voir tout →</a>
+        <h3>ðŸ† Top 3 du club</h3>
+        <a href="/top" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Voir tout â†’</a>
       </div>
       <div class="card-body">
         <div id="leaderboard">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…</div>
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦</div>
         </div>
       </div>
     </div>
 
-    <!-- Prochains créneaux -->
+    <!-- Prochains crÃ©neaux -->
     <div class="card">
       <div class="card-header">
-        <h3>📅 Prochains créneaux</h3>
-        <a href="/reservation" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">+ Réserver →</a>
+        <h3>ðŸ“… Prochains crÃ©neaux</h3>
+        <a href="/reservation" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">+ RÃ©server â†’</a>
       </div>
       <div class="card-body">
         <div id="reservations">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…</div>
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦</div>
         </div>
       </div>
     </div>
@@ -176,29 +176,29 @@
     <!-- Mes stats -->
     <div class="card">
       <div class="card-header">
-        <h3>📊 Mes Statistiques</h3>
-        <a href="/stats" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Tout voir →</a>
+        <h3>ðŸ“Š Mes Statistiques</h3>
+        <a href="/stats" style="font-size:.82rem;color:var(--bronze);text-decoration:none;font-weight:600">Tout voir â†’</a>
       </div>
       <div class="card-body">
         <div id="userStats">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargement…</div>
+          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦</div>
         </div>
       </div>
     </div>
 
-    <!-- Servo admin — zone admin discrète en bas -->
+    <!-- Servo admin â€” zone admin discrÃ¨te en bas -->
     <div class="card" id="servo-controls-card" style="display:none;border-color:rgba(255,255,255,.07);background:rgba(255,255,255,.01)">
       <div class="card-header" style="padding:.75rem 1.25rem">
-        <h3 style="font-size:.875rem;color:var(--text-muted);font-weight:600">🔒 Déverrouillage balle <small style="font-size:.72rem;font-weight:400">(Admin)</small></h3>
+        <h3 style="font-size:.875rem;color:var(--text-muted);font-weight:600">ðŸ”’ DÃ©verrouillage balle <small style="font-size:.72rem;font-weight:400">(Admin)</small></h3>
       </div>
       <div class="card-body" style="padding:.75rem 1.25rem">
-        <p style="color:var(--text-tertiary);font-size:.8rem;margin:0 0 .75rem">Débloquez manuellement la balle pour démarrer une partie</p>
+        <p style="color:var(--text-tertiary);font-size:.8rem;margin:0 0 .75rem">DÃ©bloquez manuellement la balle pour dÃ©marrer une partie</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
           <button class="btn" onclick="unlockServo1(this)" style="background:rgba(52,152,219,.1);color:#3498db;border:1px solid rgba(52,152,219,.3);font-size:.85rem;padding:.6rem .875rem">
-            🔒 Servo 1 <small style="opacity:.7;font-size:.78rem">(Éq. 1)</small>
+            ðŸ”’ Servo 1 <small style="opacity:.7;font-size:.78rem">(Ã‰q. 1)</small>
           </button>
           <button class="btn" onclick="unlockServo2(this)" style="background:rgba(231,76,60,.08);color:#e74c3c;border:1px solid rgba(231,76,60,.25);font-size:.85rem;padding:.6rem .875rem">
-            🔒 Servo 2 <small style="opacity:.7;font-size:.78rem">(Éq. 2)</small>
+            ðŸ”’ Servo 2 <small style="opacity:.7;font-size:.78rem">(Ã‰q. 2)</small>
           </button>
         </div>
         <div id="servo-feedback" style="margin-top:.75rem;padding:.65rem;border-radius:8px;display:none;text-align:center;font-weight:600;font-size:.85rem"></div>
@@ -218,7 +218,7 @@ catch(e) { socket = {emit:()=>{},on:()=>{},connected:false}; }
 let currentUsername=null, isAdmin=false, hasReservation=false;
 let activeLobbyState=null, myJoinRequestPending=false, isGameActive=false;
 
-// ── Chargement utilisateur ──────────────────────────────────────────────────
+// â”€â”€ Chargement utilisateur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadCurrentUser() {
   const user = await loadBaseUser();
   if (!user) return;
@@ -230,7 +230,7 @@ async function loadCurrentUser() {
   loadUserStats(user.username);
 }
 
-// ── Réservation ─────────────────────────────────────────────────────────────
+// â”€â”€ RÃ©servation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadMyResa() {
   try {
     const res = await fetch('/api/babyfoot_status');
@@ -242,23 +242,23 @@ async function loadMyResa() {
     if (mine) {
       hasReservation = true;
       document.getElementById('resaCard').className = 'resa-card resa-card-has';
-      document.getElementById('resaTitle').textContent = 'Créneau réservé ✓';
-      document.getElementById('resaDesc').textContent = 'Votre créneau est confirmé — le baby-foot vous est réservé';
+      document.getElementById('resaTitle').textContent = 'CrÃ©neau rÃ©servÃ© âœ“';
+      document.getElementById('resaDesc').textContent = 'Votre crÃ©neau est confirmÃ© â€” le baby-foot vous est rÃ©servÃ©';
       document.getElementById('resaSlotDisplay').style.display = 'flex';
       const s=new Date(mine.start_time), e=new Date(mine.end_time);
       const todayStr = s.toDateString()===now.toDateString() ? "Aujourd'hui" : 'Demain';
       const fmt = d => `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
-      document.getElementById('resaSlotTime').textContent = `${fmt(s)} – ${fmt(e)}`;
-      document.getElementById('resaSlotDetail').textContent = `${todayStr} · ${mine.duration_minutes||15} min · ${mine.mode}`;
+      document.getElementById('resaSlotTime').textContent = `${fmt(s)} â€“ ${fmt(e)}`;
+      document.getElementById('resaSlotDetail').textContent = `${todayStr} Â· ${mine.duration_minutes||15} min Â· ${mine.mode}`;
       const btn = document.getElementById('resaBtn');
-      btn.textContent = '✓ Gérer ma réservation';
+      btn.textContent = 'âœ“ GÃ©rer ma rÃ©servation';
       btn.style.cssText = 'background:rgba(39,174,96,.12);color:#2ecc71;border:1px solid rgba(39,174,96,.3);text-decoration:none;margin-top:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.875rem 1.25rem;border-radius:10px;font-weight:700;font-size:.95rem;';
     }
     updateLobbyCardUI();
   } catch(e) {}
 }
 
-// ── Lobby card ───────────────────────────────────────────────────────────────
+// â”€â”€ Lobby card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function checkActiveLobby() {
   try {
     const [lR,gR] = await Promise.all([fetch('/api/active_lobby'),fetch('/debug/game')]);
@@ -281,40 +281,40 @@ function updateLobbyCardUI() {
     if (imIn) {
       card.className='lobby-card lobby-card-active'; icon.style.background='linear-gradient(135deg,rgba(205,127,50,.25),rgba(255,215,0,.12))';
       icon.innerHTML='<i class="fas fa-gamepad" style="color:#cd7f32"></i>'; title.textContent='Lobby en cours';
-      badge.className='lobby-badge badge-inlobby'; badge.innerHTML='<span>🟡</span> Vous êtes dans le lobby';
-      desc.textContent=`Hôte : ${L.host} · ${(L.accepted||[]).length} joueur(s) prêt(s)`;
+      badge.className='lobby-badge badge-inlobby'; badge.innerHTML='<span>ðŸŸ¡</span> Vous Ãªtes dans le lobby';
+      desc.textContent=`HÃ´te : ${L.host} Â· ${(L.accepted||[]).length} joueur(s) prÃªt(s)`;
       btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Retourner dans le Lobby';
     } else if (myJoinRequestPending) {
       card.className='lobby-card lobby-card-waiting'; icon.style.background='linear-gradient(135deg,rgba(52,152,219,.2),rgba(52,152,219,.08))';
-      icon.innerHTML='<i class="fas fa-clock" style="color:#3498db"></i>'; title.textContent='Demande envoyée';
-      badge.className='lobby-badge badge-waiting'; badge.innerHTML='<span>🔵</span> En attente';
-      desc.textContent=`Demande envoyée à ${L.host} — en attente de réponse`;
-      btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-hourglass-half"></i> En attente…';
+      icon.innerHTML='<i class="fas fa-clock" style="color:#3498db"></i>'; title.textContent='Demande envoyÃ©e';
+      badge.className='lobby-badge badge-waiting'; badge.innerHTML='<span>ðŸ”µ</span> En attente';
+      desc.textContent=`Demande envoyÃ©e Ã  ${L.host} â€” en attente de rÃ©ponse`;
+      btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-hourglass-half"></i> En attenteâ€¦';
     } else {
       card.className='lobby-card lobby-card-waiting'; icon.style.background='linear-gradient(135deg,rgba(52,152,219,.2),rgba(52,152,219,.08))';
       icon.innerHTML='<i class="fas fa-users" style="color:#3498db"></i>'; title.textContent='Lobby ouvert';
-      badge.className='lobby-badge badge-waiting'; badge.innerHTML=`<span>🔵</span> Hôte : ${L.host}`;
-      desc.textContent=`${L.host} a un lobby · ${(L.accepted||[]).length} joueur(s) — demandez à rejoindre`;
-      btn.className='lobby-main-btn btn-blue'; btn.disabled=false; btn.innerHTML='<i class="fas fa-hand-paper"></i> Demander à rejoindre';
+      badge.className='lobby-badge badge-waiting'; badge.innerHTML=`<span>ðŸ”µ</span> HÃ´te : ${L.host}`;
+      desc.textContent=`${L.host} a un lobby Â· ${(L.accepted||[]).length} joueur(s) â€” demandez Ã  rejoindre`;
+      btn.className='lobby-main-btn btn-blue'; btn.disabled=false; btn.innerHTML='<i class="fas fa-hand-paper"></i> Demander Ã  rejoindre';
     }
   } else if (isGameActive && !isAdmin) {
     card.className='lobby-card lobby-card-disabled'; icon.style.background='rgba(255,255,255,.05)';
     icon.innerHTML='<i class="fas fa-futbol" style="color:var(--text-muted)"></i>'; title.textContent='Partie en cours';
-    badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>🔴</span> Partie en cours';
-    desc.textContent='Une partie est en cours — lobby disponible à la fin';
+    badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>ðŸ”´</span> Partie en cours';
+    desc.textContent='Une partie est en cours â€” lobby disponible Ã  la fin';
     btn.className='lobby-main-btn btn-ghost-grey'; btn.disabled=true; btn.innerHTML='<i class="fas fa-lock"></i> Indisponible';
   } else if (canCreate) {
     card.className='lobby-card lobby-card-active'; icon.style.background='linear-gradient(135deg,rgba(205,127,50,.25),rgba(255,215,0,.12))';
-    icon.innerHTML='<i class="fas fa-plus" style="color:#cd7f32"></i>'; title.textContent='Créer un Lobby';
-    badge.className='lobby-badge badge-available'; badge.innerHTML='<span>🟢</span> Disponible';
-    desc.textContent='Créez un lobby et invitez vos adversaires — notification instantanée';
-    btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-gamepad"></i> Créer un Lobby';
+    icon.innerHTML='<i class="fas fa-plus" style="color:#cd7f32"></i>'; title.textContent='CrÃ©er un Lobby';
+    badge.className='lobby-badge badge-available'; badge.innerHTML='<span>ðŸŸ¢</span> Disponible';
+    desc.textContent='CrÃ©ez un lobby et invitez vos adversaires â€” notification instantanÃ©e';
+    btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-gamepad"></i> CrÃ©er un Lobby';
   } else {
     card.className='lobby-card lobby-card-disabled'; icon.style.background='rgba(255,255,255,.05)';
-    icon.innerHTML='<i class="fas fa-lock" style="color:var(--text-muted)"></i>'; title.textContent='Créer un Lobby';
-    badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>🔴</span> Réservation requise';
-    desc.textContent="Créez un lobby — une réservation de 15 min sera créée automatiquement";
-    btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-gamepad"></i> Créer un Lobby';
+    icon.innerHTML='<i class="fas fa-lock" style="color:var(--text-muted)"></i>'; title.textContent='CrÃ©er un Lobby';
+    badge.className='lobby-badge badge-unavailable'; badge.innerHTML='<span>ðŸ”´</span> RÃ©servation requise';
+    desc.textContent="CrÃ©ez un lobby â€” une rÃ©servation de 15 min sera crÃ©Ã©e automatiquement";
+    btn.className='lobby-main-btn btn-gold'; btn.disabled=false; btn.innerHTML='<i class="fas fa-gamepad"></i> CrÃ©er un Lobby';
     myJoinRequestPending=false;
   }
 }
@@ -324,12 +324,12 @@ async function handleLobbyBtn() {
     const L=activeLobbyState;
     const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername);
     if (imIn) { location.href='/lobby'; }
-    else if (!myJoinRequestPending) { socket.emit('request_join_lobby'); myJoinRequestPending=true; updateLobbyCardUI(); showNotif('Demande envoyée à '+L.host,'info'); }
+    else if (!myJoinRequestPending) { socket.emit('request_join_lobby'); myJoinRequestPending=true; updateLobbyCardUI(); showNotif('Demande envoyÃ©e Ã  '+L.host,'info'); }
   } else {
-    // Créer une réservation immédiate + lobby en une seule opération
+    // CrÃ©er une rÃ©servation immÃ©diate + lobby en une seule opÃ©ration
     const btn = document.getElementById('lobbyBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création…';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CrÃ©ationâ€¦';
     try {
       const r = await fetch('/api/reserve_and_lobby', {
         method: 'POST',
@@ -339,30 +339,30 @@ async function handleLobbyBtn() {
       if (r.success) {
         window.location.href = '/lobby';
       } else {
-        showNotif('✕ ' + (r.message || 'Erreur lors de la création du lobby'), 'error');
+        showNotif('âœ• ' + (r.message || 'Erreur lors de la crÃ©ation du lobby'), 'error');
         btn.disabled = false;
         updateLobbyCardUI();
       }
     } catch(e) {
-      showNotif('✕ Erreur réseau — réessayez', 'error');
+      showNotif('âœ• Erreur rÃ©seau â€” rÃ©essayez', 'error');
       btn.disabled = false;
       updateLobbyCardUI();
     }
   }
 }
 
-// ── Notifications ────────────────────────────────────────────────────────────
+// â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showNotif(msg, type) {
   const bar = document.getElementById('notificationBar');
   const colors = {error:'#e74c3c',success:'#2ecc71',info:'var(--bronze)'};
   const n = document.createElement('div'); n.className='notification';
   n.style.borderLeft=`3px solid ${colors[type]||colors.info}`;
-  n.innerHTML=`<div style="flex:1;color:var(--text-primary)">${msg}</div><button onclick="this.closest('.notification').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:0 2px;flex-shrink:0">✕</button>`;
+  n.innerHTML=`<div style="flex:1;color:var(--text-primary)">${msg}</div><button onclick="this.closest('.notification').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:0 2px;flex-shrink:0">âœ•</button>`;
   bar.appendChild(n);
   setTimeout(()=>{ n.style.cssText+=';opacity:0;transform:translateX(20px);transition:all .3s'; setTimeout(()=>n.remove(),300); },5000);
 }
 
-// ── API calls ────────────────────────────────────────────────────────────────
+// â”€â”€ API calls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function loadLeaderboard() {
   const el = document.getElementById('leaderboard');
   try {
@@ -370,8 +370,8 @@ async function loadLeaderboard() {
     const cache = (window.ProfileUtils && ProfileUtils._getAllCache) ? ProfileUtils._getAllCache() : {};
     const res = await fetch('/leaderboard'); if(!res.ok) throw new Error();
     let data = (await res.json()).filter(p=>/^Joueur\d+$/i.test(p.username)===false);
-    if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucun classement — jouez une partie !</p>'; return; }
-    const M=['🥇','🥈','🥉'];
+    if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucun classement â€” jouez une partie !</p>'; return; }
+    const M=['ðŸ¥‡','ðŸ¥ˆ','ðŸ¥‰'];
     const esc = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     el.innerHTML=data.slice(0,3).map((p,i)=>{
       const prof = Object.assign({}, cache[p.username] || { username: p.username }, p);
@@ -399,7 +399,7 @@ async function loadReservations() {
     const cache = (window.ProfileUtils && ProfileUtils._getAllCache) ? ProfileUtils._getAllCache() : {};
     const res = await fetch('/reservations_today'); if(!res.ok) throw new Error();
     const data = await res.json();
-    if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucune réservation — <a href="/reservation" style="color:var(--bronze)">réservez un créneau</a> !</p>'; return; }
+    if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucune rÃ©servation â€” <a href="/reservation" style="color:var(--bronze)">rÃ©servez un crÃ©neau</a> !</p>'; return; }
     const now=new Date();
     const todayFr=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][now.getDay()];
     el.innerHTML=data.slice(0,5).map((r,i)=>{
@@ -414,8 +414,8 @@ async function loadReservations() {
         <div style="display:flex;align-items:center;gap:.625rem">
           ${av}
           <div>
-            <div style="font-weight:600;font-size:.9rem;color:var(--text-primary)">${r.day===todayFr?"Aujourd'hui":'Demain'} · ${r.time}${past?' <span style="font-size:.7rem;color:var(--text-muted)">(passé)</span>':''}</div>
-            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} — ${esc(dname)}</div>
+            <div style="font-weight:600;font-size:.9rem;color:var(--text-primary)">${r.day===todayFr?"Aujourd'hui":'Demain'} Â· ${r.time}${past?' <span style="font-size:.7rem;color:var(--text-muted)">(passÃ©)</span>':''}</div>
+            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} â€” ${esc(dname)}</div>
           </div>
         </div>
         ${isMine?'<span style="font-size:.75rem;padding:2px 10px;border-radius:20px;background:rgba(205,127,50,.15);color:var(--bronze);font-weight:600">Vous</span>':''}
@@ -432,13 +432,13 @@ async function loadUserStats(username) {
     const d = await res.json();
     el.innerHTML=`
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:1rem">
-        <div class="stat-mini"><div class="stat-mini-val">${d.total_goals??0}</div><div class="stat-mini-label">Buts marqués</div></div>
+        <div class="stat-mini"><div class="stat-mini-val">${d.total_goals??0}</div><div class="stat-mini-label">Buts marquÃ©s</div></div>
         <div class="stat-mini"><div class="stat-mini-val">${d.total_games??0}</div><div class="stat-mini-label">Parties</div></div>
         <div class="stat-mini"><div class="stat-mini-val">${d.ratio??0}</div><div class="stat-mini-label">Buts/partie</div></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;border-top:1px solid var(--border-subtle);font-size:.85rem;color:var(--text-tertiary)">
-        <span>Meilleur score : <strong style="color:var(--text-primary)">${d.best_score||'—'}</strong></span>
-        <a href="/stats" style="color:var(--bronze);font-weight:600;text-decoration:none">Tout voir →</a>
+        <span>Meilleur score : <strong style="color:var(--text-primary)">${d.best_score||'â€”'}</strong></span>
+        <a href="/stats" style="color:var(--bronze);font-weight:600;text-decoration:none">Tout voir â†’</a>
       </div>`;
   } catch(e) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Stats indisponibles</p>'; }
 }
@@ -453,51 +453,52 @@ async function loadQuestsWidget() {
     let html='';
     if(inP.length){
       html+='<div style="padding:.375rem .25rem .25rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">En cours</div>';
-      html+=inP.slice(0,4).map(q=>{const pct=q.condition_value>0?Math.min(100,Math.round(q.progress/q.condition_value*100)):0;const b=pct>=80?'#2ecc71':pct>=40?'#cd7f32':'#3498db';return`<div style="padding:.625rem .25rem;border-bottom:1px solid var(--border-subtle)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="display:flex;align-items:center;gap:7px"><span>${q.icon}</span><span style="font-weight:700;font-size:.85rem">${q.name}</span></div><span style="font-size:.72rem;color:var(--text-muted)">${q.progress}/${q.condition_value}</span></div><div style="height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;border-radius:99px;background:${b};width:${pct}%;transition:width .8s"></div></div><div style="font-size:.7rem;color:var(--text-muted);margin-top:3px">🎁 ${q.reward_label}</div></div>`;}).join('');
+      html+=inP.slice(0,4).map(q=>{const pct=q.condition_value>0?Math.min(100,Math.round(q.progress/q.condition_value*100)):0;const b=pct>=80?'#2ecc71':pct>=40?'#cd7f32':'#3498db';return`<div style="padding:.625rem .25rem;border-bottom:1px solid var(--border-subtle)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="display:flex;align-items:center;gap:7px"><span>${q.icon}</span><span style="font-weight:700;font-size:.85rem">${q.name}</span></div><span style="font-size:.72rem;color:var(--text-muted)">${q.progress}/${q.condition_value}</span></div><div style="height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;border-radius:99px;background:${b};width:${pct}%;transition:width .8s"></div></div><div style="font-size:.7rem;color:var(--text-muted);margin-top:3px">ðŸŽ ${q.reward_label}</div></div>`;}).join('');
     }
     if(done.length){
-      html+='<div style="padding:.625rem .25rem .25rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">Débloquées ✅</div>';
-      html+=done.slice(0,3).map(q=>`<div style="padding:.5rem .25rem;display:flex;align-items:center;gap:8px;opacity:.65"><span>${q.icon}</span><span style="font-size:.82rem;text-decoration:line-through;color:var(--text-muted)">${q.name}</span><span style="margin-left:auto;font-size:.72rem;color:#2ecc71;font-weight:700">✓ ${q.reward_label}</span></div>`).join('');
+      html+='<div style="padding:.625rem .25rem .25rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)">DÃ©bloquÃ©es âœ…</div>';
+      html+=done.slice(0,3).map(q=>`<div style="padding:.5rem .25rem;display:flex;align-items:center;gap:8px;opacity:.65"><span>${q.icon}</span><span style="font-size:.82rem;text-decoration:line-through;color:var(--text-muted)">${q.name}</span><span style="margin-left:auto;font-size:.72rem;color:#2ecc71;font-weight:700">âœ“ ${q.reward_label}</span></div>`).join('');
     }
-    if(!inP.length&&!done.length) html='<div style="text-align:center;padding:1.25rem;color:var(--text-muted);font-size:.875rem">Jouez une partie pour débloquer des quêtes !</div>';
+    if(!inP.length&&!done.length) html='<div style="text-align:center;padding:1.25rem;color:var(--text-muted);font-size:.875rem">Jouez une partie pour dÃ©bloquer des quÃªtes !</div>';
     el.innerHTML=html;
   } catch(e){el.innerHTML='';}
 }
 
-// ── Servo ────────────────────────────────────────────────────────────────────
+// â”€â”€ Servo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function unlockServo1(btn){_servo(btn,'unlock_servo1','Servo 1','#3498db');}
 function unlockServo2(btn){_servo(btn,'unlock_servo2','Servo 2','#e74c3c');}
 function _servo(btn,ev,label,color){
   const fb=document.getElementById('servo-feedback');
   btn.disabled=true; btn.style.opacity='.5';
   fb.style.cssText=`display:block;background:${color}18;border:1px solid ${color};color:${color};`;
-  fb.textContent=`Déverrouillage ${label} en cours… (5 sec)`;
+  fb.textContent=`DÃ©verrouillage ${label} en coursâ€¦ (5 sec)`;
   socket.emit(ev);
-  setTimeout(()=>{btn.disabled=false;btn.style.opacity='1';fb.style.cssText='display:block;background:rgba(39,174,96,.1);border:1px solid #27ae60;color:#27ae60;';fb.textContent=`✓ ${label} reverrouillé`;setTimeout(()=>{fb.style.display='none';},3000);},5000);
+  setTimeout(()=>{btn.disabled=false;btn.style.opacity='1';fb.style.cssText='display:block;background:rgba(39,174,96,.1);border:1px solid #27ae60;color:#27ae60;';fb.textContent=`âœ“ ${label} reverrouillÃ©`;setTimeout(()=>{fb.style.display='none';},3000);},5000);
 }
 
-// ── Socket ───────────────────────────────────────────────────────────────────
-socket.on('lobby_created',d=>{if(d.host===currentUsername||(d.invited||[]).includes(currentUsername)){showNotif('Lobby créé — redirection…','success');setTimeout(()=>location.href='/lobby',500);}else checkActiveLobby();});
+// â”€â”€ Socket â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+socket.on('lobby_created',d=>{if(d.host===currentUsername||(d.invited||[]).includes(currentUsername)){showNotif('Lobby crÃ©Ã© â€” redirectionâ€¦','success');setTimeout(()=>location.href='/lobby',500);}else checkActiveLobby();});
 socket.on('lobby_cancelled',()=>{activeLobbyState=null;myJoinRequestPending=false;updateLobbyCardUI();});
 socket.on('lobby_update',d=>{activeLobbyState=d;updateLobbyCardUI();});
 socket.on('game_started',()=>{isGameActive=true;checkActiveLobby();});
 socket.on('game_stopped',()=>{isGameActive=false;checkActiveLobby();});
 socket.on('join_request_result',d=>{
   myJoinRequestPending=false;
-  if(d.from && d.from!==currentUsername) return; // pas pour moi
+  const recipient = d.to || d.from;
+  if(recipient && recipient!==currentUsername) return; // pas pour moi
   if(d.accepted){
-    showNotif('✓ Accepté par '+d.host+' — redirection…','success');
-    // Courte attente pour que lobby_update arrive et mette à jour activeLobbyState
+    showNotif('âœ“ AcceptÃ© par '+d.host+' â€” redirectionâ€¦','success');
+    // Courte attente pour que lobby_update arrive et mette Ã  jour activeLobbyState
     setTimeout(()=>location.href='/lobby',1000);
   }else{
-    showNotif('✕ '+d.host+' a refusé votre demande','error');
+    showNotif('âœ• '+d.host+' a refusÃ© votre demande','error');
     checkActiveLobby();
   }
 });
-socket.on('lobby_invitation',d=>{if(d.to!==currentUsername)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.innerHTML=`<div style="flex:1"><strong style="color:var(--bronze)">${d.from}</strong> vous invite à jouer</div><div class="notification-buttons"><button class="btn-accept" onclick="acceptLobby(this.closest('.notification'))">✓ Accepter</button><button class="btn-decline" onclick="declineLobby(this.closest('.notification'))">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),15000);});
-socket.on('join_request',d=>{if(d.host!==currentUsername&&!isAdmin)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.style.borderLeft='3px solid #3498db';n.innerHTML=`<div style="flex:1"><strong style="color:#3498db">${d.from}</strong> veut rejoindre votre lobby</div><div class="notification-buttons"><button class="btn-accept" style="background:linear-gradient(135deg,#2980b9,#3498db)" onclick="socket.emit('accept_join_request',{from:'${d.from}',request_id:'${d.request_id}'});this.closest('.notification').remove()">✓</button><button class="btn-decline" onclick="socket.emit('decline_join_request',{from:'${d.from}',request_id:'${d.request_id}'});this.closest('.notification').remove()">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),20000);});
-socket.on('error',d=>showNotif('✕ '+(d.message||'Erreur'),'error'));
-socket.on('elo_updated',d=>{if(!d?.changes)return;const me=d.changes.find(c=>c.player===currentUsername);if(!me)return;const sign=me.delta>=0?'+':'';showNotif(`${me.tier_up?'🎉 Niveau supérieur ! ':me.delta>=20?'🔥 Belle victoire ! ':''}${sign}${me.delta} pts ELO`,me.delta>=0?'success':'error');});
+socket.on('lobby_invitation',d=>{if(d.to!==currentUsername)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.innerHTML=`<div style="flex:1"><strong style="color:var(--bronze)">${d.from}</strong> vous invite Ã  jouer</div><div class="notification-buttons"><button class="btn-accept" onclick="acceptLobby(this.closest('.notification'))">âœ“ Accepter</button><button class="btn-decline" onclick="declineLobby(this.closest('.notification'))">âœ•</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),15000);});
+socket.on('join_request',d=>{if(d.host!==currentUsername&&!isAdmin)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.style.borderLeft='3px solid #3498db';n.innerHTML=`<div style="flex:1"><strong style="color:#3498db">${d.from}</strong> veut rejoindre votre lobby</div><div class="notification-buttons"><button class="btn-accept" style="background:linear-gradient(135deg,#2980b9,#3498db)" onclick="socket.emit('accept_join_request',{request_id:'${d.request_id}'});this.closest('.notification').remove()">âœ“</button><button class="btn-decline" onclick="socket.emit('decline_join_request',{request_id:'${d.request_id}'});this.closest('.notification').remove()">âœ•</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),20000);});
+socket.on('error',d=>showNotif('âœ• '+(d.message||'Erreur'),'error'));
+socket.on('elo_updated',d=>{if(!d?.changes)return;const me=d.changes.find(c=>c.player===currentUsername);if(!me)return;const sign=me.delta>=0?'+':'';showNotif(`${me.tier_up?'ðŸŽ‰ Niveau supÃ©rieur ! ':me.delta>=20?'ðŸ”¥ Belle victoire ! ':''}${sign}${me.delta} pts ELO`,me.delta>=0?'success':'error');});
 
 function acceptLobby(el){
   socket.emit('accept_lobby');
@@ -511,10 +512,11 @@ function acceptLobby(el){
 }
 function declineLobby(el){socket.emit('decline_lobby');el?.remove();}
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 (async()=>{
   await loadCurrentUser();
   await Promise.all([loadLeaderboard(),loadReservations(),loadQuestsWidget()]);
 })();
 </script>
 {% endblock %}
+
