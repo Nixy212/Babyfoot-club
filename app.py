@@ -50,6 +50,12 @@ if USE_CLOUDINARY:
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 # ProxyFix : essentiel pour que Flask comprenne HTTPS derrière Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_for=1)
+ASSET_VERSION = (
+    os.environ.get("RENDER_GIT_COMMIT")
+    or os.environ.get("RENDER_GIT_HASH")
+    or os.environ.get("ASSET_VERSION")
+    or str(int(_time.time()))
+)
 
 # ── Blueprint Arduino REST (simulateur / Arduino WiFi) ────────
 from arduino_routes import arduino_bp
@@ -79,6 +85,10 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 Mo max request body
+
+@app.context_processor
+def inject_asset_version():
+    return {"asset_version": ASSET_VERSION}
 
 # ── SocketIO ──────────────────────────────────────────────────
 
@@ -135,13 +145,20 @@ def set_headers(response):
         # Forcer iOS/Android a toujours revalider le service worker apres deploiement.
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Service-Worker-Allowed'] = '/'
+    elif path.startswith('/static/'):
+        # Assets versionnes (?v=...) = cache long immutable.
+        if request.args.get('v'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        else:
+            # Sans version explicite, on garde un cache court pour limiter les versions stale mobile.
+            response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=86400'
     elif path.startswith('/api/avatar/'):
         # Les avatars peuvent rester en cache court, mais doivent se rafraichir rapidement.
         response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=600'
     elif path.startswith('/api/') or path == '/current_user':
         # Evite les fuites/cache stale de donnees utilisateur entre sessions.
         response.headers['Cache-Control'] = 'no-store'
-    elif response.content_type and any(ct in response.content_type for ct in ['javascript', 'css', 'image', 'font']):
+    elif response.content_type and 'font' in response.content_type:
         response.headers['Cache-Control'] = 'public, max-age=604800, stale-while-revalidate=86400'
     elif response.content_type and 'text/html' in response.content_type:
         response.headers['Cache-Control'] = 'no-cache, must-revalidate'
@@ -2518,7 +2535,27 @@ def api_upload_avatar():
             return jsonify({"error": "Erreur lors de l'upload — réessayez"}), 500
     else:
         # ── Fallback base64 en DB (max ~500 Ko image réelle) ──
-        MAX_LEN = 1_400_000
+        # Tentative de recompression serveur (si Pillow dispo) pour sauver les uploads mobiles limites.
+        if len(img_data) > 1_100_000:
+            try:
+                import io as _io
+                from PIL import Image
+                b64_part = img_data.split(",", 1)[1]
+                raw_bytes = _base64.b64decode(b64_part)
+                with Image.open(_io.BytesIO(raw_bytes)) as im:
+                    if im.mode not in ("RGB",):
+                        im = im.convert("RGB")
+                    max_side = 480
+                    if max(im.size) > max_side:
+                        im.thumbnail((max_side, max_side))
+                    out = _io.BytesIO()
+                    im.save(out, format="JPEG", quality=78, optimize=True)
+                    img_data = "data:image/jpeg;base64," + _base64.b64encode(out.getvalue()).decode("ascii")
+            except Exception:
+                # Pillow absent ou image invalide : on garde la donnée originale.
+                pass
+        # Tolère des photos mobiles plus lourdes (après recadrage côté client).
+        MAX_LEN = 2_200_000
         if len(img_data) > MAX_LEN:
             return jsonify({"error": "Image trop grande. Recadrez/compressez la photo ou configurez CLOUDINARY_URL dans Render → Environment."}), 413
         conn = get_db_connection()
@@ -3458,60 +3495,72 @@ def handle_create_lobby(data):
 def handle_invite_to_lobby(data):
     global active_lobby
     username = get_socket_user()
-    invited_user = data.get('user')
-    if username != active_lobby['host'] and not is_admin(username):
-        emit('error', {'message': "Seul l'hote ou un admin peut inviter"})
+    if not username or not active_lobby.get('active'):
         return
-    # Compter uniquement les vrais joueurs (pas les guests) pour la limite du lobby
-    real_accepted = [u for u in active_lobby['accepted'] if not is_guest_player(u)]
-    real_invited  = [u for u in active_lobby['invited']  if not is_guest_player(u)]
-    if not is_guest_player(invited_user) and len(real_accepted) + len(real_invited) >= 4:
-        emit('error', {'message': 'Lobby complet'})
+    invited_user = str((data or {}).get('user') or '').strip()
+    if not invited_user:
+        emit('error', {'message': 'Joueur invalide'})
         return
-    already_in = (
-        invited_user in active_lobby['invited'] or
-        invited_user in active_lobby['accepted'] or
-        invited_user in active_lobby['team1'] or
-        invited_user in active_lobby['team2']
-    )
-    if already_in:
-        return
-    pending_invitations[invited_user] = {'from': active_lobby['host'], 'timestamp': _time.time()}
-    if is_guest_player(invited_user):
-        active_lobby['accepted'].append(invited_user)
-        # Placer dans l'équipe demandée (si précisée), sinon la moins remplie
-        target_team = data.get('team', '')
-        t1, t2 = len(active_lobby['team1']), len(active_lobby['team2'])
-        placed = False
-        if target_team == 'team1' and t1 < 2:
-            active_lobby['team1'].append(invited_user)
-            placed = True
-        elif target_team == 'team2' and t2 < 2:
-            active_lobby['team2'].append(invited_user)
-            placed = True
-        if not placed:
-            # Fallback : équipe la moins remplie avec de la place
-            if t1 <= t2 and t1 < 2:
+    payload = None
+    with _lobby_lock:
+        if not active_lobby.get('active'):
+            return
+        if username != active_lobby.get('host') and not is_admin(username):
+            emit('error', {'message': "Seul l'hote ou un admin peut inviter"})
+            return
+        # Compter uniquement les vrais joueurs (pas les guests) pour la limite du lobby
+        real_accepted = [u for u in active_lobby.get('accepted', []) if not is_guest_player(u)]
+        real_invited  = [u for u in active_lobby.get('invited', [])  if not is_guest_player(u)]
+        if not is_guest_player(invited_user) and len(real_accepted) + len(real_invited) >= 4:
+            emit('error', {'message': 'Lobby complet'})
+            return
+        already_in = (
+            invited_user in active_lobby.get('invited', []) or
+            invited_user in active_lobby.get('accepted', []) or
+            invited_user in active_lobby.get('team1', []) or
+            invited_user in active_lobby.get('team2', [])
+        )
+        if already_in:
+            return
+        pending_invitations[invited_user] = {'from': active_lobby.get('host'), 'timestamp': _time.time()}
+        if is_guest_player(invited_user):
+            active_lobby.setdefault('accepted', []).append(invited_user)
+            # Placer dans l'équipe demandée (si précisée), sinon la moins remplie
+            target_team = (data or {}).get('team', '')
+            t1, t2 = len(active_lobby.get('team1', [])), len(active_lobby.get('team2', []))
+            placed = False
+            if target_team == 'team1' and t1 < 2:
                 active_lobby['team1'].append(invited_user)
-            elif t2 < 2:
+                placed = True
+            elif target_team == 'team2' and t2 < 2:
                 active_lobby['team2'].append(invited_user)
-            elif t1 < 2:
-                active_lobby['team1'].append(invited_user)
-            else:
-                active_lobby['accepted'].remove(invited_user)
-                emit('error', {'message': 'Equipes completes'})
-                return
-    else:
-        active_lobby['invited'].append(invited_user)
-        # Stocker la préférence d'équipe de l'hôte pour ce joueur
-        target_team = data.get('team', '')
-        if target_team in ('team1', 'team2'):
-            active_lobby.setdefault('team_pref', {})[invited_user] = target_team
-        emit_to_user(invited_user, 'lobby_invitation', {
-            'from': active_lobby['host'],
-            'to': invited_user,
-            'team': target_team
-        })
+                placed = True
+            if not placed:
+                # Fallback : équipe la moins remplie avec de la place
+                if t1 <= t2 and t1 < 2:
+                    active_lobby['team1'].append(invited_user)
+                elif t2 < 2:
+                    active_lobby['team2'].append(invited_user)
+                elif t1 < 2:
+                    active_lobby['team1'].append(invited_user)
+                else:
+                    if invited_user in active_lobby.get('accepted', []):
+                        active_lobby['accepted'].remove(invited_user)
+                    emit('error', {'message': 'Equipes completes'})
+                    return
+        else:
+            active_lobby.setdefault('invited', []).append(invited_user)
+            # Stocker la préférence d'équipe de l'hôte pour ce joueur
+            target_team = (data or {}).get('team', '')
+            if target_team in ('team1', 'team2'):
+                active_lobby.setdefault('team_pref', {})[invited_user] = target_team
+            payload = {
+                'from': active_lobby.get('host'),
+                'to': invited_user,
+                'team': target_team
+            }
+    if payload:
+        emit_to_user(invited_user, 'lobby_invitation', payload)
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 @socketio.on('leave_lobby')
@@ -3583,12 +3632,13 @@ def handle_decline_lobby():
     username = get_socket_user()
     if not username or not active_lobby.get('active'):
         return
-    if username not in active_lobby.get('invited', []):
-        return
-    active_lobby['invited'].remove(username)
-    if username not in active_lobby['declined']:
-        active_lobby['declined'].append(username)
-    pending_invitations.pop(username, None)
+    with _lobby_lock:
+        if username not in active_lobby.get('invited', []):
+            return
+        active_lobby['invited'].remove(username)
+        if username not in active_lobby['declined']:
+            active_lobby['declined'].append(username)
+        pending_invitations.pop(username, None)
     socketio.emit('lobby_update', active_lobby, namespace='/')
 
 @socketio.on('request_join_lobby')
@@ -3803,19 +3853,22 @@ def handle_decline_team_swap(data):
 def handle_kick_from_lobby(data):
     global active_lobby
     username = get_socket_user()
-    kicked_user = data.get('user')
+    kicked_user = str((data or {}).get('user') or '').strip()
     if not username or not active_lobby.get('active'):
         return
-    if username != active_lobby.get('host') and not is_admin(username):
-        emit('error', {'message': "Seul l'hote ou un admin peut exclure"})
+    if not kicked_user:
         return
-    if kicked_user == active_lobby['host']:
-        emit('error', {'message': "Impossible d'exclure l'hote"})
-        return
-    for lst in ['invited', 'accepted', 'team1', 'team2']:
-        if kicked_user in active_lobby[lst]:
-            active_lobby[lst].remove(kicked_user)
-    pending_invitations.pop(kicked_user, None)
+    with _lobby_lock:
+        if username != active_lobby.get('host') and not is_admin(username):
+            emit('error', {'message': "Seul l'hote ou un admin peut exclure"})
+            return
+        if kicked_user == active_lobby.get('host'):
+            emit('error', {'message': "Impossible d'exclure l'hote"})
+            return
+        for lst in ['invited', 'accepted', 'team1', 'team2']:
+            if kicked_user in active_lobby.get(lst, []):
+                active_lobby[lst].remove(kicked_user)
+        pending_invitations.pop(kicked_user, None)
     emit_to_user(kicked_user, 'kicked_from_lobby', {'kicked_user': kicked_user})
     socketio.emit('lobby_update', active_lobby, namespace='/')
 

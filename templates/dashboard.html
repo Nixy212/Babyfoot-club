@@ -5,7 +5,7 @@
 {% block extra_head %}
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
 <script>if(typeof window.io==='undefined'){document.write('<script src="/socket.io/socket.io.js"><\\/script>');}</script>
-<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
 <style>
 .lobby-card { border-radius:16px; padding:1.5rem; border:2px solid; position:relative; overflow:hidden; transition:all .25s; height:100%; display:flex; flex-direction:column; gap:.625rem; }
 .lobby-card-active  { background:linear-gradient(135deg,rgba(205,127,50,.15) 0%,rgba(255,215,0,.06) 100%); border-color:rgba(205,127,50,.5); }
@@ -140,8 +140,10 @@
       </div>
       <div class="card-body" style="padding:0">
         <div id="questsWidgetList" style="padding:.875rem">
-          <div style="text-align:center;padding:1.25rem;color:var(--text-muted);font-size:.875rem">
-            <div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line w-45"></div>
+            <div class="skeleton skeleton-line w-90"></div>
+            <div class="skeleton skeleton-line w-75"></div>
           </div>
         </div>
       </div>
@@ -155,7 +157,11 @@
       </div>
       <div class="card-body">
         <div id="leaderboard">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦</div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line w-45"></div>
+            <div class="skeleton skeleton-line w-75"></div>
+            <div class="skeleton skeleton-line w-60"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -168,7 +174,11 @@
       </div>
       <div class="card-body">
         <div id="reservations">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦</div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line w-45"></div>
+            <div class="skeleton skeleton-line w-90"></div>
+            <div class="skeleton skeleton-line w-60"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -181,7 +191,11 @@
       </div>
       <div class="card-body">
         <div id="userStats">
-          <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:.875rem"><div class="loading-spinner" style="margin:0 auto .5rem;width:20px;height:20px"></div>Chargementâ€¦</div>
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-line w-30"></div>
+            <div class="skeleton skeleton-line w-60"></div>
+            <div class="skeleton skeleton-line w-45"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -519,4 +533,5 @@ function declineLobby(el){socket.emit('decline_lobby');el?.remove();}
 })();
 </script>
 {% endblock %}
+
 

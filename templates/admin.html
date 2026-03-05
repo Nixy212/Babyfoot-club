@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% set active_page = "admin" %}
-{% block title %}Admin — Baby-Foot Club{% endblock %}
+{% block title %}Admin â€” Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
-<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
 <script>if(typeof window.io==='undefined'){document.write('<script src="/socket.io/socket.io.js"><\\/script>');}</script>
 {% endblock %}
@@ -19,16 +19,16 @@
   <p>Outils de gestion du Baby-Foot Club</p>
 </div>
 
-<!-- CONTRÔLE DES SERVOS -->
+<!-- CONTRÃ”LE DES SERVOS -->
 <div class="card">
   <div class="card-header">
-    <h3>🔧 Contrôle des Servos</h3>
-    <div id="servoStatus" style="font-size:0.8rem;color:var(--text-tertiary)">Prêt</div>
+    <h3>ðŸ”§ ContrÃ´le des Servos</h3>
+    <div id="servoStatus" style="font-size:0.8rem;color:var(--text-tertiary)">PrÃªt</div>
   </div>
   <div class="card-body">
     <p style="color:var(--text-tertiary);margin-bottom:1.5rem;font-size:0.9375rem">
-      Déverrouillez manuellement les servomoteurs pour libérer les balles bloquées.
-      Les servos se reverrouillent automatiquement après 5 secondes.
+      DÃ©verrouillez manuellement les servomoteurs pour libÃ©rer les balles bloquÃ©es.
+      Les servos se reverrouillent automatiquement aprÃ¨s 5 secondes.
     </p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
       <button
@@ -37,7 +37,7 @@
         onclick="unlockServo(1)"
         id="btnServo1">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Servo 1
-        <small style="font-size:0.75rem;opacity:0.8;font-weight:400">(Équipe 1)</small>
+        <small style="font-size:0.75rem;opacity:0.8;font-weight:400">(Ã‰quipe 1)</small>
       </button>
       <button
         class="btn btn-primary"
@@ -45,7 +45,7 @@
         onclick="unlockServo(2)"
         id="btnServo2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Servo 2
-        <small style="font-size:0.75rem;opacity:0.8;font-weight:400">(Équipe 2)</small>
+        <small style="font-size:0.75rem;opacity:0.8;font-weight:400">(Ã‰quipe 2)</small>
       </button>
     </div>
     <div id="servoResult" style="display:none;padding:1rem;border-radius:10px;font-size:0.9375rem;text-align:center"></div>
@@ -68,12 +68,12 @@
   </div>
 </div>
 
-<!-- ÉTAT DU JEU -->
+<!-- Ã‰TAT DU JEU -->
 <div class="card">
   <div class="card-header">
-    <h3><i class="fas fa-gamepad"></i> État du jeu en cours</h3>
+    <h3><i class="fas fa-gamepad"></i> Ã‰tat du jeu en cours</h3>
     <button class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.8rem" onclick="loadGameState()">
-      🔄 Actualiser
+      ðŸ”„ Actualiser
     </button>
   </div>
   <div class="card-body">
@@ -82,60 +82,60 @@
     </div>
     <div style="margin-top:1rem">
       <button class="btn" style="background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);width:100%" onclick="forceStopGame()">
-        🛑 Forcer l'arrêt de la partie
+        ðŸ›‘ Forcer l'arrÃªt de la partie
       </button>
     </div>
   </div>
 </div>
 
-<!-- SECTION TEST COSMÉTIQUES — Super Admin uniquement -->
+<!-- SECTION TEST COSMÃ‰TIQUES â€” Super Admin uniquement -->
 <div id="cosmeticsTestZone" class="card" style=";margin-bottom:1.5rem;display:none;border-color:rgba(205,127,50,0.3)">
   <div class="card-header" style="border-bottom-color:rgba(205,127,50,0.2)">
-    <h3 style="color:#cd7f32">🎨 Test & Aperçu des Cosmétiques</h3>
+    <h3 style="color:#cd7f32">ðŸŽ¨ Test & AperÃ§u des CosmÃ©tiques</h3>
     <span style="font-size:0.75rem;padding:2px 10px;border-radius:99px;background:rgba(205,127,50,0.15);color:#cd7f32;font-weight:700">Super Admin</span>
   </div>
   <div class="card-body">
 
     <!-- Onglets -->
     <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
-      <button class="test-tab active" onclick="switchTestTab('themes')" id="tab-themes">🎨 Thèmes Live</button>
-      <button class="test-tab" onclick="switchTestTab('frames')" id="tab-frames">🖼️ Cadres Avatar</button>
-      <button class="test-tab" onclick="switchTestTab('quests')" id="tab-quests">🏅 Quêtes</button>
-      <button class="test-tab" onclick="switchTestTab('users')" id="tab-users">👤 Par Joueur</button>
+      <button class="test-tab active" onclick="switchTestTab('themes')" id="tab-themes">ðŸŽ¨ ThÃ¨mes Live</button>
+      <button class="test-tab" onclick="switchTestTab('frames')" id="tab-frames">ðŸ–¼ï¸ Cadres Avatar</button>
+      <button class="test-tab" onclick="switchTestTab('quests')" id="tab-quests">ðŸ… QuÃªtes</button>
+      <button class="test-tab" onclick="switchTestTab('users')" id="tab-users">ðŸ‘¤ Par Joueur</button>
     </div>
 
-    <!-- Onglet Thèmes -->
+    <!-- Onglet ThÃ¨mes -->
     <div id="panel-themes" class="test-panel">
-      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Aperçu visuel de chaque thème. Clique sur <strong>Tester</strong> pour l'appliquer sur ta session, <strong>Activer</strong> pour l'équiper vraiment.</p>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">AperÃ§u visuel de chaque thÃ¨me. Clique sur <strong>Tester</strong> pour l'appliquer sur ta session, <strong>Activer</strong> pour l'Ã©quiper vraiment.</p>
       <div id="themesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem"></div>
     </div>
 
     <!-- Onglet Cadres -->
     <div id="panel-frames" class="test-panel" style="display:none">
-      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Aperçu des cadres d'avatar débloquables via les quêtes.</p>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">AperÃ§u des cadres d'avatar dÃ©bloquables via les quÃªtes.</p>
       <div id="framesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem"></div>
     </div>
 
-    <!-- Onglet Quêtes -->
+    <!-- Onglet QuÃªtes -->
     <div id="panel-quests" class="test-panel" style="display:none">
-      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Complète une quête sur ton propre compte pour tester le cosmétique qu'elle débloque.</p>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">ComplÃ¨te une quÃªte sur ton propre compte pour tester le cosmÃ©tique qu'elle dÃ©bloque.</p>
       <div id="questsTestGrid" style="display:flex;flex-direction:column;gap:0.75rem"></div>
       <button onclick="resetMyCosmetics()" style="margin-top:1rem;width:100%;padding:0.75rem;border-radius:10px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-weight:700;cursor:pointer;font-family:inherit">
-        🗑️ Réinitialiser mes cosmétiques de test
+        ðŸ—‘ï¸ RÃ©initialiser mes cosmÃ©tiques de test
       </button>
     </div>
 
     <!-- Onglet Par Joueur -->
     <div id="panel-users" class="test-panel" style="display:none">
-      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">Débloquer un cosmétique sur n'importe quel joueur.</p>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem">DÃ©bloquer un cosmÃ©tique sur n'importe quel joueur.</p>
       <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem">
         <select id="cosUserSelect" style="flex:1;min-width:150px;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit">
-          <option value="">Sélectionner un joueur…</option>
+          <option value="">SÃ©lectionner un joueurâ€¦</option>
         </select>
         <select id="cosCosmeticSelect" style="flex:1;min-width:150px;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit">
-          <option value="">Sélectionner un cosmétique…</option>
+          <option value="">SÃ©lectionner un cosmÃ©tiqueâ€¦</option>
         </select>
-        <button onclick="unlockForUser()" style="padding:0.6rem 1.2rem;border-radius:8px;background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);color:#cd7f32;font-weight:700;cursor:pointer;font-family:inherit">Débloquer</button>
+        <button onclick="unlockForUser()" style="padding:0.6rem 1.2rem;border-radius:8px;background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);color:#cd7f32;font-weight:700;cursor:pointer;font-family:inherit">DÃ©bloquer</button>
       </div>
       <div id="userCosmeticsStatus" style="font-size:0.85rem;color:var(--text-muted)"></div>
     </div>
@@ -209,51 +209,58 @@
 }
 .admin-user-main { display:flex;align-items:center;gap:0.625rem;flex:1;min-width:0; }
 .admin-user-actions { display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;flex-shrink:0; }
+.admin-user-name {
+  font-weight:700;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.admin-user-sub {
+  font-size:0.68rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .admin-role-select {
   font-size:0.75rem;padding:0.3rem 0.5rem;border-radius:6px;
   border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;
 }
 @media (max-width: 680px) {
-  .admin-user-row { flex-direction:column; align-items:stretch; gap:0.6rem; }
-  .admin-user-actions { width:100%; justify-content:flex-end; flex-wrap:wrap; }
-  .admin-role-select { flex:1; min-width:150px; }
+  .admin-user-row { flex-direction:column; align-items:stretch; gap:0.6rem; padding:0.7rem 0.75rem; }
+  .admin-user-main { width:100%; }
+  .admin-user-actions { width:100%; justify-content:flex-start; flex-wrap:wrap; gap:0.5rem; }
+  .admin-role-select { flex:1 1 100%; min-width:0; max-width:100%; }
 }
 </style>
 
-<!-- SECTION BADGES — Imran uniquement -->
+<!-- SECTION BADGES â€” Imran uniquement -->
 <div id="badgesZone" class="card" style=";margin-bottom:1.5rem;display:none;border-color:rgba(100,160,255,0.25)">
   <div class="card-header" style="border-bottom-color:rgba(100,160,255,0.15)">
-    <h3 style="color:#6aa3ff">🏅 Gestion des Badges</h3>
+    <h3 style="color:#6aa3ff">ðŸ… Gestion des Badges</h3>
     <span style="font-size:0.75rem;padding:2px 10px;border-radius:99px;background:rgba(100,160,255,0.12);color:#6aa3ff;font-weight:700">Imran uniquement</span>
   </div>
   <div class="card-body">
 
     <!-- Onglets -->
     <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
-      <button class="badge-tab active" onclick="switchBadgeTab('create')" id="btab-create">➕ Créer</button>
-      <button class="badge-tab" onclick="switchBadgeTab('list')"   id="btab-list">📋 Catalogue</button>
-      <button class="badge-tab" onclick="switchBadgeTab('award')"  id="btab-award">🎖️ Attribuer</button>
-      <button class="badge-tab" onclick="switchBadgeTab('view')"   id="btab-view">👤 Par joueur</button>
+      <button class="badge-tab active" onclick="switchBadgeTab('create')" id="btab-create">âž• CrÃ©er</button>
+      <button class="badge-tab" onclick="switchBadgeTab('list')"   id="btab-list">ðŸ“‹ Catalogue</button>
+      <button class="badge-tab" onclick="switchBadgeTab('award')"  id="btab-award">ðŸŽ–ï¸ Attribuer</button>
+      <button class="badge-tab" onclick="switchBadgeTab('view')"   id="btab-view">ðŸ‘¤ Par joueur</button>
     </div>
 
-    <!-- ── Créer un badge ─────────────────────────── -->
+    <!-- â”€â”€ CrÃ©er un badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <div id="bpanel-create" class="badge-panel">
       <div style="display:flex;flex-direction:column;gap:0.9rem;max-width:480px">
 
         <div>
           <div class="badge-label">Nom du badge *</div>
-          <input id="badgeName" type="text" maxlength="80" placeholder="ex: Meilleur défenseur" class="badge-input">
+          <input id="badgeName" type="text" maxlength="80" placeholder="ex: Meilleur dÃ©fenseur" class="badge-input">
         </div>
 
         <div>
           <div class="badge-label">Description (optionnelle)</div>
-          <input id="badgeDesc" type="text" maxlength="200" placeholder="ex: Accordé pour une défense exceptionnelle" class="badge-input">
+          <input id="badgeDesc" type="text" maxlength="200" placeholder="ex: AccordÃ© pour une dÃ©fense exceptionnelle" class="badge-input">
         </div>
 
         <div style="display:flex;gap:1rem;flex-wrap:wrap">
           <div style="flex:1;min-width:140px">
-            <div class="badge-label">Icône (emoji <em>ou</em> image)</div>
-            <input id="badgeIcon" type="text" maxlength="8" placeholder="🏅" value="🏅" class="badge-input" oninput="clearBadgeImage(); updateBadgePreview()">
+            <div class="badge-label">IcÃ´ne (emoji <em>ou</em> image)</div>
+            <input id="badgeIcon" type="text" maxlength="8" placeholder="ðŸ…" value="ðŸ…" class="badge-input" oninput="clearBadgeImage(); updateBadgePreview()">
           </div>
           <div style="flex:1;min-width:140px">
             <div class="badge-label">Couleur du badge</div>
@@ -266,72 +273,72 @@
 
         <!-- Upload image (remplace l'emoji) -->
         <div>
-          <div class="badge-label">Image du badge <span style="color:var(--text-muted);font-weight:400">(optionnel — remplace l'emoji)</span></div>
+          <div class="badge-label">Image du badge <span style="color:var(--text-muted);font-weight:400">(optionnel â€” remplace l'emoji)</span></div>
           <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
             <label style="cursor:pointer;padding:0.45rem 1rem;border-radius:8px;border:1px dashed var(--border-subtle);background:var(--bg-tertiary);color:var(--text-secondary);font-size:0.82rem;transition:all .2s" onmouseover="this.style.borderColor='#cd7f32'" onmouseout="this.style.borderColor='var(--border-subtle)'">
-              📁 Choisir une image
+              ðŸ“ Choisir une image
               <input id="badgeImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handleBadgeImageSelect(this)">
             </label>
-            <span id="badgeImageFileName" style="font-size:0.78rem;color:var(--text-muted)">Aucune image sélectionnée</span>
-            <button id="badgeImageClearBtn" onclick="clearBadgeImage()" style="display:none;padding:3px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:0.78rem;cursor:pointer">✕ Retirer</button>
+            <span id="badgeImageFileName" style="font-size:0.78rem;color:var(--text-muted)">Aucune image sÃ©lectionnÃ©e</span>
+            <button id="badgeImageClearBtn" onclick="clearBadgeImage()" style="display:none;padding:3px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:0.78rem;cursor:pointer">âœ• Retirer</button>
           </div>
           <div id="badgeImageUploadStatus" style="font-size:0.78rem;margin-top:4px"></div>
         </div>
 
-        <!-- Aperçu -->
+        <!-- AperÃ§u -->
         <div style="background:var(--bg-tertiary);border-radius:10px;padding:1rem;border:1px solid var(--border-subtle)">
-          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px">Aperçu</div>
+          <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px">AperÃ§u</div>
           <div id="badgePreview" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;font-size:0.82rem;font-weight:700">
-            🏅 Nouveau badge
+            ðŸ… Nouveau badge
           </div>
         </div>
 
         <button onclick="createBadge()" class="btn btn-primary" style="align-self:flex-start;padding:0.6rem 1.5rem">
-          ➕ Créer ce badge
+          âž• CrÃ©er ce badge
         </button>
         <div id="badgeCreateResult" style="font-size:0.85rem"></div>
       </div>
     </div>
 
-    <!-- ── Catalogue ──────────────────────────────── -->
+    <!-- â”€â”€ Catalogue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <div id="bpanel-list" class="badge-panel" style="display:none">
       <div style="margin-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:0.85rem;color:var(--text-muted)">Badges créés — cliquer sur 🗑️ pour supprimer</span>
-        <button onclick="loadBadgeCatalogue()" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-muted);font-size:0.78rem;cursor:pointer;font-family:inherit">🔄 Actualiser</button>
+        <span style="font-size:0.85rem;color:var(--text-muted)">Badges crÃ©Ã©s â€” cliquer sur ðŸ—‘ï¸ pour supprimer</span>
+        <button onclick="loadBadgeCatalogue()" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-muted);font-size:0.78rem;cursor:pointer;font-family:inherit">ðŸ”„ Actualiser</button>
       </div>
       <div id="badgeCatalogueList" style="display:flex;flex-direction:column;gap:0.6rem">
-        <div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Chargement…</div>
+        <div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Chargementâ€¦</div>
       </div>
     </div>
 
-    <!-- ── Attribuer ──────────────────────────────── -->
+    <!-- â”€â”€ Attribuer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <div id="bpanel-award" class="badge-panel" style="display:none">
       <div style="display:flex;flex-direction:column;gap:0.9rem;max-width:480px">
         <div>
           <div class="badge-label">Joueur</div>
           <select id="awardPlayerSelect" class="badge-input" style="cursor:pointer">
-            <option value="">Sélectionner un joueur…</option>
+            <option value="">SÃ©lectionner un joueurâ€¦</option>
           </select>
         </div>
         <div>
-          <div class="badge-label">Badge à attribuer</div>
+          <div class="badge-label">Badge Ã  attribuer</div>
           <select id="awardBadgeSelect" class="badge-input" style="cursor:pointer">
-            <option value="">Sélectionner un badge…</option>
+            <option value="">SÃ©lectionner un badgeâ€¦</option>
           </select>
         </div>
         <div style="display:flex;gap:0.75rem">
-          <button onclick="awardBadge()" class="btn btn-primary" style="flex:1">🎖️ Attribuer</button>
-          <button onclick="revokeBadge()" style="flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(231,76,60,0.35);background:rgba(231,76,60,0.08);color:#e74c3c;font-weight:700;cursor:pointer;font-family:inherit">✕ Retirer</button>
+          <button onclick="awardBadge()" class="btn btn-primary" style="flex:1">ðŸŽ–ï¸ Attribuer</button>
+          <button onclick="revokeBadge()" style="flex:1;padding:0.6rem;border-radius:8px;border:1px solid rgba(231,76,60,0.35);background:rgba(231,76,60,0.08);color:#e74c3c;font-weight:700;cursor:pointer;font-family:inherit">âœ• Retirer</button>
         </div>
         <div id="awardResult" style="font-size:0.85rem"></div>
       </div>
     </div>
 
-    <!-- ── Vue par joueur ────────────────────────── -->
+    <!-- â”€â”€ Vue par joueur â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <div id="bpanel-view" class="badge-panel" style="display:none">
       <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
         <select id="viewPlayerSelect" class="badge-input" style="flex:1;cursor:pointer" onchange="loadPlayerBadges()">
-          <option value="">Sélectionner un joueur…</option>
+          <option value="">SÃ©lectionner un joueurâ€¦</option>
         </select>
       </div>
       <div id="playerBadgesList" style="display:flex;flex-wrap:wrap;gap:0.5rem"></div>
@@ -366,20 +373,20 @@
 }
 </style>
 
-<!-- ══════════════════════════════════════════════════════════
-     ⚠️  DEV / TEST ONLY — Token Arduino actif
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     âš ï¸  DEV / TEST ONLY â€” Token Arduino actif
      Visible UNIQUEMENT pour le compte Imran (super admin).
      Ne jamais exposer ce panneau aux joueurs normaux.
-     ══════════════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="arduinoDevZone" class="card" style="display:none;margin-bottom:1.5rem;border:1.5px solid rgba(0,255,180,0.28);background:linear-gradient(135deg,rgba(0,30,20,0.7) 0%,rgba(0,20,40,0.7) 100%)">
   <div class="card-header" style="border-bottom:1px solid rgba(0,255,180,0.18);background:transparent">
     <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
       <h3 style="color:#00ffb4;margin:0;display:flex;align-items:center;gap:0.5rem">
-        <!-- Icône circuit/puce -->
+        <!-- IcÃ´ne circuit/puce -->
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffb4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-        Token Arduino — Dev/Test
+        Token Arduino â€” Dev/Test
       </h3>
-      <span style="font-size:0.7rem;padding:2px 10px;border-radius:99px;background:rgba(0,255,180,0.12);color:#00ffb4;font-weight:700;letter-spacing:.04em;border:1px solid rgba(0,255,180,0.25)">⚠️ IMRAN ONLY</span>
+      <span style="font-size:0.7rem;padding:2px 10px;border-radius:99px;background:rgba(0,255,180,0.12);color:#00ffb4;font-weight:700;letter-spacing:.04em;border:1px solid rgba(0,255,180,0.25)">âš ï¸ IMRAN ONLY</span>
       <span style="font-size:0.7rem;padding:2px 10px;border-radius:99px;background:rgba(255,180,0,0.1);color:#ffb400;font-weight:600;border:1px solid rgba(255,180,0,0.25)">DEV / TEST ONLY</span>
     </div>
   </div>
@@ -387,9 +394,9 @@
 
     <!-- Description -->
     <p style="color:rgba(0,255,180,0.7);font-size:0.85rem;margin:0 0 1.25rem;line-height:1.6">
-      Récupère le token Bearer actif de la partie en cours pour lancer le simulateur Arduino
+      RÃ©cupÃ¨re le token Bearer actif de la partie en cours pour lancer le simulateur Arduino
       (<code style="background:rgba(0,255,180,0.1);padding:1px 6px;border-radius:4px;font-size:0.8rem">arduino_simulator.py</code>).
-      Ce token est valable 1h et révoqué automatiquement à la fin de la partie.
+      Ce token est valable 1h et rÃ©voquÃ© automatiquement Ã  la fin de la partie.
     </p>
 
     <!-- Bouton fetch -->
@@ -398,18 +405,18 @@
       onclick="fetchArduinoToken()"
       style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;border-radius:10px;background:rgba(0,255,180,0.12);color:#00ffb4;border:1.5px solid rgba(0,255,180,0.35);font-weight:600;font-size:0.875rem;cursor:pointer;transition:all .2s">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
-      Récupérer le token actif
+      RÃ©cupÃ©rer le token actif
     </button>
 
-    <!-- Zone résultat (cachée jusqu'à fetch) -->
+    <!-- Zone rÃ©sultat (cachÃ©e jusqu'Ã  fetch) -->
     <div id="arduinoTokenResult" style="display:none;margin-top:1.25rem">
 
       <!-- Indicateur aucune partie -->
       <div id="arduinoTokenNone" style="display:none;padding:0.9rem 1rem;border-radius:10px;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.25);color:#ffb400;font-size:0.875rem">
-        ⚠️ Aucun token actif — lancez une partie depuis l'interface d'abord.
+        âš ï¸ Aucun token actif â€” lancez une partie depuis l'interface d'abord.
       </div>
 
-      <!-- Token trouvé -->
+      <!-- Token trouvÃ© -->
       <div id="arduinoTokenFound" style="display:none">
 
         <!-- Ligne game_id + expiration -->
@@ -428,7 +435,7 @@
           </div>
         </div>
 
-        <!-- Token affiché dans un bloc monospace copiable -->
+        <!-- Token affichÃ© dans un bloc monospace copiable -->
         <div style="position:relative">
           <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
             Bearer Token
@@ -444,12 +451,12 @@
               onclick="copyArduinoToken()"
               title="Copier le token"
               style="padding:0 0.9rem;border-radius:8px;background:rgba(0,255,180,0.1);border:1.5px solid rgba(0,255,180,0.3);color:#00ffb4;cursor:pointer;font-size:1rem;transition:all .15s;flex-shrink:0">
-              📋
+              ðŸ“‹
             </button>
           </div>
         </div>
 
-        <!-- Commande simulateur prête à copier -->
+        <!-- Commande simulateur prÃªte Ã  copier -->
         <div style="margin-top:1rem">
           <div style="font-size:0.7rem;color:rgba(0,255,180,0.55);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
             Commande simulateur Python
@@ -463,48 +470,48 @@
               onclick="copySimCmd()"
               title="Copier la commande"
               style="padding:0 0.9rem;border-radius:8px;background:rgba(0,255,180,0.08);border:1.5px solid rgba(0,255,180,0.2);color:rgba(0,255,180,0.7);cursor:pointer;font-size:1rem;transition:all .15s;flex-shrink:0">
-              📋
+              ðŸ“‹
             </button>
           </div>
         </div>
 
         <!-- Note dev -->
         <p style="margin-top:1rem;font-size:0.75rem;color:rgba(255,180,0,0.65);line-height:1.5;padding:0.6rem 0.9rem;border-radius:8px;background:rgba(255,180,0,0.06);border:1px solid rgba(255,180,0,0.15)">
-          ⚠️ <strong style="color:rgba(255,180,0,0.9)">DEV/TEST ONLY</strong> — Ne jamais partager ce token avec les joueurs.
-          Il est révoqué automatiquement à la fin de la partie ou après 1h.
+          âš ï¸ <strong style="color:rgba(255,180,0,0.9)">DEV/TEST ONLY</strong> â€” Ne jamais partager ce token avec les joueurs.
+          Il est rÃ©voquÃ© automatiquement Ã  la fin de la partie ou aprÃ¨s 1h.
         </p>
       </div>
     </div>
 
   </div>
 </div>
-<!-- ── Fin zone DEV/TEST Arduino ─────────────────────────── -->
+<!-- â”€â”€ Fin zone DEV/TEST Arduino â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
 
-<!-- ZONE DANGER — Classe 1 uniquement (Imran) -->
+<!-- ZONE DANGER â€” Classe 1 uniquement (Imran) -->
 <div id="dangerZone" class="card" style=";margin-bottom:1.5rem;border-color:rgba(231,76,60,0.3);display:none">
   <div class="card-header" style="border-bottom-color:rgba(231,76,60,0.2)">
-    <h3 style="color:#e74c3c">🔥 Zone Danger</h3>
+    <h3 style="color:#e74c3c">ðŸ”¥ Zone Danger</h3>
   </div>
   <div class="card-body">
-    <h4 style="color:var(--text-primary);margin-top:0;margin-bottom:0.5rem">Reset de la base de données</h4>
+    <h4 style="color:var(--text-primary);margin-top:0;margin-bottom:0.5rem">Reset de la base de donnÃ©es</h4>
     <p style="color:var(--text-tertiary);margin-bottom:0.75rem;font-size:0.9375rem">
-      ⚠️ Supprime TOUTES les données (utilisateurs, scores, réservations) et recrée uniquement les comptes de base.
+      âš ï¸ Supprime TOUTES les donnÃ©es (utilisateurs, scores, rÃ©servations) et recrÃ©e uniquement les comptes de base.
     </p>
     <p style="color:#e74c3c;font-weight:700;margin-bottom:1.5rem;font-size:0.9375rem">
-      Cette action est IRRÉVERSIBLE !
+      Cette action est IRRÃ‰VERSIBLE !
     </p>
     <button
       class="btn btn-full"
       style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.4);font-weight:700"
       onclick="resetDatabase()">
-      🗑️ RESET COMPLET DE LA BASE
+      ðŸ—‘ï¸ RESET COMPLET DE LA BASE
     </button>
     <div id="resetResult" style="display:none;margin-top:1rem;padding:1rem;border-radius:10px;text-align:center"></div>
   </div>
 </div>
 
 <div style="text-align:center;margin-top:1rem;margin-bottom:2rem">
-  <a href="/dashboard" class="btn btn-ghost">← Retour au Dashboard</a>
+  <a href="/dashboard" class="btn btn-ghost">â† Retour au Dashboard</a>
 </div>
 
   </div>
@@ -518,9 +525,9 @@
 let socket;
 try { socket = io({
     reconnection: true,
-    reconnectionDelay: 1000,       // Attendre 1s avant 1ère tentative
+    reconnectionDelay: 1000,       // Attendre 1s avant 1Ã¨re tentative
     reconnectionDelayMax: 10000,   // Max 10s entre tentatives
-    reconnectionAttempts: Infinity, // Toujours réessayer
+    reconnectionAttempts: Infinity, // Toujours rÃ©essayer
     timeout: 20000,                // 20s avant d'abandonner une connexion
     transports: ['polling'],  // Mode compatible Render si websocket refuse
     upgrade: false,
@@ -551,7 +558,7 @@ function showToast(message, type = 'inf') {
   }, 3200);
 }
 
-// ── Init nav ──
+// â”€â”€ Init nav â”€â”€
 let isSuperAdmin = false;
 fetch('/current_user').then(r => {
   if (!r.ok) { location.href = '/login'; return null; }
@@ -570,13 +577,13 @@ fetch('/current_user').then(r => {
   if (cosZone) cosZone.style.display = isSuperAdmin ? 'block' : 'none';
   const badgesZone = document.getElementById('badgesZone');
   if (badgesZone) badgesZone.style.display = isSuperAdmin ? 'block' : 'none';
-  // ⚠️ DEV/TEST ONLY — Zone token Arduino, visible uniquement pour Imran (super admin)
+  // âš ï¸ DEV/TEST ONLY â€” Zone token Arduino, visible uniquement pour Imran (super admin)
   const arduinoDevZone = document.getElementById('arduinoDevZone');
   if (arduinoDevZone) arduinoDevZone.style.display = isSuperAdmin ? 'block' : 'none';
   if (isSuperAdmin) { loadCatalog(); loadBadgeCatalogue(); }
 });
 
-// ── Servos ──
+// â”€â”€ Servos â”€â”€
 function unlockServo(num) {
   const btnId = `btnServo${num}`;
   const btn = document.getElementById(btnId);
@@ -591,60 +598,60 @@ function unlockServo(num) {
   result.style.background = 'rgba(52,152,219,0.1)';
   result.style.border = '1px solid rgba(52,152,219,0.4)';
   result.style.color = 'var(--text-primary)';
-  result.textContent = `Déverrouillage Servo ${num} en cours... (5 secondes)`;
+  result.textContent = `DÃ©verrouillage Servo ${num} en cours... (5 secondes)`;
 
   socket.emit(`unlock_servo${num}`);
 
   setTimeout(() => {
     btn.disabled = false;
     btn.style.opacity = '1';
-    status.textContent = 'Prêt';
+    status.textContent = 'PrÃªt';
 
     result.style.background = 'rgba(39,174,96,0.1)';
     result.style.border = '1px solid rgba(39,174,96,0.4)';
-    result.textContent = `✓ Servo ${num} reverrouillé automatiquement`;
+    result.textContent = `âœ“ Servo ${num} reverrouillÃ© automatiquement`;
 
     setTimeout(() => { result.style.display = 'none'; }, 3000);
   }, 5000);
 }
 
-// ── Erreurs socket ──
+// â”€â”€ Erreurs socket â”€â”€
 socket.on('error', (data) => {
   const result = document.getElementById('servoResult');
   result.style.display = 'block';
   result.style.background = 'rgba(231,76,60,0.1)';
   result.style.border = '1px solid rgba(231,76,60,0.4)';
   result.style.color = '#e74c3c';
-  result.textContent = '✕ Erreur : ' + data.message;
+  result.textContent = 'âœ• Erreur : ' + data.message;
   setTimeout(() => { result.style.display = 'none'; }, 5000);
 });
 
 socket.on('servo1_unlock', () => {
-  document.getElementById('servoStatus').textContent = 'Servo 1 ouvert ✓';
+  document.getElementById('servoStatus').textContent = 'Servo 1 ouvert âœ“';
 });
 socket.on('servo1_lock', () => {
-  document.getElementById('servoStatus').textContent = 'Servo 1 reverrouillé';
-  setTimeout(() => { document.getElementById('servoStatus').textContent = 'Prêt'; }, 2000);
+  document.getElementById('servoStatus').textContent = 'Servo 1 reverrouillÃ©';
+  setTimeout(() => { document.getElementById('servoStatus').textContent = 'PrÃªt'; }, 2000);
 });
 socket.on('servo2_unlock', () => {
-  document.getElementById('servoStatus').textContent = 'Servo 2 ouvert ✓';
+  document.getElementById('servoStatus').textContent = 'Servo 2 ouvert âœ“';
 });
 socket.on('servo2_lock', () => {
-  document.getElementById('servoStatus').textContent = 'Servo 2 reverrouillé';
-  setTimeout(() => { document.getElementById('servoStatus').textContent = 'Prêt'; }, 2000);
+  document.getElementById('servoStatus').textContent = 'Servo 2 reverrouillÃ©';
+  setTimeout(() => { document.getElementById('servoStatus').textContent = 'PrÃªt'; }, 2000);
 });
 
-// ── Liste utilisateurs AVEC BOUTON SUPPRESSION ──
-const ROLE_LABELS = { 0: { label: 'Joueur', color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.05)' }, 1: { label: '⭐ Responsable+', color: '#ffd700', bg: 'rgba(255,215,0,0.12)' }, 2: { label: '🛡️ Responsable', color: '#cd7f32', bg: 'rgba(205,127,50,0.12)' } };
+// â”€â”€ Liste utilisateurs AVEC BOUTON SUPPRESSION â”€â”€
+const ROLE_LABELS = { 0: { label: 'Joueur', color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.05)' }, 1: { label: 'â­ Responsable+', color: '#ffd700', bg: 'rgba(255,215,0,0.12)' }, 2: { label: 'ðŸ›¡ï¸ Responsable', color: '#cd7f32', bg: 'rgba(205,127,50,0.12)' } };
 
 async function setUserRole(username, role) {
-  if (!isSuperAdmin) { showToast('Réservé au super admin', 'err'); return; }
+  if (!isSuperAdmin) { showToast('RÃ©servÃ© au super admin', 'err'); return; }
   try {
     const res = await fetch('/api/set_user_role', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username, role }) });
     const data = await res.json();
-    if (data.success) { showToast(`✓ Rôle de ${username} mis à jour`, 'ok'); setTimeout(loadUsers, 400); }
-    else showToast('✕ ' + data.message, 'err');
-  } catch(e) { showToast('Erreur réseau', 'err'); }
+    if (data.success) { showToast(`âœ“ RÃ´le de ${username} mis Ã  jour`, 'ok'); setTimeout(loadUsers, 400); }
+    else showToast('âœ• ' + data.message, 'err');
+  } catch(e) { showToast('Erreur rÃ©seau', 'err'); }
 }
 
 async function loadUsers() {
@@ -690,15 +697,15 @@ async function loadUsers() {
         <div class="admin-user-main">
           ${avHtml}
           <div style="min-width:0;flex:1">
-            <div style="font-weight:700;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${nickname || username}</div>
-            ${nickname ? `<div style="font-size:0.68rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${username}</div>` : ''}
-            <div style="font-size:0.68rem;color:var(--text-muted)">ELO ${elo}${isGuest ? ' · Guest' : ''}</div>
+            <div class="admin-user-name">${nickname || username}</div>
+            ${nickname ? `<div class="admin-user-sub">${username}</div>` : ''}
+            <div class="admin-user-sub">ELO ${elo}${isGuest ? ' · Guest' : ''}</div>
           </div>
         </div>
         <div class="admin-user-actions">
           ${roleSel}
-          <a href="/stats/${username}" class="btn btn-secondary" style="padding:0.35rem 0.6rem;font-size:0.75rem;text-decoration:none;white-space:nowrap">📊</a>
-          ${!isGuest ? `<button onclick="deleteUser('${username}')" class="btn" style="padding:0.35rem 0.6rem;font-size:0.75rem;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);font-weight:600">🗑️</button>` : ''}
+          <a href="/stats/${username}" class="btn btn-secondary" style="padding:0.35rem 0.6rem;font-size:0.75rem;text-decoration:none;white-space:nowrap">ðŸ“Š</a>
+          ${!isGuest ? `<button onclick="deleteUser('${username}')" class="btn" style="padding:0.35rem 0.6rem;font-size:0.75rem;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);font-weight:600">ðŸ—‘ï¸</button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -709,24 +716,24 @@ async function loadUsers() {
   }
 }
 
-// ── SUPPRESSION D'UTILISATEUR ──
+// â”€â”€ SUPPRESSION D'UTILISATEUR â”€â”€
 async function deleteUser(username) {
-  // Comptes protégés
+  // Comptes protÃ©gÃ©s
   const protectedAccounts = ['alice', 'bob', 'charlie', 'diana'];
   if (protectedAccounts.includes(username)) {
-    showToast(`⚠️ Le compte "${username}" est protégé et ne peut pas être supprimé`, 'err');
+    showToast(`âš ï¸ Le compte "${username}" est protÃ©gÃ© et ne peut pas Ãªtre supprimÃ©`, 'err');
     return;
   }
 
   // Confirmation
   const confirmed = confirm(
-    `⚠️ ATTENTION ⚠️\n\n` +
+    `âš ï¸ ATTENTION âš ï¸\n\n` +
     `Voulez-vous vraiment supprimer le compte "${username}" ?\n\n` +
     `Cette action supprimera :\n` +
     `- Le compte utilisateur\n` +
     `- Tous ses scores\n` +
-    `- Toutes ses réservations\n\n` +
-    `Cette action est IRRÉVERSIBLE !`
+    `- Toutes ses rÃ©servations\n\n` +
+    `Cette action est IRRÃ‰VERSIBLE !`
   );
 
   if (!confirmed) return;
@@ -741,19 +748,19 @@ async function deleteUser(username) {
     const data = await res.json();
 
     if (data.success) {
-      showToast(`✓ Compte "${username}" supprimé avec succès`, 'ok');
+      showToast(`âœ“ Compte "${username}" supprimÃ© avec succÃ¨s`, 'ok');
       // Recharger la liste
       setTimeout(() => loadUsers(), 500);
     } else {
-      showToast(`✕ Erreur : ${data.message}`, 'err');
+      showToast(`âœ• Erreur : ${data.message}`, 'err');
     }
   } catch (e) {
-    showToast('✕ Erreur de connexion au serveur', 'err');
+    showToast('âœ• Erreur de connexion au serveur', 'err');
     console.error('Erreur suppression:', e);
   }
 }
 
-// ── État du jeu ──
+// â”€â”€ Ã‰tat du jeu â”€â”€
 async function loadGameState() {
   try {
     const data = await fetch('/debug/game').then(r => r.json());
@@ -762,14 +769,14 @@ async function loadGameState() {
 
     if (game.active) {
       el.innerHTML = `
-        <div style="color:#22c55e;font-weight:700;margin-bottom:0.5rem">● Partie en cours</div>
-        <div>Équipe 1 : ${game.team1_players?.join(', ') || '—'} → <strong style="color:var(--bronze)">${game.team1_score} buts</strong></div>
-        <div>Équipe 2 : ${game.team2_players?.join(', ') || '—'} → <strong style="color:var(--bronze)">${game.team2_score} buts</strong></div>
-        <div style="margin-top:0.5rem;color:var(--text-muted)">Lancée par : ${game.started_by || '—'}</div>
-        <div style="color:var(--text-muted)">Depuis : ${game.started_at ? new Date(game.started_at).toLocaleTimeString('fr-FR') : '—'}</div>
+        <div style="color:#22c55e;font-weight:700;margin-bottom:0.5rem">â— Partie en cours</div>
+        <div>Ã‰quipe 1 : ${game.team1_players?.join(', ') || 'â€”'} â†’ <strong style="color:var(--bronze)">${game.team1_score} buts</strong></div>
+        <div>Ã‰quipe 2 : ${game.team2_players?.join(', ') || 'â€”'} â†’ <strong style="color:var(--bronze)">${game.team2_score} buts</strong></div>
+        <div style="margin-top:0.5rem;color:var(--text-muted)">LancÃ©e par : ${game.started_by || 'â€”'}</div>
+        <div style="color:var(--text-muted)">Depuis : ${game.started_at ? new Date(game.started_at).toLocaleTimeString('fr-FR') : 'â€”'}</div>
       `;
     } else {
-      el.innerHTML = '<div style="color:var(--text-tertiary)">⭕ Aucune partie en cours</div>';
+      el.innerHTML = '<div style="color:var(--text-tertiary)">â­• Aucune partie en cours</div>';
     }
   } catch(e) {
     document.getElementById('gameState').textContent = 'Erreur de chargement';
@@ -777,25 +784,25 @@ async function loadGameState() {
 }
 
 function forceStopGame() {
-  if (confirm('Forcer l\'arrêt de la partie en cours ?')) {
+  if (confirm('Forcer l\'arrÃªt de la partie en cours ?')) {
     socket.emit('stop_game');
     setTimeout(loadGameState, 500);
   }
 }
 
-// ── Reset DB ──
+// â”€â”€ Reset DB â”€â”€
 async function resetDatabase() {
   const confirmed = confirm(
-    '⚠️ ATTENTION ⚠️\n\n' +
-    'Vous allez SUPPRIMER TOUTES LES DONNÉES :\n' +
+    'âš ï¸ ATTENTION âš ï¸\n\n' +
+    'Vous allez SUPPRIMER TOUTES LES DONNÃ‰ES :\n' +
     '- Tous les utilisateurs\n' +
     '- Tous les scores\n' +
-    '- Toutes les réservations\n\n' +
-    'Cette action est IRRÉVERSIBLE !\n\nÊtes-vous sûr ?'
+    '- Toutes les rÃ©servations\n\n' +
+    'Cette action est IRRÃ‰VERSIBLE !\n\nÃŠtes-vous sÃ»r ?'
   );
   if (!confirmed) return;
 
-  const doubleCheck = confirm('Dernière confirmation : voulez-vous VRAIMENT tout supprimer ?');
+  const doubleCheck = confirm('DerniÃ¨re confirmation : voulez-vous VRAIMENT tout supprimer ?');
   if (!doubleCheck) return;
 
   const result = document.getElementById('resetResult');
@@ -803,7 +810,7 @@ async function resetDatabase() {
   result.style.background = 'rgba(255,191,0,0.1)';
   result.style.border = '1px solid rgba(255,191,0,0.3)';
   result.style.color = 'var(--text-primary)';
-  result.textContent = '⏳ Reset en cours...';
+  result.textContent = 'â³ Reset en cours...';
 
   try {
     const res = await fetch('/admin/reset_database', {
@@ -815,27 +822,27 @@ async function resetDatabase() {
     if (data.success) {
       result.style.background = 'rgba(39,174,96,0.1)';
       result.style.border = '1px solid rgba(39,174,96,0.4)';
-      result.textContent = '✓ Base réinitialisée ! Redirection...';
+      result.textContent = 'âœ“ Base rÃ©initialisÃ©e ! Redirection...';
       setTimeout(() => location.href = '/dashboard', 2000);
     } else {
       result.style.background = 'rgba(231,76,60,0.1)';
       result.style.border = '1px solid rgba(231,76,60,0.4)';
       result.style.color = '#e74c3c';
-      result.textContent = '✕ Erreur : ' + data.message;
+      result.textContent = 'âœ• Erreur : ' + data.message;
     }
   } catch(e) {
     result.style.background = 'rgba(231,76,60,0.1)';
     result.style.border = '1px solid rgba(231,76,60,0.4)';
     result.style.color = '#e74c3c';
-    result.textContent = '✕ Erreur réseau : ' + e.message;
+    result.textContent = 'âœ• Erreur rÃ©seau : ' + e.message;
   }
 }
 
-// ── Init ──
+// â”€â”€ Init â”€â”€
 loadUsers();
 loadGameState();
 
-// ── Badges ────────────────────────────────────────────────────────────────
+// â”€â”€ Badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let allBadges = [];
 
 function switchBadgeTab(tab) {
@@ -848,13 +855,13 @@ function switchBadgeTab(tab) {
   if (tab === 'view')  populateBadgeViewSelect();
 }
 
-// ── Badge : état local image ─────────────────────────────────────────────
-// L'image est lue en base64 LOCALEMENT (FileReader), jamais pré-uploadée.
-// createBadge() envoie tout en un seul appel JSON → plus de double upload.
+// â”€â”€ Badge : Ã©tat local image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// L'image est lue en base64 LOCALEMENT (FileReader), jamais prÃ©-uploadÃ©e.
+// createBadge() envoie tout en un seul appel JSON â†’ plus de double upload.
 let _badgeImageB64 = ''; // data-URI base64, vide si emoji uniquement
 
 function updateBadgePreview() {
-  const icon  = _badgeImageB64 ? '' : (document.getElementById('badgeIcon').value || '🏅');
+  const icon  = _badgeImageB64 ? '' : (document.getElementById('badgeIcon').value || 'ðŸ…');
   const name  = document.getElementById('badgeName').value || 'Nouveau badge';
   const color = document.getElementById('badgeColor').value || '#cd7f32';
   document.getElementById('badgeColorHex').value = color;
@@ -886,18 +893,18 @@ function handleBadgeImageSelect(input) {
 
   const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
   if (!allowed.includes(file.type)) {
-    statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Format non supporté (JPEG, PNG, WebP, GIF)</span>';
+    statusEl.innerHTML = '<span style="color:#e74c3c">âš ï¸ Format non supportÃ© (JPEG, PNG, WebP, GIF)</span>';
     input.value = '';
     return;
   }
   if (file.size > 10 * 1024 * 1024) {
-    statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Image trop grande (max 10 Mo)</span>';
+    statusEl.innerHTML = '<span style="color:#e74c3c">âš ï¸ Image trop grande (max 10 Mo)</span>';
     input.value = '';
     return;
   }
 
   nameEl.textContent = file.name;
-  statusEl.innerHTML = '<span style="color:var(--text-muted)">Traitement…</span>';
+  statusEl.innerHTML = '<span style="color:var(--text-muted)">Traitementâ€¦</span>';
 
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -906,20 +913,20 @@ function handleBadgeImageSelect(input) {
     img.onload = () => {
       // Outil de recadrage interactif
       showBadgeCropTool(img, rawSrc, () => {
-        statusEl.innerHTML = '<span style="color:#2ecc71">✓ Image recadrée</span>';
+        statusEl.innerHTML = '<span style="color:#2ecc71">âœ“ Image recadrÃ©e</span>';
         clearBtn.style.display = 'inline-block';
         document.getElementById('badgeIcon').value = '';
         updateBadgePreview();
       });
     };
     img.onerror = () => {
-      statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Impossible de lire l\'image</span>';
+      statusEl.innerHTML = '<span style="color:#e74c3c">âš ï¸ Impossible de lire l\'image</span>';
       input.value = '';
     };
     img.src = rawSrc;
   };
   reader.onerror = () => {
-    statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Impossible de lire le fichier</span>';
+    statusEl.innerHTML = '<span style="color:#e74c3c">âš ï¸ Impossible de lire le fichier</span>';
     input.value = '';
   };
   reader.readAsDataURL(file);
@@ -944,10 +951,10 @@ function showBadgeCropTool(img, src, onDone) {
     return `
       <div style="width:min(400px,95vw);background:var(--bg-secondary);border-radius:20px;overflow:hidden;border:1px solid var(--border-normal);box-shadow:0 20px 60px rgba(0,0,0,0.8);padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:800;font-size:1rem">✂️ Recadrer le badge</span>
-          <button id="cropClose" style="background:none;border:none;color:var(--text-secondary);font-size:1.3rem;cursor:pointer">✕</button>
+          <span style="font-weight:800;font-size:1rem">âœ‚ï¸ Recadrer le badge</span>
+          <button id="cropClose" style="background:none;border:none;color:var(--text-secondary);font-size:1.3rem;cursor:pointer">âœ•</button>
         </div>
-        <!-- Aperçu cercle -->
+        <!-- AperÃ§u cercle -->
         <div style="display:flex;justify-content:center;align-items:center;gap:2rem">
           <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid #cd7f32;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#111">
             <div id="cropPreviewBig" style="width:80px;height:80px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">
@@ -960,14 +967,14 @@ function showBadgeCropTool(img, src, onDone) {
         </div>
         <!-- Sliders -->
         <div style="display:flex;flex-direction:column;gap:0.75rem">
-          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">↔ Position horizontale</label>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">â†” Position horizontale</label>
           <input type="range" id="sliderX" min="0" max="100" value="${cropX}" style="width:100%;accent-color:#cd7f32">
-          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">↕ Position verticale</label>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">â†• Position verticale</label>
           <input type="range" id="sliderY" min="0" max="100" value="${cropY}" style="width:100%;accent-color:#cd7f32">
-          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">🔍 Zoom (${Math.round(cropZoom*100)}%)</label>
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">ðŸ” Zoom (${Math.round(cropZoom*100)}%)</label>
           <input type="range" id="sliderZ" min="100" max="300" value="${Math.round(cropZoom*100)}" style="width:100%;accent-color:#cd7f32">
         </div>
-        <button id="cropApply" style="padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#cd7f32,#b8732f);border:none;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">✅ Appliquer ce recadrage</button>
+        <button id="cropApply" style="padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#cd7f32,#b8732f);border:none;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">âœ… Appliquer ce recadrage</button>
       </div>`;
   }
 
@@ -978,7 +985,7 @@ function showBadgeCropTool(img, src, onDone) {
     const bigImg = overlay.querySelector('#cropImg');
     const smImg  = overlay.querySelector('#cropImgSm');
     const zLabel = overlay.querySelector('#sliderZ').previousElementSibling;
-    if (zLabel) zLabel.textContent = `🔍 Zoom (${Math.round(cropZoom*100)}%)`;
+    if (zLabel) zLabel.textContent = `ðŸ” Zoom (${Math.round(cropZoom*100)}%)`;
     const bSize = Math.round(80 * cropZoom);
     const sSize = Math.round(40 * cropZoom);
     const bOffX = Math.round((cropX - 50) / 100 * (80 - bSize));
@@ -995,7 +1002,7 @@ function showBadgeCropTool(img, src, onDone) {
   overlay.querySelector('#cropClose').addEventListener('click', () => overlay.remove());
 
   overlay.querySelector('#cropApply').addEventListener('click', () => {
-    // Générer canvas final 128x128 avec les paramètres de crop
+    // GÃ©nÃ©rer canvas final 128x128 avec les paramÃ¨tres de crop
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 128;
     const ctx = canvas.getContext('2d');
@@ -1021,11 +1028,11 @@ function clearBadgeImage() {
   _badgeImageB64 = '';
   const input = document.getElementById('badgeImageFile');
   if (input) input.value = '';
-  document.getElementById('badgeImageFileName').textContent = 'Aucune image sélectionnée';
+  document.getElementById('badgeImageFileName').textContent = 'Aucune image sÃ©lectionnÃ©e';
   document.getElementById('badgeImageUploadStatus').innerHTML = '';
   document.getElementById('badgeImageClearBtn').style.display = 'none';
   if (!document.getElementById('badgeIcon').value) {
-    document.getElementById('badgeIcon').value = '🏅';
+    document.getElementById('badgeIcon').value = 'ðŸ…';
   }
   updateBadgePreview();
 }
@@ -1033,18 +1040,18 @@ function clearBadgeImage() {
 async function createBadge() {
   const name  = document.getElementById('badgeName').value.trim();
   const desc  = document.getElementById('badgeDesc').value.trim();
-  const icon  = document.getElementById('badgeIcon').value.trim() || '🏅';
+  const icon  = document.getElementById('badgeIcon').value.trim() || 'ðŸ…';
   const color = document.getElementById('badgeColor').value || '#cd7f32';
   const result = document.getElementById('badgeCreateResult');
 
   if (!name) {
-    result.innerHTML = '<span style="color:#e74c3c">⚠️ Le nom est requis</span>';
+    result.innerHTML = '<span style="color:#e74c3c">âš ï¸ Le nom est requis</span>';
     return;
   }
 
-  result.innerHTML = '<span style="color:var(--text-muted)">Création…</span>';
+  result.innerHTML = '<span style="color:var(--text-muted)">CrÃ©ationâ€¦</span>';
 
-  // Un seul appel JSON — image déjà en base64 localement, pas de pré-upload
+  // Un seul appel JSON â€” image dÃ©jÃ  en base64 localement, pas de prÃ©-upload
   const payload = { name, description: desc, icon, color };
   if (_badgeImageB64) payload.image_b64 = _badgeImageB64;
 
@@ -1057,50 +1064,50 @@ async function createBadge() {
     const res = await r.json();
 
     if (res.success) {
-      result.innerHTML = `<span style="color:#2ecc71">✓ Badge "${res.name}" créé</span>`;
+      result.innerHTML = `<span style="color:#2ecc71">âœ“ Badge "${res.name}" crÃ©Ã©</span>`;
       document.getElementById('badgeName').value  = '';
       document.getElementById('badgeDesc').value  = '';
-      document.getElementById('badgeIcon').value  = '🏅';
+      document.getElementById('badgeIcon').value  = 'ðŸ…';
       document.getElementById('badgeColor').value = '#cd7f32';
       document.getElementById('badgeColorHex').value = '#cd7f32';
       clearBadgeImage();
       updateBadgePreview();
       allBadges = [];
     } else {
-      result.innerHTML = `<span style="color:#e74c3c">✕ ${res.message || 'Erreur inconnue'}</span>`;
+      result.innerHTML = `<span style="color:#e74c3c">âœ• ${res.message || 'Erreur inconnue'}</span>`;
     }
   } catch (e) {
-    result.innerHTML = `<span style="color:#e74c3c">✕ Erreur réseau : ${e.message}</span>`;
+    result.innerHTML = `<span style="color:#e74c3c">âœ• Erreur rÃ©seau : ${e.message}</span>`;
   }
 }
 
 async function loadBadgeCatalogue() {
   const el = document.getElementById('badgeCatalogueList');
   if (!el) return;
-  el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:0.75rem">Chargement…</div>';
+  el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:0.75rem">Chargementâ€¦</div>';
   try {
     const badges = await fetch('/api/badges').then(r => r.json());
     allBadges = badges;
     if (!badges.length) {
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Aucun badge créé pour l\'instant</div>';
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1rem">Aucun badge crÃ©Ã© pour l\'instant</div>';
       return;
     }
     el.innerHTML = badges.map(b => {
       const badgeVisual = (window.ProfileUtils && ProfileUtils.badgeHTML)
         ? ProfileUtils.badgeHTML(b, { size: 20, innerSize: 15 })
-        : `<span style="font-size:14px">${b.icon||'🏅'}</span>`;
+        : `<span style="font-size:14px">${b.icon||'ðŸ…'}</span>`;
       return `
       <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle)">
         <span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color};flex-shrink:0;display:inline-flex;align-items:center;gap:5px">
           ${badgeVisual} ${b.name}
         </span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.description || '—'}</div>
-          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:1px">Créé le ${b.created_at ? b.created_at.slice(0,10) : '?'}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.description || 'â€”'}</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:1px">CrÃ©Ã© le ${b.created_at ? b.created_at.slice(0,10) : '?'}</div>
         </div>
         <button onclick="deleteBadge(${b.id}, '${b.name.replace(/'/g,"\\'")}', this)"
           style="padding:4px 10px;border-radius:6px;border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:0.78rem;cursor:pointer;font-family:inherit;flex-shrink:0">
-          🗑️
+          ðŸ—‘ï¸
         </button>
       </div>`;
     }).join('');
@@ -1109,18 +1116,18 @@ async function loadBadgeCatalogue() {
 
 async function deleteBadge(id, name, btn) {
   btn.disabled = true;
-  btn.textContent = '…';
+  btn.textContent = 'â€¦';
   try {
     const res = await fetch(`/api/badges/${id}`, { method: 'DELETE' }).then(r => r.json());
     if (res.success) {
-      showToast(`✓ Badge "${name}" supprimé`, 'ok');
+      showToast(`âœ“ Badge "${name}" supprimÃ©`, 'ok');
       loadBadgeCatalogue();
       allBadges = [];
     } else {
-      showToast('✕ ' + (res.message || 'Erreur'), 'err');
-      btn.disabled = false; btn.textContent = '🗑️';
+      showToast('âœ• ' + (res.message || 'Erreur'), 'err');
+      btn.disabled = false; btn.textContent = 'ðŸ—‘ï¸';
     }
-  } catch(e) { showToast('Erreur réseau', 'err'); btn.disabled = false; btn.textContent = '🗑️'; }
+  } catch(e) { showToast('Erreur rÃ©seau', 'err'); btn.disabled = false; btn.textContent = 'ðŸ—‘ï¸'; }
 }
 
 async function ensureBadgesLoaded() {
@@ -1133,10 +1140,10 @@ function populateBadgeAwardSelects() {
   ensureBadgesLoaded().then(() => {
     const badgeSel = document.getElementById('awardBadgeSelect');
     if (badgeSel) {
-      badgeSel.innerHTML = '<option value="">Sélectionner un badge…</option>' +
-        allBadges.map(b => `<option value="${b.id}">${b.image_url ? '🖼️' : b.icon} ${b.name}</option>`).join('');
+      badgeSel.innerHTML = '<option value="">SÃ©lectionner un badgeâ€¦</option>' +
+        allBadges.map(b => `<option value="${b.id}">${b.image_url ? 'ðŸ–¼ï¸' : b.icon} ${b.name}</option>`).join('');
     }
-    // Joueurs : déjà dans le select users si loadUsers() a tourné
+    // Joueurs : dÃ©jÃ  dans le select users si loadUsers() a tournÃ©
     const awardSel = document.getElementById('awardPlayerSelect');
     const viewSel  = document.getElementById('viewPlayerSelect');
     if (awardSel && awardSel.options.length <= 1) _populatePlayerSelect('awardPlayerSelect');
@@ -1150,13 +1157,13 @@ function populateBadgeViewSelect() {
 function _populatePlayerSelect(selectId) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
-  // Récupérer depuis la liste users déjà chargée dans le DOM
+  // RÃ©cupÃ©rer depuis la liste users dÃ©jÃ  chargÃ©e dans le DOM
   const existingSel = document.getElementById('cosUserSelect');
   if (existingSel && existingSel.options.length > 1) {
     sel.innerHTML = existingSel.innerHTML;
   } else {
     fetch('/users_list').then(r => r.json()).then(users => {
-      sel.innerHTML = '<option value="">Sélectionner un joueur…</option>' +
+      sel.innerHTML = '<option value="">SÃ©lectionner un joueurâ€¦</option>' +
         users.filter(u => !/^Joueur\d+$/i.test(u.username)).map(u =>
           `<option value="${u.username}">${u.nickname ? u.nickname + ' (' + u.username + ')' : u.username}</option>`
         ).join('');
@@ -1168,49 +1175,49 @@ async function awardBadge() {
   const username = document.getElementById('awardPlayerSelect').value;
   const badge_id = parseInt(document.getElementById('awardBadgeSelect').value);
   const result   = document.getElementById('awardResult');
-  if (!username || !badge_id) { result.innerHTML = '<span style="color:#e74c3c">⚠️ Sélectionne un joueur et un badge</span>'; return; }
+  if (!username || !badge_id) { result.innerHTML = '<span style="color:#e74c3c">âš ï¸ SÃ©lectionne un joueur et un badge</span>'; return; }
   try {
     const res = await fetch('/api/badges/award', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ username, badge_id })
     }).then(r => r.json());
     result.innerHTML = res.success
-      ? `<span style="color:#2ecc71">✓ ${res.message}</span>`
-      : `<span style="color:#e74c3c">✕ ${res.message}</span>`;
-  } catch(e) { result.innerHTML = '<span style="color:#e74c3c">Erreur réseau</span>'; }
+      ? `<span style="color:#2ecc71">âœ“ ${res.message}</span>`
+      : `<span style="color:#e74c3c">âœ• ${res.message}</span>`;
+  } catch(e) { result.innerHTML = '<span style="color:#e74c3c">Erreur rÃ©seau</span>'; }
 }
 
 async function revokeBadge() {
   const username = document.getElementById('awardPlayerSelect').value;
   const badge_id = parseInt(document.getElementById('awardBadgeSelect').value);
   const result   = document.getElementById('awardResult');
-  if (!username || !badge_id) { result.innerHTML = '<span style="color:#e74c3c">⚠️ Sélectionne un joueur et un badge</span>'; return; }
+  if (!username || !badge_id) { result.innerHTML = '<span style="color:#e74c3c">âš ï¸ SÃ©lectionne un joueur et un badge</span>'; return; }
   try {
     const res = await fetch('/api/badges/revoke', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ username, badge_id })
     }).then(r => r.json());
     result.innerHTML = res.success
-      ? `<span style="color:#2ecc71">✓ Badge retiré</span>`
-      : `<span style="color:#e74c3c">✕ ${res.message}</span>`;
-  } catch(e) { result.innerHTML = '<span style="color:#e74c3c">Erreur réseau</span>'; }
+      ? `<span style="color:#2ecc71">âœ“ Badge retirÃ©</span>`
+      : `<span style="color:#e74c3c">âœ• ${res.message}</span>`;
+  } catch(e) { result.innerHTML = '<span style="color:#e74c3c">Erreur rÃ©seau</span>'; }
 }
 
 async function loadPlayerBadges() {
   const username = document.getElementById('viewPlayerSelect').value;
   const el = document.getElementById('playerBadgesList');
   if (!username || !el) { if (el) el.innerHTML = ''; return; }
-  el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Chargement…</span>';
+  el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Chargementâ€¦</span>';
   try {
     const badges = await fetch(`/api/badges/user/${username}`).then(r => r.json());
     if (!badges.length) {
-      el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Aucun badge attribué</span>';
+      el.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">Aucun badge attribuÃ©</span>';
       return;
     }
     el.innerHTML = badges.map((b) => {
       const visual = (window.ProfileUtils && ProfileUtils.badgeHTML)
         ? ProfileUtils.badgeHTML(b, { size: 20, innerSize: 15 })
-        : `<span>${b.icon || '🏅'}</span>`;
+        : `<span>${b.icon || 'ðŸ…'}</span>`;
       return `<span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color}" title="${b.description || b.name}">
         ${visual} ${b.name}
       </span>`;
@@ -1218,25 +1225,60 @@ async function loadPlayerBadges() {
   } catch(e) { el.innerHTML = '<span style="color:#e74c3c;font-size:0.85rem">Erreur</span>'; }
 }
 
-// Initialiser l'aperçu badge au chargement
+// Initialiser l'aperÃ§u badge au chargement
 updateBadgePreview();
 
-// ── Cosmétiques + Init ──────────────────────────────────────────────────────
+// â”€â”€ CosmÃ©tiques + Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let catalogData = null;
 let currentTestTheme = null;
 let currentTestFrame = null;
+let catalogLoadPromise = null;
+
+function inferCosmeticType(key, meta) {
+  if (meta && meta.type) return meta.type;
+  if (String(key || '').startsWith('theme_')) return 'theme';
+  if (String(key || '').startsWith('frame_')) return 'frame';
+  if (String(key || '').startsWith('badge_')) return 'badge';
+  return 'other';
+}
+
+async function ensureCatalogLoaded(force = false) {
+  const hasCatalog = !!(catalogData && catalogData.catalog && Object.keys(catalogData.catalog).length);
+  if (!force && hasCatalog) return true;
+  if (catalogLoadPromise) return catalogLoadPromise;
+
+  catalogLoadPromise = (async () => {
+    try {
+      const res = await fetch('/api/cosmetics_catalog');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const ok = !!(data && data.catalog && Object.keys(data.catalog).length);
+      if (!ok) throw new Error('Catalogue vide');
+      catalogData = data;
+      currentTestTheme = window.__adminActiveTheme || 'default';
+      currentTestFrame = window.__adminActiveFrame || 'none';
+      return true;
+    } catch (e) {
+      console.error('Catalog load error:', e);
+      return false;
+    } finally {
+      catalogLoadPromise = null;
+    }
+  })();
+
+  return catalogLoadPromise;
+}
 
 async function loadCatalog() {
-  try {
-    const res = await fetch('/api/cosmetics_catalog').then(r => r.json());
-    catalogData = res;
-    currentTestTheme = window.__adminActiveTheme || 'default';
-    currentTestFrame = window.__adminActiveFrame || 'none';
-    renderThemesGrid();
-    renderFramesGrid();
-    renderQuestsTestGrid();
-    populateUserCosmeticSelects();
-  } catch(e) { console.error('Catalog load error:', e); }
+  const ok = await ensureCatalogLoaded(true);
+  if (!ok) {
+    showToast('Impossible de charger le catalogue cosmétiques', 'err');
+    return;
+  }
+  renderThemesGrid();
+  renderFramesGrid();
+  renderQuestsTestGrid();
+  populateUserCosmeticSelects();
 }
 
 function switchTestTab(tab) {
@@ -1244,6 +1286,9 @@ function switchTestTab(tab) {
     document.getElementById('panel-'+t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-'+t).classList.toggle('active', t === tab);
   });
+  if (tab === 'users') {
+    ensureCatalogLoaded(false).then(() => populateUserCosmeticSelects());
+  }
 }
 
 const THEME_SWATCHES = {
@@ -1282,6 +1327,7 @@ function renderThemesGrid() {
             <div style="font-weight:700;font-size:0.85rem">${sw.label || info.label}</div>
             ${isActive ? `<span style="font-size:0.67rem;padding:2px 7px;border-radius:99px;background:${sw.soft};color:${sw.accent};font-weight:800;letter-spacing:.03em">ACTIF</span>` : ''}
           </div>
+          <div style="font-size:0.69rem;color:var(--text-muted);margin-bottom:6px">Application globale sur tout le site</div>
           <div class="theme-preview-actions">
             <button onclick="previewTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid var(--border-normal);background:var(--bg-secondary);color:var(--text-secondary);font-size:0.75rem;cursor:pointer;font-family:inherit">Tester</button>
             <button onclick="equipTheme('${key}')" style="flex:1;padding:4px 8px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:rgba(205,127,50,0.1);color:#cd7f32;font-size:0.75rem;cursor:pointer;font-family:inherit">Activer</button>
@@ -1341,6 +1387,7 @@ function renderFramesGrid() {
       <div class="frame-demo-wrap" style="${isActive ? 'border-color:rgba(205,127,50,.45);box-shadow:0 0 18px rgba(205,127,50,.18);' : ''}">
         <div class="frame-demo-av" style="background:transparent;box-shadow:none;border:none;width:74px;height:74px">${avatar}</div>
         <div style="font-weight:700;font-size:0.85rem;text-align:center">${info.label || key}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);text-align:center">Effet premium animé</div>
         ${isActive ? '<div style="font-size:0.68rem;color:#cd7f32;font-weight:800;letter-spacing:.04em">ACTIF</div>' : ''}
         <button onclick="equipFrame('${key}')" style="padding:4px 14px;border-radius:6px;border:1px solid rgba(205,127,50,0.4);background:${isActive ? 'rgba(205,127,50,0.18)' : 'rgba(205,127,50,0.1)'};color:#cd7f32;font-size:0.78rem;cursor:pointer;font-family:inherit;width:100%">${isActive ? 'Equipe' : 'Activer'}</button>
       </div>`;
@@ -1374,11 +1421,11 @@ function renderQuestsTestGrid() {
         <div>
           <div style="font-weight:700;font-size:0.88rem">${q.name}</div>
           <div style="font-size:0.75rem;color:var(--text-muted)">${q.description}</div>
-          <div style="font-size:0.72rem;color:#cd7f32;margin-top:2px">🎁 ${q.reward_label || '—'}</div>
+          <div style="font-size:0.72rem;color:#cd7f32;margin-top:2px">ðŸŽ ${q.reward_label || 'â€”'}</div>
         </div>
       </div>
       <button onclick="testCompleteQuest('${q.key}')" style="padding:0.4rem 0.9rem;border-radius:8px;background:rgba(205,127,50,0.15);border:1px solid rgba(205,127,50,0.4);color:#cd7f32;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:inherit;white-space:nowrap">
-        ✅ Compléter (test)
+        âœ… ComplÃ©ter (test)
       </button>
     </div>`).join('');
 }
@@ -1390,11 +1437,11 @@ async function testCompleteQuest(questKey) {
       body: JSON.stringify({ quest_key: questKey })
     }).then(r => r.json());
     if (res.success) {
-      showToast(`✓ Quête "${questKey}" complétée — cosmétique débloqué : ${res.reward_label || res.reward_cosmetic}`, 'ok');
+      showToast(`âœ“ QuÃªte "${questKey}" complÃ©tÃ©e â€” cosmÃ©tique dÃ©bloquÃ© : ${res.reward_label || res.reward_cosmetic}`, 'ok');
     } else {
-      showToast('✕ ' + (res.message || 'Erreur'), 'err');
+      showToast('âœ• ' + (res.message || 'Erreur'), 'err');
     }
-  } catch(e) { showToast('Erreur réseau', 'err'); }
+  } catch(e) { showToast('Erreur rÃ©seau', 'err'); }
 }
 
 async function resetMyCosmetics() {
@@ -1403,19 +1450,20 @@ async function resetMyCosmetics() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ username: currentAdminUser, reset: true })
     }).then(r => r.json());
-    showToast(res.success ? '✓ Cosmétiques réinitialisés' : '✕ ' + res.message, res.success ? 'ok' : 'err');
-  } catch(e) { showToast('Erreur réseau', 'err'); }
+    showToast(res.success ? 'âœ“ CosmÃ©tiques rÃ©initialisÃ©s' : 'âœ• ' + res.message, res.success ? 'ok' : 'err');
+  } catch(e) { showToast('Erreur rÃ©seau', 'err'); }
 }
 
 function populateUserCosmeticSelects(usersList) {
   const cosUserSel = document.getElementById('cosUserSelect');
   const cosCosmeticSel = document.getElementById('cosCosmeticSelect');
+  const status = document.getElementById('userCosmeticsStatus');
 
   const fillUsers = (users) => {
     if (!cosUserSel) return;
     const safeUsers = (Array.isArray(users) ? users : [])
       .filter(u => u && u.username && !/^Joueur\d+$/i.test(u.username));
-    cosUserSel.innerHTML = '<option value="">Sélectionner un joueur…</option>' +
+    cosUserSel.innerHTML = '<option value="">SÃ©lectionner un joueurâ€¦</option>' +
       safeUsers.map(u => `<option value="${u.username}">${u.nickname ? u.nickname + ' (' + u.username + ')' : u.username}</option>`).join('');
   };
 
@@ -1432,13 +1480,22 @@ function populateUserCosmeticSelects(usersList) {
   const catalog = (catalogData && catalogData.catalog) ? catalogData.catalog : {};
   const entries = Object.entries(catalog);
   if (!entries.length) {
-    cosCosmeticSel.innerHTML = '<option value="">Chargement des cosmétiques…</option>';
+    cosCosmeticSel.innerHTML = '<option value="">Chargement des cosmÃ©tiquesâ€¦</option>';
+    if (status) status.innerHTML = '<span style="color:var(--text-muted)">Chargement du catalogue cosmétiques…</span>';
+    ensureCatalogLoaded(false).then((ok) => {
+      if (ok) {
+        populateUserCosmeticSelects(usersList);
+      } else if (status) {
+        status.innerHTML = '<span style="color:#e74c3c">Impossible de charger le catalogue cosmétiques.</span>';
+      }
+    });
     return;
   }
+  if (status) status.innerHTML = `<span style="color:var(--text-muted)">${entries.length} cosmétiques disponibles.</span>`;
 
   const byType = { theme: [], frame: [], badge: [], other: [] };
   entries.forEach(([key, meta]) => {
-    const type = (meta && meta.type) || 'other';
+    const type = inferCosmeticType(key, meta);
     if (!byType[type]) byType[type] = [];
     byType[type].push([key, meta || {}]);
   });
@@ -1453,38 +1510,55 @@ function populateUserCosmeticSelects(usersList) {
   };
 
   cosCosmeticSel.innerHTML =
-    '<option value="">Sélectionner un cosmétique…</option>' +
-    renderGroup('Thèmes', byType.theme) +
+    '<option value="">SÃ©lectionner un cosmÃ©tiqueâ€¦</option>' +
+    renderGroup('ThÃ¨mes', byType.theme) +
     renderGroup('Cadres', byType.frame) +
     renderGroup('Badges', byType.badge) +
     renderGroup('Autres', byType.other);
 }
 
 async function unlockForUser() {
-  const user     = document.getElementById('cosUserSelect').value;
-  const cosmetic = document.getElementById('cosCosmeticSelect').value;
-  if (!user || !cosmetic) { showToast('Sélectionne un joueur et un cosmétique', 'err'); return; }
+  const userSel = document.getElementById('cosUserSelect');
+  const cosSel = document.getElementById('cosCosmeticSelect');
+  const status = document.getElementById('userCosmeticsStatus');
+  const user = userSel ? userSel.value : '';
+  let cosmetic = cosSel ? cosSel.value : '';
+
+  const ok = await ensureCatalogLoaded(false);
+  if (!ok) {
+    showToast('Catalogue cosmétiques indisponible', 'err');
+    if (status) status.innerHTML = '<span style="color:#e74c3c">Catalogue indisponible.</span>';
+    return;
+  }
+  if (cosSel && !cosmetic) {
+    const first = Array.from(cosSel.options || []).find((o) => o && o.value);
+    if (first) { cosSel.value = first.value; cosmetic = first.value; }
+  }
+  if (!user || !cosmetic) {
+    showToast('SÃ©lectionne un joueur et un cosmÃ©tique', 'err');
+    if (status) status.innerHTML = '<span style="color:#e74c3c">Sélection incomplète (joueur/cosmétique).</span>';
+    return;
+  }
   try {
     const res = await fetch('/api/admin/unlock_cosmetic', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ username: user, cosmetic })
     }).then(r => r.json());
-    const status = document.getElementById('userCosmeticsStatus');
     if (res.success) {
-      showToast(`✓ ${cosmetic} débloqué pour ${user}`, 'ok');
-      if (status) status.innerHTML = `<span style="color:#2ecc71">✓ ${res.message}</span>`;
+      showToast(`âœ“ ${cosmetic} dÃ©bloquÃ© pour ${user}`, 'ok');
+      if (status) status.innerHTML = `<span style="color:#2ecc71">âœ“ ${res.message}</span>`;
     } else {
-      showToast('✕ ' + res.message, 'err');
-      if (status) status.innerHTML = `<span style="color:#e74c3c">✕ ${res.message}</span>`;
+      showToast('âœ• ' + res.message, 'err');
+      if (status) status.innerHTML = `<span style="color:#e74c3c">âœ• ${res.message}</span>`;
     }
-  } catch(e) { showToast('Erreur réseau', 'err'); }
+  } catch(e) { showToast('Erreur rÃ©seau', 'err'); }
 }
 
-// ══════════════════════════════════════════════════════════
-// ⚠️  DEV / TEST ONLY — Fonctions Token Arduino
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// âš ï¸  DEV / TEST ONLY â€” Fonctions Token Arduino
 // Visibles uniquement pour Imran (super admin).
 // Ne jamais exposer en production publique.
-// ══════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 let _arduinoTokenValue = '';   // token en cache pour copie
 let _arduinoSimCmdValue = '';  // commande simulateur en cache
@@ -1503,7 +1577,7 @@ async function fetchArduinoToken() {
       stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite">
       <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
     </svg>
-    Récupération...`;
+    RÃ©cupÃ©ration...`;
 
   try {
     const res  = await fetch('/admin/arduino-token');
@@ -1514,7 +1588,7 @@ async function fetchArduinoToken() {
     foundEl.style.display = 'none';
 
     if (!res.ok || data.error) {
-      showToast('✕ ' + (data.error || 'Erreur'), 'err');
+      showToast('âœ• ' + (data.error || 'Erreur'), 'err');
       return;
     }
 
@@ -1525,10 +1599,10 @@ async function fetchArduinoToken() {
       return;
     }
 
-    // ── Remplir les champs ──────────────────────────────
+    // â”€â”€ Remplir les champs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const info = data.tokens && data.tokens[0] ? data.tokens[0] : data;
 
-    document.getElementById('arduinoGameId').textContent      = data.game_id ?? '—';
+    document.getElementById('arduinoGameId').textContent      = data.game_id ?? 'â€”';
     document.getElementById('arduinoPendingCount').textContent = (info.pending_actions ?? 0) + ' action(s)';
 
     const expiryS = info.expires_in_seconds ?? 3600;
@@ -1552,10 +1626,10 @@ async function fetchArduinoToken() {
     document.getElementById('arduinoSimCmd').textContent = _arduinoSimCmdValue;
 
     foundEl.style.display = 'block';
-    showToast('✓ Token récupéré', 'ok');
+    showToast('âœ“ Token rÃ©cupÃ©rÃ©', 'ok');
 
   } catch(e) {
-    showToast('Erreur réseau', 'err');
+    showToast('Erreur rÃ©seau', 'err');
     console.error('[DEV] fetchArduinoToken error:', e);
   } finally {
     btn.disabled = false;
@@ -1565,7 +1639,7 @@ async function fetchArduinoToken() {
         stroke-linecap="round" stroke-linejoin="round">
         <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
       </svg>
-      Récupérer le token actif`;
+      RÃ©cupÃ©rer le token actif`;
   }
 }
 
@@ -1573,10 +1647,10 @@ function copyArduinoToken() {
   if (!_arduinoTokenValue) return;
   navigator.clipboard.writeText(_arduinoTokenValue).then(() => {
     const btn = document.getElementById('btnCopyToken');
-    btn.textContent = '✅';
-    showToast('Token copié !', 'ok');
-    setTimeout(() => { btn.textContent = '📋'; }, 2000);
-  }).catch(() => showToast('Copie manuelle : sélectionnez le token', 'err'));
+    btn.textContent = 'âœ…';
+    showToast('Token copiÃ© !', 'ok');
+    setTimeout(() => { btn.textContent = 'ðŸ“‹'; }, 2000);
+  }).catch(() => showToast('Copie manuelle : sÃ©lectionnez le token', 'err'));
 }
 
 function copySimCmd() {
@@ -1584,11 +1658,11 @@ function copySimCmd() {
   // Supprimer les \ et sauts de ligne pour une commande sur une seule ligne
   const oneLiner = _arduinoSimCmdValue.replace(/\s*\\\n\s*/g, ' ').trim();
   navigator.clipboard.writeText(oneLiner).then(() => {
-    showToast('Commande copiée !', 'ok');
-  }).catch(() => showToast('Copie manuelle : sélectionnez la commande', 'err'));
+    showToast('Commande copiÃ©e !', 'ok');
+  }).catch(() => showToast('Copie manuelle : sÃ©lectionnez la commande', 'err'));
 }
 
-// Style spin pour l'icône de chargement (injecté une fois)
+// Style spin pour l'icÃ´ne de chargement (injectÃ© une fois)
 if (!document.getElementById('spinStyle')) {
   const s = document.createElement('style');
   s.id = 'spinStyle';
@@ -1601,3 +1675,5 @@ let currentAdminUser = null;
 
 
 {% endblock %}
+
+

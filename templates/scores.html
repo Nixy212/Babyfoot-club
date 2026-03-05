@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% set active_page = "scores" %}
-{% block title %}Scores — Baby-Foot Club{% endblock %}
+{% block title %}Scores â€” Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
-<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -11,19 +11,30 @@
   <div class="container" style="max-width:1000px">
     <div class="page-header">
       <h1><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> Historique des parties</h1>
-      <p>Toutes les parties jouées dans le club — retrouvez vos résultats et ceux de vos adversaires</p>
+      <p>Toutes les parties jouÃ©es dans le club â€” retrouvez vos rÃ©sultats et ceux de vos adversaires</p>
     </div>
 
-    <div class="section-block"><div class="section-block-header"><span class="section-block-title">🏆 Toutes les parties</span></div><div class="section-block-body" style="padding:1.25rem"><div class="scores-grid" id="scoresGrid">
-      <div style="padding:3rem;text-align:center">
-        <div class="loading-spinner" style="margin:0 auto 1rem"></div>
-        <p style="color:var(--text-tertiary)">Chargement des parties...</p>
+    <div class="section-block"><div class="section-block-header"><span class="section-block-title">ðŸ† Toutes les parties</span></div><div class="section-block-body" style="padding:1.25rem"><div class="scores-grid" id="scoresGrid">
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-line w-30"></div>
+        <div class="skeleton skeleton-line w-75"></div>
+        <div class="skeleton skeleton-line w-60"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-line w-30"></div>
+        <div class="skeleton skeleton-line w-90"></div>
+        <div class="skeleton skeleton-line w-45"></div>
+      </div>
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-line w-30"></div>
+        <div class="skeleton skeleton-line w-75"></div>
+        <div class="skeleton skeleton-line w-60"></div>
       </div>
     </div>
 
     </div></div></div>
     <div style="text-align:center;margin-top:1.5rem">
-      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+      <a href="/dashboard" class="btn btn-ghost">â† Dashboard</a>
     </div>
   </div>
 </div>
@@ -42,7 +53,7 @@ function logout() {
   fetch('/api/logout', {method:'POST'}).then(() => location.href = '/');
 }
 
-// Parse les players qui peuvent être string JSON (SQLite) ou tableau (PostgreSQL)
+// Parse les players qui peuvent Ãªtre string JSON (SQLite) ou tableau (PostgreSQL)
 function parsePlayers(players) {
   if (!players) return [];
   if (Array.isArray(players)) return players;
@@ -112,19 +123,19 @@ async function loadScores() {
       container.innerHTML = `
         <div style="padding:3rem;text-align:center">
           <div style="margin-bottom:1rem;opacity:0.3;display:flex;justify-content:center"><span data-bficon="gamepad" data-size="64" style="color:var(--text-tertiary)"></span></div>
-          <p style="color:var(--text-tertiary);margin-bottom:1.5rem">Aucune partie jouée pour le moment — soyez le premier à en créer une !</p>
-          <a href="/live-score" class="btn btn-primary">Démarrer une partie</a>
+          <p style="color:var(--text-tertiary);margin-bottom:1.5rem">Aucune partie jouÃ©e pour le moment â€” soyez le premier Ã  en crÃ©er une !</p>
+          <a href="/live-score" class="btn btn-primary">DÃ©marrer une partie</a>
         </div>
       `;
       return;
     }
 
-    // scores est trié DESC (plus récent en premier)
-    // La partie la plus récente = numéro `total`, la plus ancienne = #1
+    // scores est triÃ© DESC (plus rÃ©cent en premier)
+    // La partie la plus rÃ©cente = numÃ©ro `total`, la plus ancienne = #1
     container.innerHTML = scores.map((entry, index) => {
       const matchNum = total - index;
 
-      let dateStr = '—', timeStr = '';
+      let dateStr = 'â€”', timeStr = '';
       if (entry.date) {
         try {
           const date = new Date(entry.date);
@@ -147,7 +158,7 @@ async function loadScores() {
           <div class="score-header" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;flex-wrap:nowrap">
             <div style="display:flex;align-items:center;gap:0.5rem;min-width:0">
               <span style="font-family:'Space Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--bronze);background:rgba(205,127,50,0.12);padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0">#${matchNum}</span>
-              <span class="score-date" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.78rem">${dateStr}${timeStr ? ' · ' + timeStr : ''}</span>
+              <span class="score-date" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.78rem">${dateStr}${timeStr ? ' Â· ' + timeStr : ''}</span>
             </div>
             <span style="font-size:0.72rem;color:var(--text-tertiary);flex-shrink:0">${entry.mode || '2v2'}</span>
           </div>
@@ -156,7 +167,7 @@ async function loadScores() {
               <div style="font-size:0.75rem;font-weight:700;color:#22c55e;margin-bottom:2px;white-space:nowrap">Vainqueurs</div>
               <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${renderTeam(winnerTeam)}</div>
             </div>
-            <div style="font-family:'Space Mono',monospace;font-size:1.375rem;font-weight:900;color:var(--bronze);white-space:nowrap;flex-shrink:0">${winScore}–${loseScore}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:1.375rem;font-weight:900;color:var(--bronze);white-space:nowrap;flex-shrink:0">${winScore}â€“${loseScore}</div>
             <div style="flex:1;min-width:0;text-align:right">
               <div style="font-size:0.75rem;font-weight:700;color:#e74c3c;margin-bottom:2px;white-space:nowrap">Perdants</div>
               <div style="font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${renderTeam(loserTeam)}</div>
@@ -166,7 +177,7 @@ async function loadScores() {
       `;
     }).join('');
 
-    // Réinit icônes SVG pour le contenu injecté dynamiquement
+    // RÃ©init icÃ´nes SVG pour le contenu injectÃ© dynamiquement
     if (window.initBFIcons) initBFIcons(container);
 
   } catch(e) {
@@ -174,7 +185,7 @@ async function loadScores() {
     container.innerHTML = `
       <div style="padding:3rem;text-align:center">
         <div style="margin-bottom:1rem;opacity:0.4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4M12 17h.01"/></svg></div>
-        <p style="color:var(--text-tertiary)">Erreur de chargement des scores — ${e.message}</p>
+        <p style="color:var(--text-tertiary)">Erreur de chargement des scores â€” ${e.message}</p>
       </div>
     `;
   }
@@ -184,3 +195,4 @@ loadScores();
 </script>
 
 {% endblock %}
+

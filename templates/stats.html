@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% set active_page = "stats" %}
-{% block title %}Stats — Baby-Foot Club{% endblock %}
+{% block title %}Stats â€” Baby-Foot Club{% endblock %}
 
 {% block extra_head %}
-<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -11,33 +11,33 @@
   <div class="container" style="max-width:800px">
 
     <div class="page-header">
-      <h1>📊 Statistiques</h1>
+      <h1>ðŸ“Š Statistiques</h1>
       <p id="subttl">Chargement...</p>
     </div>
 
     <!-- Cartes stats -->
     <div class="card">
-      <div class="card-header"><h3>📈 Vue d'ensemble</h3></div>
+      <div class="card-header"><h3>ðŸ“ˆ Vue d'ensemble</h3></div>
       <div class="card-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem">
           <div class="stat-mini">
-            <div class="stat-mini-val" id="sg">—</div>
-            <div class="stat-mini-label">Parties jouées</div>
+            <div class="stat-mini-val" id="sg">â€”</div>
+            <div class="stat-mini-label">Parties jouÃ©es</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-val" id="sp">—</div>
-            <div class="stat-mini-label">Buts marqués</div>
+            <div class="stat-mini-val" id="sp">â€”</div>
+            <div class="stat-mini-label">Buts marquÃ©s</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-val" id="sr">—</div>
+            <div class="stat-mini-val" id="sr">â€”</div>
             <div class="stat-mini-label">Ratio buts/partie</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-val" id="sb">—</div>
+            <div class="stat-mini-val" id="sb">â€”</div>
             <div class="stat-mini-label">Pour / Contre</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-val" id="sa">—</div>
+            <div class="stat-mini-val" id="sa">â€”</div>
             <div class="stat-mini-label">Score moyen</div>
           </div>
         </div>
@@ -46,19 +46,25 @@
 
     <!-- Historique des parties -->
     <div class="card">
-      <div class="card-header"><h3>🕹️ Historique récent</h3></div>
+      <div class="card-header"><h3>ðŸ•¹ï¸ Historique rÃ©cent</h3></div>
       <div class="card-body" style="padding:0">
         <div id="hist" style="min-height:80px">
-          <div style="padding:2rem;text-align:center">
-            <div class="loading-spinner" style="margin:0 auto 1rem"></div>
-            <p style="color:var(--text-tertiary)">Chargement...</p>
+          <div class="skeleton-card" style="margin:1rem">
+            <div class="skeleton skeleton-line w-45"></div>
+            <div class="skeleton skeleton-line w-75"></div>
+            <div class="skeleton skeleton-line w-60"></div>
+          </div>
+          <div class="skeleton-card" style="margin:0 1rem 1rem">
+            <div class="skeleton skeleton-line w-45"></div>
+            <div class="skeleton skeleton-line w-75"></div>
+            <div class="skeleton skeleton-line w-60"></div>
           </div>
         </div>
       </div>
     </div>
 
     <div style="text-align:center;margin-top:1.5rem">
-      <a href="/dashboard" class="btn btn-ghost">← Dashboard</a>
+      <a href="/dashboard" class="btn btn-ghost">â† Dashboard</a>
     </div>
 
   </div>
@@ -96,7 +102,7 @@
       const mm = document.getElementById('mobileMenu');
       if (mm && !mm.querySelector('a[href="/admin"]')) {
         const a = document.createElement('a');
-        a.href = '/admin'; a.textContent = '🛡️ Admin';
+        a.href = '/admin'; a.textContent = 'ðŸ›¡ï¸ Admin';
         const firstLink = mm.querySelector('a');
         if (firstLink) mm.insertBefore(a, firstLink);
       }
@@ -107,20 +113,20 @@
     document.getElementById('sp').textContent = s.goals_scored ?? s.total_goals ?? 0;
     document.getElementById('sr').textContent = s.ratio ?? '0.00';
     document.getElementById('sb').textContent = `${s.goals_scored ?? 0} / ${s.goals_conceded ?? 0}`;
-    document.getElementById('sa').textContent = s.average_score || '—';
+    document.getElementById('sa').textContent = s.average_score || 'â€”';
 
     const h = document.getElementById('hist');
     if (!s.recent_scores?.length) {
-      h.innerHTML = '<p style="padding:3rem;text-align:center;color:var(--text-tertiary);font-size:0.9375rem">Aucune partie jouée — réservez un créneau et lancez votre première partie !</p>';
+      h.innerHTML = '<p style="padding:3rem;text-align:center;color:var(--text-tertiary);font-size:0.9375rem">Aucune partie jouÃ©e â€” rÃ©servez un crÃ©neau et lancez votre premiÃ¨re partie !</p>';
       return;
     }
 
-    // Afficher les scores récents du plus récent au plus ancien
+    // Afficher les scores rÃ©cents du plus rÃ©cent au plus ancien
     const orderedScores = [...s.recent_scores].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     const total = orderedScores.length;
     h.innerHTML = orderedScores.map((sc, i) => {
       const num = total - i;
-      const dateStr = sc.date ? new Date(sc.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : '—';
+      const dateStr = sc.date ? new Date(sc.date).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'}) : 'â€”';
       const pts = sc.score ?? sc.points ?? '?';
       return `
       <div class="hist-row">
@@ -138,3 +144,4 @@
 </script>
 
 {% endblock %}
+

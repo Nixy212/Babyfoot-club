@@ -5,8 +5,8 @@
 {% block extra_head %}
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
 <script>if(typeof window.io==='undefined'){document.write('<script src="/socket.io/socket.io.js"><\\/script>');}</script>
-<script src="{{ url_for('static', filename='confetti.js') }}" defer></script>
-<script src="{{ url_for('static', filename='global-animations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='', v=asset_version) }}" defer></script>
 {% endblock %}
 
 {% block body %}
@@ -744,4 +744,5 @@ init();
 </script>
 
 {% endblock %}
+
 

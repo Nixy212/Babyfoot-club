@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f111a">
-  <link rel="manifest" href="/static/manifest.json">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json', v=asset_version) }}">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BabyFoot">
-  <link rel="apple-touch-icon" href="/static/images/logo.svg">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.svg', v=asset_version) }}">
   <title>Inscription — Baby-Foot Club</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css', v=asset_version) }}">
   <style>
     html,body{height:100%;margin:0}
     body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;box-sizing:border-box;background:#0f111a;}
@@ -55,7 +55,7 @@
 
 <div class="auth-card">
   <div class="auth-brand">
-    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="">
+    <img src="{{ url_for('static', filename='images/logo.svg', v=asset_version) }}" alt="">
     <span>Baby-Foot Club</span>
   </div>
   <h1 class="auth-title">Créer un compte</h1>
@@ -101,7 +101,8 @@
   document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')register();});
   document.getElementById('username').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('password').focus();});
 </script>
-<script src="/static/particles-bg.js" defer></script>
-<script src="/static/pwa.js" defer></script>
+<script>window.__assetVersion = "{{ asset_version }}";</script>
+<script src="{{ url_for('static', filename='particles-bg.js', v=asset_version) }}" defer></script>
+<script src="{{ url_for('static', filename='pwa.js', v=asset_version) }}" defer></script>
 </body>
 </html>
