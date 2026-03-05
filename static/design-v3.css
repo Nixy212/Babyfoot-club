@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /*
  ╔══════════════════════════════════════════════════════╗
  ║  BABY-FOOT CLUB — Design System v5                   ║
@@ -200,13 +201,13 @@ body.network-saver .onboarding-overlay{
 .avatar-shell.avatar-theme-royal::after{box-shadow:0 0 0 1px rgba(74,147,235,.58),0 0 12px rgba(74,147,235,.42);}
 .avatar-shell.avatar-theme-master::after{box-shadow:0 0 0 1px rgba(215,164,58,.62),0 0 14px rgba(215,164,58,.48);}
 
-.avatar-shell[class*="avatar-frame-"]{border-color:transparent;transform-origin:center;}
-.avatar-shell[class*="avatar-frame-"]::before{opacity:.8;animation-duration:var(--frame-spin,8s);background:conic-gradient(from 0deg,var(--frame-c1) 0deg,var(--frame-c2) 92deg,var(--frame-c3) 186deg,var(--frame-c2) 274deg,var(--frame-c1) 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 2px));}
-.avatar-shell[class*="avatar-frame-"]::after{inset:-2px;opacity:.84;box-shadow:0 0 0 1px var(--frame-outline),0 0 10px var(--frame-glow),inset 0 0 8px rgba(255,255,255,.1);animation:avatarFrameHalo var(--frame-breathe,3.2s) ease-in-out infinite;}
+.avatar-shell[class*="avatar-frame-"]{border-color:rgba(255,255,255,.04);transform-origin:center;}
+.avatar-shell[class*="avatar-frame-"]::before{opacity:.72;animation-duration:var(--frame-spin,8s);background:conic-gradient(from 0deg,var(--frame-c1) 0deg,var(--frame-c2) 92deg,var(--frame-c3) 186deg,var(--frame-c2) 274deg,var(--frame-c1) 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 1.4px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 1.4px));}
+.avatar-shell[class*="avatar-frame-"]::after{inset:-1px;opacity:.62;box-shadow:0 0 0 1px var(--frame-outline),0 0 7px var(--frame-glow);animation:avatarFrameHalo var(--frame-breathe,3.2s) ease-in-out infinite;}
 
-.avatar-shell.avatar-frame-bronze{--frame-c1:#b86a2d;--frame-c2:#e8b06a;--frame-c3:#f6d5a4;--frame-outline:rgba(231,170,95,.62);--frame-glow:rgba(205,127,50,.34);--frame-spin:11s;--frame-breathe:3.4s;box-shadow:0 0 0 1.8px rgba(209,144,77,.62),0 0 0 3.8px rgba(97,62,33,.2),0 0 14px rgba(205,127,50,.26);animation:avatarFrameBronze 5.6s ease-in-out infinite;}
-.avatar-shell.avatar-frame-flame{--frame-c1:#ff692b;--frame-c2:#ff9f3f;--frame-c3:#ffd07a;--frame-outline:rgba(255,165,92,.68);--frame-glow:rgba(255,107,44,.4);--frame-spin:7.2s;--frame-breathe:2.8s;box-shadow:0 0 0 1.9px rgba(255,119,58,.7),0 0 0 4.4px rgba(255,107,44,.2),0 0 18px rgba(255,107,44,.34);animation:avatarFrameFlame 3.8s ease-in-out infinite;}
-.avatar-shell.avatar-frame-phoenix{--frame-c1:#ff5f1f;--frame-c2:#ff9d3e;--frame-c3:#ffe2a1;--frame-outline:rgba(255,194,112,.72);--frame-glow:rgba(255,98,36,.46);--frame-spin:6.2s;--frame-breathe:2.4s;box-shadow:0 0 0 2px rgba(255,132,67,.76),0 0 0 5px rgba(255,94,32,.24),0 0 22px rgba(255,90,31,.42);animation:avatarFramePhoenix 3.1s ease-in-out infinite;}
+.avatar-shell.avatar-frame-bronze{--frame-c1:#b86a2d;--frame-c2:#e8b06a;--frame-c3:#f6d5a4;--frame-outline:rgba(231,170,95,.54);--frame-glow:rgba(205,127,50,.24);--frame-spin:11s;--frame-breathe:3.4s;box-shadow:0 0 0 1.2px rgba(209,144,77,.52),0 0 8px rgba(205,127,50,.18);animation:avatarFrameBronze 5.6s ease-in-out infinite;}
+.avatar-shell.avatar-frame-flame{--frame-c1:#ff692b;--frame-c2:#ff9f3f;--frame-c3:#ffd07a;--frame-outline:rgba(255,165,92,.56);--frame-glow:rgba(255,107,44,.28);--frame-spin:7.2s;--frame-breathe:2.8s;box-shadow:0 0 0 1.25px rgba(255,119,58,.6),0 0 10px rgba(255,107,44,.24);animation:avatarFrameFlame 3.8s ease-in-out infinite;}
+.avatar-shell.avatar-frame-phoenix{--frame-c1:#ff5f1f;--frame-c2:#ff9d3e;--frame-c3:#ffe2a1;--frame-outline:rgba(255,194,112,.58);--frame-glow:rgba(255,98,36,.32);--frame-spin:6.2s;--frame-breathe:2.4s;box-shadow:0 0 0 1.3px rgba(255,132,67,.62),0 0 12px rgba(255,90,31,.26);animation:avatarFramePhoenix 3.1s ease-in-out infinite;}
 
 @keyframes avatarFrameOrbit{0%{transform:rotate(0deg) scale(1);}50%{transform:rotate(180deg) scale(1.02);}100%{transform:rotate(360deg) scale(1);}}
 @keyframes avatarFrameHalo{0%,100%{opacity:.88;filter:brightness(1);}50%{opacity:1;filter:brightness(1.14);}}
@@ -215,8 +216,8 @@ body.network-saver .onboarding-overlay{
 @keyframes avatarFramePhoenix{0%,100%{box-shadow:0 0 0 2px rgba(255,132,67,.68),0 0 0 5px rgba(255,94,32,.22),0 0 18px rgba(255,90,31,.32);}50%{box-shadow:0 0 0 2px rgba(255,201,120,.86),0 0 0 6px rgba(255,104,32,.34),0 0 30px rgba(255,90,31,.52);}}
 
 @media (max-width: 768px){
-  .avatar-shell[class*="avatar-frame-"]::before{opacity:.7;animation-duration:10s;}
-  .avatar-shell[class*="avatar-frame-"]::after{box-shadow:0 0 0 1px var(--frame-outline),0 0 8px var(--frame-glow),inset 0 0 6px rgba(255,255,255,.08);}
+  .avatar-shell[class*="avatar-frame-"]::before{opacity:.65;animation-duration:10s;}
+  .avatar-shell[class*="avatar-frame-"]::after{box-shadow:0 0 0 1px var(--frame-outline),0 0 6px var(--frame-glow);}
   .avatar-shell.avatar-frame-bronze{animation-duration:6s;}
   .avatar-shell.avatar-frame-flame{animation-duration:4.4s;}
   .avatar-shell.avatar-frame-phoenix{animation-duration:3.6s;}

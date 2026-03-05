@@ -162,8 +162,8 @@ if (typeof window.io === 'undefined') {
       <h3>✅ Ma réservation</h3>
       <div id="myResaInfo" style="font-size:.9rem;color:var(--text-secondary);margin-bottom:1rem"></div>
       <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-        <button class="cbtn green" style="flex:1;min-width:120px" onclick="goToLobby(this)">👥 Créer un lobby</button>
-        <button class="cbtn" style="flex:1;min-width:120px;background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)" onclick="cancelMyResa()">🗑️ Annuler</button>
+        <button class="cbtn green" id="btnGoLobby" type="button" style="flex:1;min-width:120px">👥 Créer un lobby</button>
+        <button class="cbtn" id="btnCancelResa" type="button" style="flex:1;min-width:120px;background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)">🗑️ Annuler</button>
       </div>
     </div>
 
@@ -174,20 +174,20 @@ if (typeof window.io === 'undefined') {
       <div style="margin-bottom:.75rem">
         <div class="pill-label">Durée</div>
         <div class="pill-row">
-          <button class="dpill on" onclick="setDur('now',10,this)">10 min</button>
-          <button class="dpill" onclick="setDur('now',15,this)">15 min</button>
-          <button class="dpill" onclick="setDur('now',30,this)">30 min</button>
-          <button class="dpill" onclick="setDur('now',60,this)">1 h</button>
+          <button class="dpill on" type="button" data-action="setDur" data-target="now" data-value="10">10 min</button>
+          <button class="dpill" type="button" data-action="setDur" data-target="now" data-value="15">15 min</button>
+          <button class="dpill" type="button" data-action="setDur" data-target="now" data-value="30">30 min</button>
+          <button class="dpill" type="button" data-action="setDur" data-target="now" data-value="60">1 h</button>
         </div>
       </div>
       <div style="margin-bottom:1rem">
         <div class="pill-label">Mode</div>
         <div class="pill-row">
-          <button class="mpill on" id="mN1" onclick="setMode('now','1v1')">1 vs 1</button>
-          <button class="mpill" id="mN2" onclick="setMode('now','2v2')">2 vs 2</button>
+          <button class="mpill on" id="mN1" type="button" data-action="setMode" data-target="now" data-value="1v1">1 vs 1</button>
+          <button class="mpill" id="mN2" type="button" data-action="setMode" data-target="now" data-value="2v2">2 vs 2</button>
         </div>
       </div>
-      <button class="cbtn green" id="btnNow" onclick="playNow()">▶ Jouer maintenant</button>
+      <button class="cbtn green" id="btnNow" type="button">▶ Jouer maintenant</button>
     </div>
 
     <!-- Planifier une réservation -->
@@ -195,12 +195,12 @@ if (typeof window.io === 'undefined') {
       <h3>📆 Planifier une réservation</h3>
 
       <div class="day-tabs">
-        <button class="dtab on" id="tabT" onclick="setDay(0)">Aujourd'hui</button>
-        <button class="dtab" id="tabD" onclick="setDay(1)">Demain</button>
+        <button class="dtab on" id="tabT" type="button" data-action="setDay" data-value="0">Aujourd'hui</button>
+        <button class="dtab" id="tabD" type="button" data-action="setDay" data-value="1">Demain</button>
       </div>
 
       <div class="time-row">
-        <input type="time" id="planTime" onchange="onTime()" oninput="onTime()" step="300">
+        <input type="time" id="planTime" step="300">
         <span class="end-label" id="endLabel">→ fin : —</span>
       </div>
 
@@ -209,21 +209,21 @@ if (typeof window.io === 'undefined') {
       <div style="margin-bottom:.75rem">
         <div class="pill-label">Durée</div>
         <div class="pill-row">
-          <button class="dpill on" onclick="setDur('plan',10,this)">10 min</button>
-          <button class="dpill" onclick="setDur('plan',15,this)">15 min</button>
-          <button class="dpill" onclick="setDur('plan',30,this)">30 min</button>
-          <button class="dpill" onclick="setDur('plan',60,this)">1 h</button>
+          <button class="dpill on" type="button" data-action="setDur" data-target="plan" data-value="10">10 min</button>
+          <button class="dpill" type="button" data-action="setDur" data-target="plan" data-value="15">15 min</button>
+          <button class="dpill" type="button" data-action="setDur" data-target="plan" data-value="30">30 min</button>
+          <button class="dpill" type="button" data-action="setDur" data-target="plan" data-value="60">1 h</button>
         </div>
       </div>
       <div style="margin-bottom:1.25rem">
         <div class="pill-label">Mode</div>
         <div class="pill-row">
-          <button class="mpill on" id="mP1" onclick="setMode('plan','1v1')">1 vs 1</button>
-          <button class="mpill" id="mP2" onclick="setMode('plan','2v2')">2 vs 2</button>
+          <button class="mpill on" id="mP1" type="button" data-action="setMode" data-target="plan" data-value="1v1">1 vs 1</button>
+          <button class="mpill" id="mP2" type="button" data-action="setMode" data-target="plan" data-value="2v2">2 vs 2</button>
         </div>
       </div>
 
-      <button class="cbtn" id="btnPlan" onclick="planReserve()">✔ Confirmer la réservation</button>
+      <button class="cbtn" id="btnPlan" type="button">✔ Confirmer la réservation</button>
     </div>
 
     <!-- Timeline -->
@@ -403,13 +403,13 @@ function renderTL(){
     b.style.left=l+'px';b.style.width=w+'px';
     b.title=r.reserved_by+' · '+hm(r.start_time)+'–'+hm(r.end_time);
     b.textContent=r.reserved_by===ME?'Vous':r.reserved_by;
-    b.onclick=()=>{
+    b.addEventListener('click', ()=>{
       if(r.reserved_by!==ME){
         const e=new Date(r.end_time);
         document.getElementById('planTime').value=String(e.getHours()).padStart(2,'0')+':'+String(e.getMinutes()).padStart(2,'0');
         onTime();
       }
-    };
+    });
     bar.appendChild(b);
   });
   // Centrer sur l'heure actuelle (seulement aujourd'hui au 1er rendu)
@@ -438,7 +438,7 @@ function renderFree(){
   const c=document.getElementById('freeRow');
   c.innerHTML=sug.slice(0,4).map(s=>{
     const hh=String(s.getHours()).padStart(2,'0'),mm=String(s.getMinutes()).padStart(2,'0');
-    return '<button class="free-pill" onclick="applySlot(\''+hh+':'+mm+'\')">'+hh+'h'+mm+'</button>';
+    return '<button class="free-pill" type="button" data-action="applySlot" data-time="'+hh+':'+mm+'">'+hh+'h'+mm+'</button>';
   }).join('')||'<span style="font-size:.82rem;color:var(--text-muted)">Aucun créneau libre</span>';
 }
 
@@ -536,8 +536,56 @@ async function goToLobby(btn) {
   setTimeout(() => { if (!redirected && !socketError) { redirected = true; window.location.href = '/lobby'; } }, 3000);
 }
 
+function initReservationBindings(){
+  const btnGoLobby = document.getElementById('btnGoLobby');
+  if (btnGoLobby) btnGoLobby.addEventListener('click', () => goToLobby(btnGoLobby));
+
+  const btnCancel = document.getElementById('btnCancelResa');
+  if (btnCancel) btnCancel.addEventListener('click', cancelMyResa);
+
+  const btnNow = document.getElementById('btnNow');
+  if (btnNow) btnNow.addEventListener('click', playNow);
+
+  const btnPlan = document.getElementById('btnPlan');
+  if (btnPlan) btnPlan.addEventListener('click', planReserve);
+
+  const planTime = document.getElementById('planTime');
+  if (planTime) {
+    planTime.addEventListener('change', onTime);
+    planTime.addEventListener('input', onTime);
+  }
+
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    if (action === 'setDur') {
+      const target = btn.dataset.target;
+      const value = Number(btn.dataset.value || 0);
+      if (target && value > 0) setDur(target, value, btn);
+      return;
+    }
+    if (action === 'setMode') {
+      const target = btn.dataset.target;
+      const value = btn.dataset.value;
+      if (target && value) setMode(target, value);
+      return;
+    }
+    if (action === 'setDay') {
+      const value = Number(btn.dataset.value || 0);
+      setDay(value);
+      return;
+    }
+    if (action === 'applySlot') {
+      const time = btn.dataset.time;
+      if (time) applySlot(time);
+    }
+  });
+}
+
 // ── Init
 async function init(){
+  initReservationBindings();
   try{
     const u=await fetch('/current_user').then(r=>r.json());
     if(!u){location.href='/login';return;}

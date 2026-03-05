@@ -22,6 +22,8 @@ import traceback
 import sys
 import collections
 import time as _time
+import secrets as _secrets
+import hmac as _hmac
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)])
 logger = logging.getLogger(__name__)
@@ -67,7 +69,6 @@ logger_bp.info("Blueprint Arduino enregistré (/api/arduino/*)")
 
 _secret_key = os.environ.get('SECRET_KEY')
 if not _secret_key:
-    import secrets as _secrets
     _secret_key = _secrets.token_hex(32)
     logger.warning("SECRET_KEY non definie — cle aleatoire generee (sessions invalidees au redemarrage). Definissez SECRET_KEY dans Render → Environment !")
 
@@ -85,19 +86,36 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 Mo max request body
+DEBUG_ROUTES_ENABLED = os.environ.get("ENABLE_DEBUG_ROUTES", "").strip().lower() in ("1", "true", "yes")
+if DEBUG_ROUTES_ENABLED:
+    logger.warning("ENABLE_DEBUG_ROUTES actif: routes de debug exposees. A utiliser uniquement en environnement controle.")
+
+_MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+_CSRF_EXEMPT_ENDPOINTS = {"api_login", "api_register"}
+_CSRF_EXEMPT_PATH_PREFIXES = ("/api/arduino/", "/socket.io/", "/engine.io/")
+
+def _get_or_create_csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = _secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
 
 @app.context_processor
 def inject_asset_version():
-    return {"asset_version": ASSET_VERSION}
+    return {
+        "asset_version": ASSET_VERSION,
+        "csrf_token": _get_or_create_csrf_token(),
+    }
 
 # ── SocketIO ──────────────────────────────────────────────────
 
 # CORS : définir CORS_ORIGINS dans Render avec ton domaine (ex: https://monapp.onrender.com)
 # Supporte 1 origine ou une liste séparée par virgules.
-def _parse_cors_origins(raw):
+def _parse_cors_origins(raw, production=False):
     raw = (raw or '').strip()
     if not raw:
-        return '*'
+        return None if production else '*'
     parts = []
     for p in raw.split(','):
         p = p.strip()
@@ -107,11 +125,14 @@ def _parse_cors_origins(raw):
         if p:
             parts.append(p)
     if not parts:
-        return '*'
+        return None if production else '*'
+    if production and '*' in parts:
+        logger.warning("CORS '*' detecte en production: fallback sur same-origin uniquement.")
+        return None
     return parts[0] if len(parts) == 1 else parts
 
 _CORS_RAW = os.environ.get('CORS_ORIGINS', '')
-_ALLOWED_ORIGINS = _parse_cors_origins(_CORS_RAW)
+_ALLOWED_ORIGINS = _parse_cors_origins(_CORS_RAW, production=_is_production)
 logger.info(f"CORS autorisé : {_ALLOWED_ORIGINS}")
 socketio = SocketIO(
     app,
@@ -155,7 +176,12 @@ def set_headers(response):
     elif path.startswith('/api/avatar/'):
         # Les avatars peuvent rester en cache court, mais doivent se rafraichir rapidement.
         response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=600'
-    elif path.startswith('/api/') or path == '/current_user':
+    elif (
+        path.startswith('/api/')
+        or path == '/current_user'
+        or path.startswith('/user_stats')
+        or path in ('/leaderboard', '/scores_all', '/reservations_all')
+    ):
         # Evite les fuites/cache stale de donnees utilisateur entre sessions.
         response.headers['Cache-Control'] = 'no-store'
     elif response.content_type and 'font' in response.content_type:
@@ -166,6 +192,8 @@ def set_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    if _is_production:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     # CSP : scripts/styles locaux + CDN Font Awesome
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
@@ -176,6 +204,20 @@ def set_headers(response):
         "connect-src 'self' wss: ws:; "
         "frame-ancestors 'none';"
     )
+    # Garantit un rendu UTF-8 explicite pour eviter les caracteres corrompus sur certains navigateurs mobiles.
+    content_type = (response.headers.get('Content-Type') or '').lower()
+    if content_type and 'charset=' not in content_type:
+        text_mimetypes = {
+            'application/javascript',
+            'application/json',
+            'application/xml',
+            'application/manifest+json',
+        }
+        if response.mimetype and (
+            response.mimetype.startswith('text/')
+            or response.mimetype in text_mimetypes
+        ):
+            response.headers['Content-Type'] = f"{response.mimetype}; charset=utf-8"
     return response
 
 @app.before_request
@@ -183,6 +225,24 @@ def handle_http_for_arduino():
     # Les endpoints Arduino sont accessibles en HTTP (pas de session Flask)
     if request.path.startswith('/api/arduino/'):
         return None
+    return None
+
+@app.before_request
+def enforce_csrf():
+    if request.method not in _MUTATING_METHODS:
+        return None
+
+    endpoint = request.endpoint or ''
+    path = request.path or ''
+    if endpoint in _CSRF_EXEMPT_ENDPOINTS:
+        return None
+    if any(path.startswith(prefix) for prefix in _CSRF_EXEMPT_PATH_PREFIXES):
+        return None
+
+    expected = session.get("_csrf_token")
+    provided = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")
+    if not expected or not provided or not _hmac.compare_digest(str(expected), str(provided)):
+        return jsonify({"success": False, "message": "CSRF token invalide"}), 403
     return None
 
 # ── Base de donnees ───────────────────────────────────────────
@@ -260,10 +320,15 @@ def check_rate_limit(ip):
     """Retourne True si l'IP est bloquee (trop de tentatives)."""
     now = _time.time()
     _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < LOGIN_WINDOW_SECONDS]
-    if len(_login_attempts[ip]) >= LOGIN_MAX_ATTEMPTS:
-        return True
+    return len(_login_attempts[ip]) >= LOGIN_MAX_ATTEMPTS
+
+def register_login_attempt(ip, success=False):
+    now = _time.time()
+    _login_attempts[ip] = [t for t in _login_attempts[ip] if now - t < LOGIN_WINDOW_SECONDS]
+    if success:
+        _login_attempts.pop(ip, None)
+        return
     _login_attempts[ip].append(now)
-    return False
 
 # ── Verrou anti double-but (ESP32 HTTP + Socket simultanes) ──
 
@@ -402,6 +467,30 @@ def init_database():
     cur.close()
     conn.close()
     logger.info(f"DB initialisee ({'PostgreSQL' if USE_POSTGRES else 'SQLite'})")
+
+def ensure_db_indexes():
+    """Cree les index utiles (idempotent) pour accelerer les requetes frequentes."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        stmts = [
+            "CREATE INDEX IF NOT EXISTS idx_users_elo ON users(elo)",
+            "CREATE INDEX IF NOT EXISTS idx_res_start_time ON reservations(start_time)",
+            "CREATE INDEX IF NOT EXISTS idx_res_reserved_by ON reservations(reserved_by)",
+            "CREATE INDEX IF NOT EXISTS idx_res_day_time ON reservations(day, time)",
+            "CREATE INDEX IF NOT EXISTS idx_scores_user_date ON scores(username, date)",
+            "CREATE INDEX IF NOT EXISTS idx_games_date ON games(date)",
+            "CREATE INDEX IF NOT EXISTS idx_user_badges_username ON user_badges(username)",
+            "CREATE INDEX IF NOT EXISTS idx_user_quests_username ON user_quests(username)",
+        ]
+        for stmt in stmts:
+            cur.execute(stmt)
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"Index DB non appliques: {e}")
+    finally:
+        cur.close()
+        conn.close()
 
 def migrate_reservations_v2():
     """Ajoute les colonnes start_time, end_time, duration_minutes et la contrainte UNIQUE si elles n'existent pas."""
@@ -1098,6 +1187,7 @@ try:
     migrate_cosmetics_v1()
     migrate_badges_v1()
     migrate_teams_to_text()
+    ensure_db_indexes()
     seed_accounts()
     seed_quests()
     schedule_cleanup()
@@ -1182,10 +1272,28 @@ def health_check():
         conn.close()
         return jsonify({"status": "healthy", "database": "connected", "timestamp": now_local().isoformat()}), 200
     except Exception as e:
-        return jsonify({"status": "unhealthy", "error": str(e)}), 500
+        logger.error(f"Health check echec: {e}")
+        return jsonify({"status": "unhealthy", "error": "database_unavailable"}), 500
+
+def _admin_game_state_payload():
+    return {
+        "current_game": current_game,
+        "active_lobby": active_lobby,
+        "rematch_votes": rematch_votes,
+        "servo_commands": servo_commands,
+    }
+
+@app.route("/api/admin/game_state")
+def api_admin_game_state():
+    username = session.get('username')
+    if not is_admin(username):
+        return jsonify({"error": "Admin requis"}), 403
+    return jsonify(_admin_game_state_payload())
 
 @app.route("/debug/static")
 def debug_static():
+    if not DEBUG_ROUTES_ENABLED:
+        return jsonify({"error": "Routes debug desactivees"}), 404
     username = session.get('username')
     if not is_admin(username):
         return jsonify({"error": "Admin requis"}), 403
@@ -1203,19 +1311,15 @@ def debug_static():
 @app.route("/debug/live")
 def debug_live():
     """Page de diagnostic live-score — supprimée en production."""
-    return jsonify({"error": "Page de debug supprimée. Utilisez /debug/game pour l'état du jeu."}), 404
+    if not DEBUG_ROUTES_ENABLED:
+        return jsonify({"error": "Routes debug desactivees"}), 404
+    return jsonify({"error": "Page de debug supprimee. Utilisez /api/admin/game_state pour l'etat du jeu."}), 404
 
 @app.route("/debug/game")
 def debug_game():
-    username = session.get('username')
-    if not is_admin(username):
-        return jsonify({"error": "Admin requis"}), 403
-    return jsonify({
-        "current_game": current_game,
-        "active_lobby": active_lobby,
-        "rematch_votes": rematch_votes,
-        "servo_commands": servo_commands,
-    })
+    if not DEBUG_ROUTES_ENABLED:
+        return jsonify({"error": "Routes debug desactivees"}), 404
+    return api_admin_game_state()
 
 # ══════════════════════════════════════════════════════════════
 # ⚠️  DEV / TEST ONLY — NE PAS UTILISER EN PRODUCTION PUBLIQUE
@@ -1232,6 +1336,9 @@ def admin_get_arduino_token():
     Réservé exclusivement au compte Imran (is_super_admin).
     Utilisé uniquement pour tester le simulateur arduino_simulator.py.
     """
+    if not DEBUG_ROUTES_ENABLED:
+        return jsonify({"error": "Routes debug desactivees"}), 404
+
     caller = session.get("username")
 
     # Vérification double : session active + super admin (Imran uniquement)
@@ -1338,9 +1445,12 @@ def api_login():
     cur.close()
     conn.close()
     if not user:
+        register_login_attempt(client_ip, success=False)
         return jsonify({"success": False, "message": "Utilisateur inconnu"}), 401
     if not bcrypt.checkpw(password.encode(), user["password"].encode()):
+        register_login_attempt(client_ip, success=False)
         return jsonify({"success": False, "message": "Mot de passe incorrect"}), 401
+    register_login_attempt(client_ip, success=True)
     session.permanent = True
     session['username'] = username
     return jsonify({"success": True, "is_admin": is_admin(username)})
@@ -1514,6 +1624,19 @@ def leaderboard():
 @app.route("/user_stats/<username>")
 @handle_errors
 def user_stats(username):
+    viewer = session.get('username')
+    accept_header = request.headers.get('Accept', '')
+    wants_html = accept_header.startswith('text/html') or accept_header.startswith('application/xhtml')
+
+    if not viewer:
+        if wants_html:
+            return redirect(url_for('login_page'))
+        return jsonify({"error": "Non connecte"}), 401
+    if viewer != username and not is_admin(viewer):
+        if wants_html:
+            return redirect(url_for('dashboard'))
+        return jsonify({"error": "Acces refuse"}), 403
+
     # Bloquer l'accès aux stats des comptes invités physiques
     if is_guest_player(username):
         return redirect(url_for('dashboard'))
@@ -1525,8 +1648,7 @@ def user_stats(username):
     if not user:
         cur.close()
         conn.close()
-        accept_header = request.headers.get('Accept', '')
-        if accept_header.startswith('text/html') or accept_header.startswith('application/xhtml'):
+        if wants_html:
             return redirect(url_for('admin_page'))
         return jsonify(None), 404
     q2 = (
@@ -1663,7 +1785,8 @@ def admin_reset_database():
         seed_accounts()
         return jsonify({"success": True, "message": "Base de donnees reinitialisee"})
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+        logger.error(f"Erreur reset_database: {e}")
+        return jsonify({"success": False, "message": "Erreur interne du serveur"}), 500
 
 @app.route('/api/delete_user', methods=['POST'])
 @handle_errors
@@ -3071,7 +3194,8 @@ def api_award_badge():
         return jsonify({"success": True, "message": f"Badge '{badge['name']}' attribué à {target}"})
     except Exception as e:
         cur.close(); conn.close()
-        return jsonify({"success": False, "message": str(e)}), 500
+        logger.error(f"Erreur api_award_badge: {e}")
+        return jsonify({"success": False, "message": "Erreur interne du serveur"}), 500
 
 
 @app.route("/api/badges/revoke", methods=["POST"])
@@ -4011,7 +4135,7 @@ def handle_start_game(data):
             logger.error(f"Erreur token Arduino (direct): {_e}")
     except Exception as e:
         logger.error(f"Erreur start_game: {e}")
-        emit('error', {'message': str(e)})
+        emit('error', {'message': "Erreur interne du serveur"})
 
 @socketio.on('unlock_servo1')
 def handle_unlock_servo1():
@@ -4114,7 +4238,7 @@ def handle_score(data):
         })
     except Exception as e:
         logger.error(f"Erreur update_score: {e}")
-        emit('error', {'message': str(e)})
+        emit('error', {'message': "Erreur interne du serveur"})
 
 @socketio.on('vote_rematch')
 def handle_vote_rematch(data):

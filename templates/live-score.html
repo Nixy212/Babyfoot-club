@@ -702,11 +702,15 @@ function renderTeamPlayers(elId, players) {
     const name = (p.nickname && p.nickname.trim()) ? p.nickname.trim() : u;
 
     // Avatar + cadres/thèmes
+    const fallbackAvatar = p.avatar_preset
+      ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.08);font-size:1rem;vertical-align:middle;margin-right:5px">${p.avatar_preset}</span>`
+      : `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,0.08);font-size:0.7rem;font-weight:700;vertical-align:middle;margin-right:5px">${u[0].toUpperCase()}</span>`;
+
     let avHtml = '';
     if (window.ProfileUtils) {
       avHtml = ProfileUtils.avatarWithCosmeticsHTML(p, 24);
-    } else if (p.has_avatar || p.avatar_url) {
-      avHtml = `<img src="/api/avatar/${encodeURIComponent(u)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px" onerror="this.style.display='none'">`;
+    } else if (u) {
+      avHtml = `<span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;overflow:hidden;vertical-align:middle;margin-right:5px">${fallbackAvatar}<img src="/api/avatar/${encodeURIComponent(u)}" style="position:absolute;inset:0;width:24px;height:24px;border-radius:50%;object-fit:cover" onload="if(this.previousElementSibling)this.previousElementSibling.style.display='none'" onerror="this.remove()"></span>`;
     } else if (p.avatar_preset) {
       avHtml = `<span style="font-size:1rem;vertical-align:middle;margin-right:4px">${p.avatar_preset}</span>`;
     } else {

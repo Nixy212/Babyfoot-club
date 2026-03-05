@@ -115,7 +115,7 @@ if (typeof window.io === 'undefined') {
             </div>
             <div class="lobby-badge badge-unavailable" id="lobbyBadge"><span>🔴</span> Réservation requise</div>
             <div class="lobby-desc" id="lobbyDesc">Réservez d'abord un créneau pour déverrouiller la création de lobby</div>
-            <button class="lobby-main-btn btn-ghost-grey" id="lobbyBtn" onclick="handleLobbyBtn()">
+            <button class="lobby-main-btn btn-ghost-grey" id="lobbyBtn" type="button">
               <i class="fas fa-lock"></i> Créer un Lobby
             </button>
           </div>
@@ -214,10 +214,10 @@ if (typeof window.io === 'undefined') {
       <div class="card-body" style="padding:.75rem 1.25rem">
         <p style="color:var(--text-tertiary);font-size:.8rem;margin:0 0 .75rem">Débloquez manuellement la balle pour démarrer une partie</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-          <button class="btn" onclick="unlockServo1(this)" style="background:rgba(52,152,219,.1);color:#3498db;border:1px solid rgba(52,152,219,.3);font-size:.85rem;padding:.6rem .875rem">
+          <button class="btn" id="servo1Btn" type="button" style="background:rgba(52,152,219,.1);color:#3498db;border:1px solid rgba(52,152,219,.3);font-size:.85rem;padding:.6rem .875rem">
             🔒 Servo 1 <small style="opacity:.7;font-size:.78rem">(Éq. 1)</small>
           </button>
-          <button class="btn" onclick="unlockServo2(this)" style="background:rgba(231,76,60,.08);color:#e74c3c;border:1px solid rgba(231,76,60,.25);font-size:.85rem;padding:.6rem .875rem">
+          <button class="btn" id="servo2Btn" type="button" style="background:rgba(231,76,60,.08);color:#e74c3c;border:1px solid rgba(231,76,60,.25);font-size:.85rem;padding:.6rem .875rem">
             🔒 Servo 2 <small style="opacity:.7;font-size:.78rem">(Éq. 2)</small>
           </button>
         </div>
@@ -237,6 +237,7 @@ catch(e) { socket = {emit:()=>{},on:()=>{},connected:false}; }
 
 let currentUsername=null, isAdmin=false, hasReservation=false;
 let activeLobbyState=null, myJoinRequestPending=false, isGameActive=false;
+const escHtml = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 // ── Chargement utilisateur ──────────────────────────────────────────────────
 async function loadCurrentUser() {
@@ -281,9 +282,9 @@ async function loadMyResa() {
 // ── Lobby card ───────────────────────────────────────────────────────────────
 async function checkActiveLobby() {
   try {
-    const [lR,gR] = await Promise.all([fetch('/api/active_lobby'),fetch('/debug/game')]);
+    const [lR,gR] = await Promise.all([fetch('/api/active_lobby'),fetch('/api/current_game')]);
     if (lR.ok) activeLobbyState = await lR.json();
-    if (gR.ok) { const g=await gR.json(); isGameActive=!!(g?.current_game?.active); }
+    if (gR.ok) { const g=await gR.json(); isGameActive=!!(g?.active || g?.current_game?.active); }
     updateLobbyCardUI();
   } catch(e) {}
 }
@@ -374,10 +375,25 @@ async function handleLobbyBtn() {
 // ── Notifications ────────────────────────────────────────────────────────────
 function showNotif(msg, type) {
   const bar = document.getElementById('notificationBar');
+  if (!bar) return;
   const colors = {error:'#e74c3c',success:'#2ecc71',info:'var(--bronze)'};
-  const n = document.createElement('div'); n.className='notification';
+  const n = document.createElement('div');
+  n.className='notification';
   n.style.borderLeft=`3px solid ${colors[type]||colors.info}`;
-  n.innerHTML=`<div style="flex:1;color:var(--text-primary)">${msg}</div><button onclick="this.closest('.notification').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:0 2px;flex-shrink:0">✕</button>`;
+
+  const txt = document.createElement('div');
+  txt.style.flex = '1';
+  txt.style.color = 'var(--text-primary)';
+  txt.textContent = String(msg || '');
+
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;padding:0 2px;flex-shrink:0';
+  close.textContent = '✕';
+  close.addEventListener('click', () => n.remove());
+
+  n.appendChild(txt);
+  n.appendChild(close);
   bar.appendChild(n);
   setTimeout(()=>{ n.style.cssText+=';opacity:0;transform:translateX(20px);transition:all .3s'; setTimeout(()=>n.remove(),300); },5000);
 }
@@ -392,19 +408,18 @@ async function loadLeaderboard() {
     let data = (await res.json()).filter(p=>/^Joueur\d+$/i.test(p.username)===false);
     if(!data.length) { el.innerHTML='<p style="color:var(--text-muted);text-align:center">Aucun classement — jouez une partie !</p>'; return; }
     const M=['🥇','🥈','🥉'];
-    const esc = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     el.innerHTML=data.slice(0,3).map((p,i)=>{
       const prof = Object.assign({}, cache[p.username] || { username: p.username }, p);
       const name = (prof.nickname && prof.nickname.trim()) ? prof.nickname.trim() : prof.username;
-      const sub = name !== prof.username ? `<span style="font-size:.7rem;color:var(--text-muted);display:block;line-height:1.1">@${esc(prof.username)}</span>` : '';
+      const sub = name !== prof.username ? `<span style="font-size:.7rem;color:var(--text-muted);display:block;line-height:1.1">@${escHtml(prof.username)}</span>` : '';
       const av = window.ProfileUtils
         ? ProfileUtils.avatarWithCosmeticsHTML(prof, 34)
-        : `<span style="width:34px;height:34px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700">${esc((prof.username||'?')[0].toUpperCase())}</span>`;
+        : `<span style="width:34px;height:34px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700">${escHtml((prof.username||'?')[0].toUpperCase())}</span>`;
       return `
       <div style="display:flex;align-items:center;gap:.75rem;padding:.625rem 0;${i<2?'border-bottom:1px solid var(--border-subtle)':''}">
         <span style="font-size:1.2rem;flex-shrink:0">${M[i]||i+1}</span>
         ${av}
-        <span style="font-weight:700;color:var(--text-primary);flex:1;line-height:1.2">${esc(name)}${sub}</span>
+        <span style="font-weight:700;color:var(--text-primary);flex:1;line-height:1.2">${escHtml(name)}${sub}</span>
         <span style="font-weight:900;color:var(--bronze)">${p.elo||1000} <small style="font-size:.7rem;font-weight:500;color:var(--text-tertiary)">ELO</small></span>
       </div>`;
     }).join('');
@@ -414,7 +429,6 @@ async function loadLeaderboard() {
 async function loadReservations() {
   const el = document.getElementById('reservations');
   try {
-    const esc = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     if (window.ProfileUtils) await ProfileUtils.fetchAllProfiles(false);
     const cache = (window.ProfileUtils && ProfileUtils._getAllCache) ? ProfileUtils._getAllCache() : {};
     const res = await fetch('/reservations_today'); if(!res.ok) throw new Error();
@@ -435,7 +449,7 @@ async function loadReservations() {
           ${av}
           <div>
             <div style="font-weight:600;font-size:.9rem;color:var(--text-primary)">${r.day===todayFr?"Aujourd'hui":'Demain'} · ${r.time}${past?' <span style="font-size:.7rem;color:var(--text-muted)">(passé)</span>':''}</div>
-            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} — ${esc(dname)}</div>
+            <div style="color:var(--text-tertiary);font-size:.8rem">${r.mode} — ${escHtml(dname)}</div>
           </div>
         </div>
         ${isMine?'<span style="font-size:.75rem;padding:2px 10px;border-radius:20px;background:rgba(205,127,50,.15);color:var(--bronze);font-weight:600">Vous</span>':''}
@@ -515,8 +529,87 @@ socket.on('join_request_result',d=>{
     checkActiveLobby();
   }
 });
-socket.on('lobby_invitation',d=>{if(d.to!==currentUsername)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.innerHTML=`<div style="flex:1"><strong style="color:var(--bronze)">${d.from}</strong> vous invite à jouer</div><div class="notification-buttons"><button class="btn-accept" onclick="acceptLobby(this.closest('.notification'))">✓ Accepter</button><button class="btn-decline" onclick="declineLobby(this.closest('.notification'))">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),15000);});
-socket.on('join_request',d=>{if(d.host!==currentUsername&&!isAdmin)return;const bar=document.getElementById('notificationBar');const n=document.createElement('div');n.className='notification';n.style.borderLeft='3px solid #3498db';n.innerHTML=`<div style="flex:1"><strong style="color:#3498db">${d.from}</strong> veut rejoindre votre lobby</div><div class="notification-buttons"><button class="btn-accept" style="background:linear-gradient(135deg,#2980b9,#3498db)" onclick="socket.emit('accept_join_request',{request_id:'${d.request_id}'});this.closest('.notification').remove()">✓</button><button class="btn-decline" onclick="socket.emit('decline_join_request',{request_id:'${d.request_id}'});this.closest('.notification').remove()">✕</button></div>`;bar.appendChild(n);setTimeout(()=>n.remove&&n.remove(),20000);});
+socket.on('lobby_invitation', (d) => {
+  if (d.to !== currentUsername) return;
+  const bar = document.getElementById('notificationBar');
+  if (!bar) return;
+
+  const n = document.createElement('div');
+  n.className = 'notification';
+
+  const txt = document.createElement('div');
+  txt.style.flex = '1';
+  const who = document.createElement('strong');
+  who.style.color = 'var(--bronze)';
+  who.textContent = d.from || 'Quelqu’un';
+  txt.appendChild(who);
+  txt.appendChild(document.createTextNode(' vous invite à jouer'));
+
+  const actions = document.createElement('div');
+  actions.className = 'notification-buttons';
+  const accept = document.createElement('button');
+  accept.className = 'btn-accept';
+  accept.type = 'button';
+  accept.textContent = '✓ Accepter';
+  accept.addEventListener('click', () => acceptLobby(n));
+  const decline = document.createElement('button');
+  decline.className = 'btn-decline';
+  decline.type = 'button';
+  decline.textContent = '✕';
+  decline.addEventListener('click', () => declineLobby(n));
+  actions.appendChild(accept);
+  actions.appendChild(decline);
+
+  n.appendChild(txt);
+  n.appendChild(actions);
+  bar.appendChild(n);
+  setTimeout(() => n.remove && n.remove(), 15000);
+});
+
+socket.on('join_request', (d) => {
+  if (d.host !== currentUsername && !isAdmin) return;
+  const bar = document.getElementById('notificationBar');
+  if (!bar) return;
+
+  const n = document.createElement('div');
+  n.className = 'notification';
+  n.style.borderLeft = '3px solid #3498db';
+
+  const txt = document.createElement('div');
+  txt.style.flex = '1';
+  const who = document.createElement('strong');
+  who.style.color = '#3498db';
+  who.textContent = d.from || 'Un joueur';
+  txt.appendChild(who);
+  txt.appendChild(document.createTextNode(' veut rejoindre votre lobby'));
+
+  const actions = document.createElement('div');
+  actions.className = 'notification-buttons';
+  const accept = document.createElement('button');
+  accept.className = 'btn-accept';
+  accept.type = 'button';
+  accept.style.background = 'linear-gradient(135deg,#2980b9,#3498db)';
+  accept.textContent = '✓';
+  accept.addEventListener('click', () => {
+    socket.emit('accept_join_request', { request_id: d.request_id });
+    n.remove();
+  });
+  const decline = document.createElement('button');
+  decline.className = 'btn-decline';
+  decline.type = 'button';
+  decline.textContent = '✕';
+  decline.addEventListener('click', () => {
+    socket.emit('decline_join_request', { request_id: d.request_id });
+    n.remove();
+  });
+  actions.appendChild(accept);
+  actions.appendChild(decline);
+
+  n.appendChild(txt);
+  n.appendChild(actions);
+  bar.appendChild(n);
+  setTimeout(() => n.remove && n.remove(), 20000);
+});
 socket.on('error',d=>showNotif('✕ '+(d.message||'Erreur'),'error'));
 socket.on('elo_updated',d=>{if(!d?.changes)return;const me=d.changes.find(c=>c.player===currentUsername);if(!me)return;const sign=me.delta>=0?'+':'';showNotif(`${me.tier_up?'🎉 Niveau supérieur ! ':me.delta>=20?'🔥 Belle victoire ! ':''}${sign}${me.delta} pts ELO`,me.delta>=0?'success':'error');});
 
@@ -532,8 +625,20 @@ function acceptLobby(el){
 }
 function declineLobby(el){socket.emit('decline_lobby');el?.remove();}
 
+function initDashboardBindings() {
+  const lobbyBtn = document.getElementById('lobbyBtn');
+  if (lobbyBtn) lobbyBtn.addEventListener('click', handleLobbyBtn);
+
+  const servo1Btn = document.getElementById('servo1Btn');
+  if (servo1Btn) servo1Btn.addEventListener('click', () => unlockServo1(servo1Btn));
+
+  const servo2Btn = document.getElementById('servo2Btn');
+  if (servo2Btn) servo2Btn.addEventListener('click', () => unlockServo2(servo2Btn));
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 (async()=>{
+  initDashboardBindings();
   await loadCurrentUser();
   await Promise.all([loadLeaderboard(),loadReservations(),loadQuestsWidget()]);
 })();

@@ -1,8 +1,8 @@
 // Service Worker - Baby-Foot Club
 // Optimise mobile et connexions lentes (cache statique + runtime robuste).
 
-const STATIC_CACHE = 'babyfoot-static-v46';
-const RUNTIME_CACHE = 'babyfoot-runtime-v46';
+const STATIC_CACHE = 'babyfoot-static-v47';
+const RUNTIME_CACHE = 'babyfoot-runtime-v47';
 
 const STATIC_ASSETS = [
   '/static/design-v3.css',
@@ -20,7 +20,6 @@ const STATIC_ASSETS = [
 const PUBLIC_DYNAMIC_PATHS = [
   '/leaderboard',
   '/reservations',
-  '/user_stats',
   '/scores_all',
   '/api/public_stats',
 ];
@@ -135,7 +134,10 @@ async function fetchWithTimeout(request, timeoutMs) {
 }
 
 function shouldCacheResponse(response) {
-  return !!response && (response.ok || response.type === 'opaque');
+  if (!response) return false;
+  const cacheControl = String(response.headers.get('Cache-Control') || '').toLowerCase();
+  if (cacheControl.includes('no-store')) return false;
+  return response.ok || response.type === 'opaque';
 }
 
 async function staleWhileRevalidate(request, cacheName) {
@@ -217,8 +219,12 @@ function offlineHtmlResponse() {
     <div style="font-size:2.1rem">📶</div>
     <h1>Connexion indisponible</h1>
     <p>Le serveur est temporairement inaccessible. Verifie ton reseau puis reessaie.</p>
-    <button onclick="location.reload()">Reessayer</button>
+    <button id="retryBtn">Reessayer</button>
   </div>
+  <script>
+    const retry = document.getElementById('retryBtn');
+    if (retry) retry.addEventListener('click', () => location.reload());
+  </script>
 </body>
 </html>`, { headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
 }

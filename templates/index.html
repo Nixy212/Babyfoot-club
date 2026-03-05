@@ -292,7 +292,7 @@ async function initNav() {
     const av = document.getElementById('navAvatar');
     const inner = document.getElementById('navAvatarInner');
     av.style.display = 'flex';
-    if (user.has_avatar || user.avatar_url) {
+    if (user.username) {
       const img = document.createElement('img');
       img.src = '/api/avatar/' + encodeURIComponent(user.username);
       img.onerror = () => { inner.textContent = (user.username[0] || '?').toUpperCase(); };

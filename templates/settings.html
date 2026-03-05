@@ -356,7 +356,7 @@
         <!-- Avatar -->
         <div class="perso-label" style="margin-bottom:0.75rem">Photo de profil</div>
         <div class="avatar-section">
-          <div class="avatar-preview-wrap" onclick="document.getElementById('avatarFileInput').click()">
+          <div class="avatar-preview-wrap" id="avatarPreviewWrap" role="button" tabindex="0" aria-label="Choisir une photo de profil">
             <div class="avatar-preview-big" id="avatarPreviewBig">
               <span id="avatarPreviewEmoji">?</span>
               <img id="avatarPreviewImg" src="" style="display:none">
@@ -366,30 +366,29 @@
           <div>
             <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem">Choisir un avatar</div>
             <div class="avatar-presets" id="avatarPresets">
-              <button class="avatar-preset-btn" data-preset="⚽" onclick="selectPreset('⚽')">⚽</button>
-              <button class="avatar-preset-btn" data-preset="🏆" onclick="selectPreset('🏆')">🏆</button>
-              <button class="avatar-preset-btn" data-preset="🔥" onclick="selectPreset('🔥')">🔥</button>
-              <button class="avatar-preset-btn" data-preset="⚡" onclick="selectPreset('⚡')">⚡</button>
-              <button class="avatar-preset-btn" data-preset="👑" onclick="selectPreset('👑')">👑</button>
-              <button class="avatar-preset-btn" data-preset="💎" onclick="selectPreset('💎')">💎</button>
-              <button class="avatar-preset-btn" data-preset="🎯" onclick="selectPreset('🎯')">🎯</button>
-              <button class="avatar-preset-btn" data-preset="🦁" onclick="selectPreset('🦁')">🦁</button>
+              <button class="avatar-preset-btn" type="button" data-preset="⚽">⚽</button>
+              <button class="avatar-preset-btn" type="button" data-preset="🏆">🏆</button>
+              <button class="avatar-preset-btn" type="button" data-preset="🔥">🔥</button>
+              <button class="avatar-preset-btn" type="button" data-preset="⚡">⚡</button>
+              <button class="avatar-preset-btn" type="button" data-preset="👑">👑</button>
+              <button class="avatar-preset-btn" type="button" data-preset="💎">💎</button>
+              <button class="avatar-preset-btn" type="button" data-preset="🎯">🎯</button>
+              <button class="avatar-preset-btn" type="button" data-preset="🦁">🦁</button>
             </div>
             <div style="margin-top:0.6rem">
-              <button class="btn btn-ghost" style="font-size:0.8rem;padding:0.4rem 0.8rem" onclick="document.getElementById('avatarFileInput').click()">
+              <button class="btn btn-ghost" id="avatarUploadTrigger" type="button" style="font-size:0.8rem;padding:0.4rem 0.8rem">
                 📷 Uploader une photo
               </button>
             </div>
           </div>
         </div>
-        <input type="file" id="avatarFileInput" accept="image/*,.heic,.heif" style="display:none" onchange="handleAvatarUpload(this)">
+        <input type="file" id="avatarFileInput" accept="image/*,.heic,.heif" style="display:none">
 
         <!-- Surnom -->
         <div style="margin-bottom:1rem">
           <div class="perso-label">Surnom affiché en jeu</div>
           <input type="text" class="perso-input" id="nicknameInput" maxlength="30"
-                 placeholder="Ton surnom (laisser vide = username)"
-                 oninput="document.getElementById('nicknameCount').textContent=this.value.length+'/30'">
+                 placeholder="Ton surnom (laisser vide = username)">
           <div class="char-count" id="nicknameCount">0/30</div>
         </div>
 
@@ -398,12 +397,11 @@
           <div class="perso-label">Citation / statut</div>
           <textarea class="perso-input" id="bioInput" maxlength="120" rows="2"
                     placeholder="Ta devise de joueur..."
-                    oninput="document.getElementById('bioCount').textContent=this.value.length+'/120'"
                     style="resize:none"></textarea>
           <div class="char-count" id="bioCount">0/120</div>
         </div>
 
-        <button class="btn btn-primary btn-full" onclick="saveProfile()" id="btnSaveProfile">
+        <button class="btn btn-primary btn-full" id="btnSaveProfile" type="button">
           Sauvegarder le profil
         </button>
       </div>
@@ -448,7 +446,7 @@
           <div>
             <div class="pw-label">Nouveau mot de passe</div>
             <div class="pw-input-wrap">
-              <input type="password" id="newPw" placeholder="Min. 6 caractères" autocomplete="new-password" oninput="checkStrength(this.value)">
+              <input type="password" id="newPw" placeholder="Min. 6 caractères" autocomplete="new-password">
             </div>
             <div class="pw-strength"><div class="pw-strength-bar" id="strengthBar"></div></div>
             <div class="pw-strength-text" id="strengthText"></div>
@@ -460,7 +458,7 @@
             </div>
           </div>
         </div>
-        <button class="btn btn-primary btn-full" onclick="changePassword()" id="btnChangePw">
+        <button class="btn btn-primary btn-full" id="btnChangePw" type="button">
           Mettre à jour le mot de passe
         </button>
       </div>
@@ -917,10 +915,7 @@ function renderCosmeticSelectors() {
     const isEquipped = equippedTheme === t.key || (!equippedTheme && t.key === 'default');
     const isLocked = t.cosmetic_key && !unlockedCosmetics.includes(t.cosmetic_key);
     const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
-    const clickHandler = isLocked
-      ? `toast('🔒 Complete des quetes pour debloquer ce theme', 'err')`
-      : `equipCosmetic('theme','${t.key}')`;
-    return `<button type="button" onclick="${clickHandler}" class="cosmetic-option theme-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" style="--theme-c1:${t.c1};--theme-c2:${t.c2}" aria-pressed="${isEquipped ? 'true' : 'false'}">
+    return `<button type="button" data-cosmetic-type="theme" data-cosmetic-key="${t.key}" data-locked="${isLocked ? '1' : '0'}" class="cosmetic-option theme-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" style="--theme-c1:${t.c1};--theme-c2:${t.c2}" aria-pressed="${isEquipped ? 'true' : 'false'}">
       ${isLocked ? '<span class="cosmetic-lock">🔒</span>' : ''}
       <span class="theme-preview"><span class="theme-preview-icon">${t.icon}</span></span>
       <span class="cosmetic-label">${t.name}</span>
@@ -933,9 +928,6 @@ function renderCosmeticSelectors() {
     const isEquipped = equippedFrame === f.key || (!equippedFrame && f.key === 'none');
     const isLocked = f.cosmetic_key && !unlockedCosmetics.includes(f.cosmetic_key);
     const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
-    const clickHandler = isLocked
-      ? `toast('🔒 Complete des quetes pour debloquer ce cadre', 'err')`
-      : `equipCosmetic('frame','${f.key}')`;
     const frameUser = Object.assign({}, previewSeed, {
       active_theme: equippedTheme || 'default',
       active_frame: f.key === 'none' ? 'none' : f.key,
@@ -944,7 +936,7 @@ function renderCosmeticSelectors() {
       ? ProfileUtils.avatarWithCosmeticsHTML(frameUser, 50)
       : `<span style="font-size:1.2rem">${f.icon}</span>`;
 
-    return `<button type="button" onclick="${clickHandler}" class="cosmetic-option frame-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" aria-pressed="${isEquipped ? 'true' : 'false'}">
+    return `<button type="button" data-cosmetic-type="frame" data-cosmetic-key="${f.key}" data-locked="${isLocked ? '1' : '0'}" class="cosmetic-option frame-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" aria-pressed="${isEquipped ? 'true' : 'false'}">
       ${isLocked ? '<span class="cosmetic-lock">🔒</span>' : ''}
       <span class="frame-preview-wrap">${framePreview}</span>
       <span class="cosmetic-label">${f.icon} ${f.name}</span>
@@ -953,6 +945,87 @@ function renderCosmeticSelectors() {
       <span class="cosmetic-state">${stateLabel}</span>
     </button>`;
   }).join('');
+}
+
+function handleCosmeticGridClick(event) {
+  const btn = event.target && event.target.closest
+    ? event.target.closest('[data-cosmetic-type][data-cosmetic-key]')
+    : null;
+  if (!btn) return;
+  const type = btn.dataset.cosmeticType;
+  const key = btn.dataset.cosmeticKey;
+  if (!type || !key) return;
+  if (btn.dataset.locked === '1') {
+    toast(type === 'theme'
+      ? '🔒 Complete des quetes pour debloquer ce theme'
+      : '🔒 Complete des quetes pour debloquer ce cadre', 'err');
+    return;
+  }
+  equipCosmetic(type, key);
+}
+
+function initSettingsBindings() {
+  const fileInput = document.getElementById('avatarFileInput');
+  const openAvatarPicker = () => {
+    if (fileInput) fileInput.click();
+  };
+
+  const avatarWrap = document.getElementById('avatarPreviewWrap');
+  if (avatarWrap) {
+    avatarWrap.addEventListener('click', openAvatarPicker);
+    avatarWrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openAvatarPicker();
+      }
+    });
+  }
+
+  const avatarUploadTrigger = document.getElementById('avatarUploadTrigger');
+  if (avatarUploadTrigger) avatarUploadTrigger.addEventListener('click', openAvatarPicker);
+
+  if (fileInput) {
+    fileInput.addEventListener('change', () => handleAvatarUpload(fileInput));
+  }
+
+  document.querySelectorAll('.avatar-preset-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      const emoji = b.dataset.preset || '';
+      if (emoji) selectPreset(emoji);
+    });
+  });
+
+  const nicknameInput = document.getElementById('nicknameInput');
+  const nicknameCount = document.getElementById('nicknameCount');
+  if (nicknameInput && nicknameCount) {
+    nicknameInput.addEventListener('input', () => {
+      nicknameCount.textContent = `${nicknameInput.value.length}/30`;
+    });
+  }
+
+  const bioInput = document.getElementById('bioInput');
+  const bioCount = document.getElementById('bioCount');
+  if (bioInput && bioCount) {
+    bioInput.addEventListener('input', () => {
+      bioCount.textContent = `${bioInput.value.length}/120`;
+    });
+  }
+
+  const saveProfileBtn = document.getElementById('btnSaveProfile');
+  if (saveProfileBtn) saveProfileBtn.addEventListener('click', saveProfile);
+
+  const newPwInput = document.getElementById('newPw');
+  if (newPwInput) {
+    newPwInput.addEventListener('input', () => checkStrength(newPwInput.value));
+  }
+
+  const changePwBtn = document.getElementById('btnChangePw');
+  if (changePwBtn) changePwBtn.addEventListener('click', changePassword);
+
+  const themeGrid = document.getElementById('themeSelectorGrid');
+  if (themeGrid) themeGrid.addEventListener('click', handleCosmeticGridClick);
+  const frameGrid = document.getElementById('frameSelectorGrid');
+  if (frameGrid) frameGrid.addEventListener('click', handleCosmeticGridClick);
 }
 
 // ── Quêtes ────────────────────────────────────────────────────
@@ -1076,10 +1149,21 @@ async function loadProfile() {
 
     // Avatar dans l'en-tête
     if (avEl) {
-      if (profile.avatar_url) {
+      const avatarUser = Object.assign({}, user, profile || {}, {
+        username: user.username,
+        avatar_preset: (profile && profile.avatar_preset) || user.avatar_preset || '',
+        has_avatar: typeof (profile && profile.has_avatar) === 'boolean'
+          ? profile.has_avatar
+          : !!((profile && profile.avatar_url) || user.avatar_url || user.has_avatar),
+      });
+      if (window.ProfileUtils && ProfileUtils.avatarWithCosmeticsHTML) {
+        avEl.style.background = 'transparent';
+        avEl.style.boxShadow = 'none';
+        avEl.innerHTML = ProfileUtils.avatarWithCosmeticsHTML(avatarUser, 72);
+      } else if (profile.avatar_url) {
         avEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      } else if (profile.avatar_preset) {
-        avEl.textContent = profile.avatar_preset;
+      } else if (profile.avatar_preset || user.avatar_preset) {
+        avEl.textContent = profile.avatar_preset || user.avatar_preset;
       } else {
         avEl.textContent = user.username[0].toUpperCase();
       }
@@ -1150,6 +1234,7 @@ async function loadProfile() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
+initSettingsBindings();
 loadProfile();
 loadQuests();
 </script>

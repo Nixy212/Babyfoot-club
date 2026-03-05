@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f111a">
   <meta name="color-scheme" content="dark">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}Baby-Foot Club{% endblock %}</title>
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json', v=asset_version) }}">
   <meta name="mobile-web-app-capable" content="yes">
@@ -51,7 +52,7 @@
         <div class="nav-avatar" id="navAv">?</div>
         <span class="nav-username" id="navUsername"></span>
       </div>
-      <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Menu">
+      <button class="burger" id="burger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -59,7 +60,7 @@
 </nav>
 
 <div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-menu-close" onclick="toggleMenu()">✕</button>
+  <button class="mobile-menu-close" id="mobileMenuClose" type="button">✕</button>
   <a href="/dashboard" {% if active_page == 'dashboard' %}class="active"{% endif %}>🏠 Dashboard</a>
   <a href="/reservation" {% if active_page == 'reservation' %}class="active"{% endif %}>📅 Réserver</a>
   <a href="/live-score" {% if active_page == 'live' %}class="active"{% endif %}>🎮 Partie Live</a>
@@ -69,15 +70,15 @@
   <a href="/settings" {% if active_page == 'settings' %}class="active"{% endif %}>⚙️ Paramètres</a>
   <a href="/admin" id="adminBtnMobile" style="display:none">🔧 Admin</a>
   <div class="mobile-menu-sep"></div>
-  <button class="mobile-menu-logout" onclick="logout()">🚪 Déconnexion</button>
-  <button id="pwa-install-trigger" class="mobile-menu-action-btn" onclick="triggerPwaInstall()" style="display:none">
+  <button class="mobile-menu-logout" id="mobileLogoutBtn" type="button">🚪 Déconnexion</button>
+  <button id="pwa-install-trigger" class="mobile-menu-action-btn" type="button" style="display:none">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 13h6M12 10v6"/></svg>Installer l'app
   </button>
   <button id="compactModeToggle" class="mobile-menu-action-btn" type="button">🗜️ Mode compact</button>
   <button id="hardRefreshBtn" class="mobile-menu-action-btn" type="button">🔄 Forcer mise à jour</button>
   <button id="onboardingTrigger" class="mobile-menu-action-btn" type="button">💡 Aide rapide</button>
 </div>
-<div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+<div class="menu-overlay" id="menuOverlay"></div>
 
 <div class="onboarding-overlay" id="onboardingModal" style="display:none">
   <div class="onboarding-card">
@@ -117,6 +118,38 @@
 <script>
 const BF_COMPACT_KEY = 'bf_compact_mode';
 const BF_ONBOARDING_KEY = 'bf_onboarding_seen_v2';
+
+(function patchFetchWithCsrf() {
+  if (!window.fetch || window.__csrfFetchPatched) return;
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = meta ? meta.getAttribute('content') : '';
+  if (!csrfToken) return;
+
+  const mutatingMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = function(input, init) {
+    const opts = init ? { ...init } : {};
+    const reqMethod = String(
+      opts.method || (input instanceof Request ? input.method : 'GET')
+    ).toUpperCase();
+    if (mutatingMethods.has(reqMethod)) {
+      const requestUrl = (typeof input === 'string')
+        ? input
+        : ((input && input.url) ? input.url : '');
+      try {
+        const absoluteUrl = new URL(requestUrl, window.location.origin);
+        if (absoluteUrl.origin === window.location.origin) {
+          const baseHeaders = opts.headers || (input instanceof Request ? input.headers : undefined);
+          const headers = new Headers(baseHeaders || {});
+          if (!headers.has('X-CSRF-Token')) headers.set('X-CSRF-Token', csrfToken);
+          opts.headers = headers;
+        }
+      } catch (e) {}
+    }
+    return nativeFetch(input, opts);
+  };
+  window.__csrfFetchPatched = true;
+})();
 
 function toggleMenu() {
   const menu = document.getElementById('mobileMenu');
@@ -230,6 +263,29 @@ function initBaseUX() {
 
   const compactBtn = document.getElementById('compactModeToggle');
   if (compactBtn) compactBtn.addEventListener('click', toggleCompactMode);
+
+  const burger = document.getElementById('burger');
+  if (burger) burger.addEventListener('click', toggleMenu);
+
+  const mobileMenuClose = document.getElementById('mobileMenuClose');
+  if (mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMenu);
+
+  const menuOverlay = document.getElementById('menuOverlay');
+  if (menuOverlay) menuOverlay.addEventListener('click', toggleMenu);
+
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.addEventListener('click', () => {
+      if (typeof window.logout === 'function') window.logout();
+    });
+  }
+
+  const pwaInstallBtn = document.getElementById('pwa-install-trigger');
+  if (pwaInstallBtn) {
+    pwaInstallBtn.addEventListener('click', () => {
+      if (typeof window.triggerPwaInstall === 'function') window.triggerPwaInstall();
+    });
+  }
 
   const refreshBtn = document.getElementById('hardRefreshBtn');
   if (refreshBtn) refreshBtn.addEventListener('click', forceHardRefresh);

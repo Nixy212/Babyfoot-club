@@ -7,9 +7,15 @@ window.ProfileUtils = (() => {
   const CACHE_TTL_MS = 15000;
   let _lastFetchAt = 0;
   let _inflightProfilesReq = null;
+  const _avatarMissing = new Set();
 
   function _cacheFresh() {
     return Object.keys(_cache).length > 0 && (Date.now() - _lastFetchAt) < CACHE_TTL_MS;
+  }
+
+  function mergeUserData(prev, next) {
+    if (!next || !next.username) return prev || next || {};
+    return { ...(prev || {}), ...next, username: next.username };
   }
 
   function normalizeThemeKey(raw) {
@@ -58,7 +64,7 @@ window.ProfileUtils = (() => {
         if (!res.ok) return _cache;
         const list = await res.json();
         (Array.isArray(list) ? list : []).forEach((u) => {
-          if (u && u.username) _cache[u.username] = u;
+          if (u && u.username) _cache[u.username] = mergeUserData(_cache[u.username], u);
         });
         if (Object.keys(_cache).length > 0) _lastFetchAt = Date.now();
       } catch (e) {}
@@ -85,20 +91,36 @@ window.ProfileUtils = (() => {
       .replace(/'/g, '&#39;');
   }
 
+  function avatarFallbackHTML(user, size) {
+    const s = size || 36;
+    if (!user) return '<span>?</span>';
+    if (user.avatar_preset) {
+      return `<span style="font-size:${Math.round(s * 0.55)}px;line-height:1">${escapeHtml(user.avatar_preset)}</span>`;
+    }
+    const initial = (user.username || '?')[0].toUpperCase();
+    return `<span style="font-size:${Math.round(s * 0.45)}px;font-weight:700">${escapeHtml(initial)}</span>`;
+  }
+
   function avatarHTML(user, size) {
     const s = size || 36;
     if (!user) return '<span>?</span>';
-    if ((user.has_avatar || user.avatar_url) && user.username) {
-      const src = '/api/avatar/' + encodeURIComponent(user.username);
-      const ox = Number.isFinite(Number(user.avatar_crop_x)) ? Number(user.avatar_crop_x) : 50;
-      const oy = Number.isFinite(Number(user.avatar_crop_y)) ? Number(user.avatar_crop_y) : 50;
-      return `<img src="${src}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;object-position:${ox}% ${oy}%;" alt="" onerror="this.style.display='none'">`;
+
+    const username = String(user.username || '');
+    if (!username) return avatarFallbackHTML(user, s);
+
+    // Evite les requetes 404 repetitives tout en restant tolerant si un avatar apparait ensuite.
+    if (_avatarMissing.has(username) && !user.avatar_url && user.has_avatar !== true) {
+      return avatarFallbackHTML(user, s);
     }
-    if (user.avatar_preset) {
-      return `<span style="font-size:${Math.round(s * 0.55)}px;line-height:1">${user.avatar_preset}</span>`;
-    }
-    const initial = (user.username || '?')[0].toUpperCase();
-    return `<span style="font-size:${Math.round(s * 0.45)}px;font-weight:700">${initial}</span>`;
+    if (user.has_avatar === true || user.avatar_url) _avatarMissing.delete(username);
+
+    const src = '/api/avatar/' + encodeURIComponent(username);
+    const ox = Number.isFinite(Number(user.avatar_crop_x)) ? Number(user.avatar_crop_x) : 50;
+    const oy = Number.isFinite(Number(user.avatar_crop_y)) ? Number(user.avatar_crop_y) : 50;
+    const fallback = avatarFallbackHTML(user, s);
+    const usernameEncoded = encodeURIComponent(username);
+
+    return `<span style="position:relative;width:${s}px;height:${s}px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%">${fallback}<img src="${src}" style="position:absolute;inset:0;width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;object-position:${ox}% ${oy}%;" alt="" loading="lazy" decoding="async" onload="if(window.ProfileUtils&&ProfileUtils._markAvatarPresent)ProfileUtils._markAvatarPresent(decodeURIComponent('${usernameEncoded}'));if(this.previousElementSibling)this.previousElementSibling.style.display='none'" onerror="if(window.ProfileUtils&&ProfileUtils._markAvatarMissing)ProfileUtils._markAvatarMissing(decodeURIComponent('${usernameEncoded}'));this.remove()"></span>`;
   }
 
   function avatarWithCosmeticsHTML(user, size, opts) {
@@ -130,8 +152,7 @@ window.ProfileUtils = (() => {
       const cx = Number.isFinite(Number(b.crop_x)) ? Number(b.crop_x) : 50;
       const cy = Number.isFinite(Number(b.crop_y)) ? Number(b.crop_y) : 50;
       const cs = Number.isFinite(Number(b.crop_scale)) ? Math.max(1, Number(b.crop_scale)) : 1;
-      const imgSize = Math.max(size, Math.round(size * cs));
-      inner = `<img src="${b.image_url}" alt="${name}" style="width:${imgSize}px;height:${imgSize}px;display:block;flex-shrink:0;object-fit:cover;object-position:${cx}% ${cy}%">`;
+      inner = `<img src="${b.image_url}" alt="${name}" style="width:100%;height:100%;display:block;flex-shrink:0;object-fit:cover;object-position:${cx}% ${cy}%;transform:scale(${cs});transform-origin:${cx}% ${cy}%">`;
     } else if (b.icon) {
       inner = `<span style="font-size:${Math.max(10, Math.round(size * 0.56))}px;line-height:1;user-select:none">${escapeHtml(b.icon)}</span>`;
     } else {
@@ -139,9 +160,9 @@ window.ProfileUtils = (() => {
     }
 
     const ring = showRing
-      ? `box-shadow:inset 0 0 0 ${borderWidth}px ${color}66,inset 0 0 0 ${Math.max(1, borderWidth - 0.4)}px rgba(255,255,255,.1)${withHalo ? `,0 0 10px ${color}3f` : ''};`
+      ? `box-shadow:0 0 0 ${Math.max(1, Math.round(borderWidth * 0.65))}px ${color}3d${withHalo ? `,0 0 ${Math.max(6, Math.round(size * 0.4))}px ${color}2a` : ''};`
       : `border:1px solid rgba(255,255,255,.14);`;
-    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 28% 22%,${color}2e 0%,${color}14 52%,rgba(10,12,18,.82) 100%);${ring}overflow:hidden;flex-shrink:0;transform:translateZ(0)"><span style="display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;overflow:hidden;background:rgba(0,0,0,.1)">${inner}</span></span>`;
+    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:rgba(10,12,18,.9);${ring}overflow:hidden;flex-shrink:0;transform:translateZ(0)"><span style="display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;overflow:hidden">${inner}</span></span>`;
   }
 
   function badgesOnlyHTML(user, imgSize) {
@@ -194,25 +215,30 @@ window.ProfileUtils = (() => {
     navAv.classList.add('avatar-shell', 'avatar-shell-circle', 'avatar-shell-nav');
     applyAvatarCosmetics(navAv, user);
 
-    if ((user.has_avatar || user.avatar_url) && user.username) {
-      const src = '/api/avatar/' + encodeURIComponent(user.username) + '?t=' + Date.now();
+    const fallback = user.avatar_preset || (user.username || '?')[0].toUpperCase();
+    navAv.innerHTML = '';
+    navAv.textContent = fallback;
+
+    const knowsNoAvatar = user.has_avatar === false && !user.avatar_url;
+    if (!user.username || knowsNoAvatar) return;
+
+    const src = '/api/avatar/' + encodeURIComponent(user.username);
+    const img = document.createElement('img');
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;';
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = src;
+    img.onload = function () {
+      if (user.username) _avatarMissing.delete(user.username);
       navAv.innerHTML = '';
-      const img = document.createElement('img');
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;';
-      img.alt = '';
-      img.src = src;
-      img.onerror = function () {
-        navAv.innerHTML = '';
-        navAv.textContent = user.avatar_preset || (user.username || '?')[0].toUpperCase();
-      };
       navAv.appendChild(img);
-    } else if (user.avatar_preset) {
-      navAv.innerHTML = '';
-      navAv.textContent = user.avatar_preset;
-    } else {
-      navAv.innerHTML = '';
-      navAv.textContent = (user.username || '?')[0].toUpperCase();
-    }
+    };
+    img.onerror = function () {
+      if (user.username) _avatarMissing.add(user.username);
+      // Keep fallback text.
+      img.remove();
+    };
   }
 
   async function fetchUserProfile(username) {
@@ -228,8 +254,18 @@ window.ProfileUtils = (() => {
   }
 
   function _cache_set(username, data) {
-    _cache[username] = data;
+    _cache[username] = mergeUserData(_cache[username], data);
     _lastFetchAt = Date.now();
+  }
+
+  function _markAvatarMissing(username) {
+    const u = String(username || '').trim();
+    if (u) _avatarMissing.add(u);
+  }
+
+  function _markAvatarPresent(username) {
+    const u = String(username || '').trim();
+    if (u) _avatarMissing.delete(u);
   }
 
   function logout() {
@@ -254,6 +290,8 @@ window.ProfileUtils = (() => {
     fetchUserProfile,
     fetchAllProfiles,
     _cache_set,
+    _markAvatarMissing,
+    _markAvatarPresent,
     _getAllCache,
     logout,
   };

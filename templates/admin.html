@@ -769,7 +769,7 @@ async function deleteUser(username) {
 // ── État du jeu ──
 async function loadGameState() {
   try {
-    const data = await fetch('/debug/game').then(r => r.json());
+    const data = await fetch('/api/admin/game_state').then(r => r.json());
     const game = data.current_game;
     const el = document.getElementById('gameState');
 
