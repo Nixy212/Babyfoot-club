@@ -101,15 +101,29 @@ window.ProfileUtils = (() => {
   }
 
   // badgesOnlyHTML — affiche uniquement les images des badges (sans nom), taille configurable
+  // Gère crop_x / crop_y / crop_scale si stockés dans le badge
   function badgesOnlyHTML(user, imgSize) {
     const s = imgSize || 22;
     const badges = (user && user.badges) || [];
     if (!badges.length) return '';
-    return badges.slice(0, 4).map(b => {
+    return badges.slice(0, 5).map(b => {
+      const c = b.color || '#888';
+      const name = (b.name || '').replace(/"/g, '&quot;');
+      let inner;
       if (b.image_url) {
-        return `<span title="${(b.name||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;width:${s+6}px;height:${s+6}px;border-radius:50%;background:${b.color||'#888'}22;border:1.5px solid ${b.color||'#888'}55;flex-shrink:0;overflow:hidden"><img src="${b.image_url}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover" alt="${(b.name||'').replace(/"/g,'&quot;')}"></span>`;
+        // Recadrage personnalisé (crop_x, crop_y, crop_scale stockés en JSON dans le badge)
+        const cx = b.crop_x != null ? b.crop_x : 50;
+        const cy = b.crop_y != null ? b.crop_y : 50;
+        const cs = b.crop_scale != null ? b.crop_scale : 1;
+        const imgSize2 = Math.round(s * cs);
+        inner = `<img src="${b.image_url}" style="width:${imgSize2}px;height:${imgSize2}px;border-radius:50%;object-fit:cover;object-position:${cx}% ${cy}%;flex-shrink:0" alt="${name}">`;
+      } else if (b.icon) {
+        inner = `<span style="font-size:${Math.round(s*.82)}px;line-height:1;user-select:none">${b.icon}</span>`;
+      } else {
+        // Fallback : initiale du nom (jamais la photo de profil)
+        inner = `<span style="font-size:${Math.round(s*.6)}px;font-weight:700;color:${c};line-height:1">${(b.name||'?')[0].toUpperCase()}</span>`;
       }
-      return `<span title="${(b.name||'').replace(/"/g,'&quot;')}" style="display:inline-flex;align-items:center;justify-content:center;width:${s+6}px;height:${s+6}px;border-radius:50%;background:${b.color||'#888'}22;border:1.5px solid ${b.color||'#888'}55;font-size:${Math.round(s*.85)}px;flex-shrink:0">${b.icon||'🏅'}</span>`;
+      return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${s+6}px;height:${s+6}px;border-radius:50%;background:${c}1a;border:1.5px solid ${c}66;flex-shrink:0;overflow:hidden">${inner}</span>`;
     }).join('');
   }
 

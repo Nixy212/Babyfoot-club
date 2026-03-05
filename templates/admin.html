@@ -643,19 +643,19 @@ async function loadUsers() {
       }
 
       return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle);gap:0.5rem;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:0.5rem;padding:0.75rem 0.875rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle);flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:0.625rem;flex:1;min-width:0">
           ${avHtml}
-          <div style="min-width:0">
-            <div style="font-weight:700;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nickname || username}</div>
-            ${nickname ? `<div style="font-size:0.7rem;color:var(--text-muted)">${username}</div>` : ''}
-            <div style="font-size:0.7rem;color:var(--text-muted)">ELO ${elo}${isGuest ? ' · Guest' : ''}</div>
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:700;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${nickname || username}</div>
+            ${nickname ? `<div style="font-size:0.68rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${username}</div>` : ''}
+            <div style="font-size:0.68rem;color:var(--text-muted)">ELO ${elo}${isGuest ? ' · Guest' : ''}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:nowrap;flex-shrink:0">
           ${roleSel}
-          <a href="/stats/${username}" class="btn btn-secondary" style="padding:0.4rem 0.8rem;font-size:0.78rem;text-decoration:none">📊 Stats</a>
-          ${!isGuest ? `<button onclick="deleteUser('${username}')" class="btn" style="padding:0.4rem 0.8rem;font-size:0.78rem;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);font-weight:600">🗑️</button>` : ''}
+          <a href="/stats/${username}" class="btn btn-secondary" style="padding:0.35rem 0.6rem;font-size:0.75rem;text-decoration:none;white-space:nowrap">📊</a>
+          ${!isGuest ? `<button onclick="deleteUser('${username}')" class="btn" style="padding:0.35rem 0.6rem;font-size:0.75rem;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);font-weight:600">🗑️</button>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -834,7 +834,7 @@ function updateBadgePreview() {
   preview.style.border     = '1px solid ' + color + '66';
   preview.style.color      = color;
   if (_badgeImageB64) {
-    preview.innerHTML = `<img src="${_badgeImageB64}" style="width:22px;height:22px;border-radius:4px;object-fit:cover;vertical-align:middle"> ${name}`;
+    preview.innerHTML = `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;overflow:hidden;background:${preview.style.background};flex-shrink:0"><img src="${_badgeImageB64}" style="width:24px;height:24px;border-radius:50%;object-fit:cover"></span> ${name}`;
   } else {
     preview.textContent = icon + ' ' + name;
   }
@@ -872,35 +872,120 @@ function handleBadgeImageSelect(input) {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    // Redimensionner à 128×128 via Canvas pour un payload léger
+    const rawSrc = e.target.result;
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width  = 128;
-      canvas.height = 128;
-      const ctx = canvas.getContext('2d');
-      // Crop centré
-      const size = Math.min(img.width, img.height);
-      const sx   = (img.width  - size) / 2;
-      const sy   = (img.height - size) / 2;
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, 128, 128);
-      _badgeImageB64 = canvas.toDataURL('image/jpeg', 0.85);
-      statusEl.innerHTML = '<span style="color:#2ecc71">✓ Image prête</span>';
-      clearBtn.style.display = 'inline-block';
-      document.getElementById('badgeIcon').value = '';
-      updateBadgePreview();
+      // Outil de recadrage interactif
+      showBadgeCropTool(img, rawSrc, () => {
+        statusEl.innerHTML = '<span style="color:#2ecc71">✓ Image recadrée</span>';
+        clearBtn.style.display = 'inline-block';
+        document.getElementById('badgeIcon').value = '';
+        updateBadgePreview();
+      });
     };
     img.onerror = () => {
       statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Impossible de lire l\'image</span>';
       input.value = '';
     };
-    img.src = e.target.result;
+    img.src = rawSrc;
   };
   reader.onerror = () => {
     statusEl.innerHTML = '<span style="color:#e74c3c">⚠️ Impossible de lire le fichier</span>';
     input.value = '';
   };
   reader.readAsDataURL(file);
+}
+
+function showBadgeCropTool(img, src, onDone) {
+  // Variables de recadrage
+  let cropX = 50, cropY = 50, cropZoom = 1.0;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)';
+
+  function renderPreview() {
+    const px = cropX, py = cropY, pz = cropZoom;
+    const s = Math.round(120 * pz);
+    const ox = Math.round((cropX / 100) * (s - 120));
+    const oy = Math.round((cropY / 100) * (s - 120));
+    return `<img src="${src}" style="width:${s}px;height:${s}px;object-fit:cover;margin-left:-${ox}px;margin-top:-${oy}px;flex-shrink:0">`;
+  }
+
+  function buildHTML() {
+    return `
+      <div style="width:min(400px,95vw);background:var(--bg-secondary);border-radius:20px;overflow:hidden;border:1px solid var(--border-normal);box-shadow:0 20px 60px rgba(0,0,0,0.8);padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:800;font-size:1rem">✂️ Recadrer le badge</span>
+          <button id="cropClose" style="background:none;border:none;color:var(--text-secondary);font-size:1.3rem;cursor:pointer">✕</button>
+        </div>
+        <!-- Aperçu cercle -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:2rem">
+          <div style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:3px solid #cd7f32;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#111">
+            <div id="cropPreviewBig" style="width:80px;height:80px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">
+              <img id="cropImg" src="${src}" style="position:absolute;width:${Math.round(80*cropZoom)}px;height:${Math.round(80*cropZoom)}px;object-fit:cover;left:50%;top:50%;transform:translate(calc(-50% + ${Math.round((cropX-50)/100*(80-Math.round(80*cropZoom)))}px), calc(-50% + ${Math.round((cropY-50)/100*(80-Math.round(80*cropZoom)))}px))">
+            </div>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid #cd7f32;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#111">
+            <img id="cropImgSm" src="${src}" style="position:absolute;width:${Math.round(40*cropZoom)}px;height:${Math.round(40*cropZoom)}px;object-fit:cover;margin-left:${Math.round((cropX-50)/100*(40-Math.round(40*cropZoom)))}px;margin-top:${Math.round((cropY-50)/100*(40-Math.round(40*cropZoom)))}px">
+          </div>
+        </div>
+        <!-- Sliders -->
+        <div style="display:flex;flex-direction:column;gap:0.75rem">
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">↔ Position horizontale</label>
+          <input type="range" id="sliderX" min="0" max="100" value="${cropX}" style="width:100%;accent-color:#cd7f32">
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">↕ Position verticale</label>
+          <input type="range" id="sliderY" min="0" max="100" value="${cropY}" style="width:100%;accent-color:#cd7f32">
+          <label style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">🔍 Zoom (${Math.round(cropZoom*100)}%)</label>
+          <input type="range" id="sliderZ" min="100" max="300" value="${Math.round(cropZoom*100)}" style="width:100%;accent-color:#cd7f32">
+        </div>
+        <button id="cropApply" style="padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#cd7f32,#b8732f);border:none;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">✅ Appliquer ce recadrage</button>
+      </div>`;
+  }
+
+  overlay.innerHTML = buildHTML();
+  document.body.appendChild(overlay);
+
+  function updateCropPreview() {
+    const bigImg = overlay.querySelector('#cropImg');
+    const smImg  = overlay.querySelector('#cropImgSm');
+    const zLabel = overlay.querySelector('#sliderZ').previousElementSibling;
+    if (zLabel) zLabel.textContent = `🔍 Zoom (${Math.round(cropZoom*100)}%)`;
+    const bSize = Math.round(80 * cropZoom);
+    const sSize = Math.round(40 * cropZoom);
+    const bOffX = Math.round((cropX - 50) / 100 * (80 - bSize));
+    const bOffY = Math.round((cropY - 50) / 100 * (80 - bSize));
+    const sOffX = Math.round((cropX - 50) / 100 * (40 - sSize));
+    const sOffY = Math.round((cropY - 50) / 100 * (40 - sSize));
+    if (bigImg) bigImg.style.cssText = `position:absolute;width:${bSize}px;height:${bSize}px;object-fit:cover;left:50%;top:50%;transform:translate(calc(-50% + ${bOffX}px), calc(-50% + ${bOffY}px))`;
+    if (smImg)  smImg.style.cssText  = `position:absolute;width:${sSize}px;height:${sSize}px;object-fit:cover;left:50%;top:50%;transform:translate(calc(-50% + ${sOffX}px), calc(-50% + ${sOffY}px))`;
+  }
+
+  overlay.querySelector('#sliderX').addEventListener('input', e => { cropX = +e.target.value; updateCropPreview(); });
+  overlay.querySelector('#sliderY').addEventListener('input', e => { cropY = +e.target.value; updateCropPreview(); });
+  overlay.querySelector('#sliderZ').addEventListener('input', e => { cropZoom = e.target.value / 100; updateCropPreview(); });
+  overlay.querySelector('#cropClose').addEventListener('click', () => overlay.remove());
+
+  overlay.querySelector('#cropApply').addEventListener('click', () => {
+    // Générer canvas final 128x128 avec les paramètres de crop
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    const dispSize = 128 * cropZoom;
+    const offX = (cropX / 100) * (128 - dispSize) + (128 - dispSize) / 2 * 0;
+    const offY = (cropY / 100) * (128 - dispSize) + (128 - dispSize) / 2 * 0;
+    // On calcule la zone source dans l'image originale
+    const srcSize = Math.min(img.naturalWidth, img.naturalHeight) / cropZoom;
+    const srcX = ((cropX / 100) * (img.naturalWidth  - srcSize));
+    const srcY = ((cropY / 100) * (img.naturalHeight - srcSize));
+    ctx.drawImage(img,
+      Math.max(0, srcX), Math.max(0, srcY),
+      Math.min(srcSize, img.naturalWidth), Math.min(srcSize, img.naturalHeight),
+      0, 0, 128, 128
+    );
+    _badgeImageB64 = canvas.toDataURL('image/jpeg', 0.88);
+    overlay.remove();
+    onDone();
+  });
 }
 
 function clearBadgeImage() {
@@ -974,7 +1059,7 @@ async function loadBadgeCatalogue() {
     el.innerHTML = badges.map(b => `
       <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle)">
         <span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color};flex-shrink:0;display:inline-flex;align-items:center;gap:5px">
-          ${b.image_url ? `<img src="${b.image_url}" style="width:20px;height:20px;border-radius:3px;object-fit:cover">` : b.icon} ${b.name}
+          ${b.image_url ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;overflow:hidden;background:${b.color||'#888'}22;border:1px solid ${b.color||'#888'}55;flex-shrink:0"><img src="${b.image_url}" style="width:18px;height:18px;border-radius:50%;object-fit:cover"></span>` : `<span style="font-size:16px">${b.icon||'🏅'}</span>`} ${b.name}
         </span>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.description || '—'}</div>
@@ -1155,38 +1240,18 @@ function renderThemesGrid() {
 }
 
 function previewTheme(themeKey) {
-  // Ouvrir live-score dans une modal iframe pour voir le thème
-  const modal = document.createElement('div');
-  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(6px)`;
-  const themeClass = themeKey !== 'default' ? themeKey.replace('theme_','theme-') : '';
-  const sw = THEME_SWATCHES[themeKey] || { bg:'#111', score:'#cd7f32' };
-  modal.innerHTML = `
-    <div style="width:min(600px,95vw);background:${sw.bg};border-radius:20px;overflow:hidden;border:2px solid rgba(205,127,50,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.8)">
-      <div style="padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.4)">
-        <span style="font-weight:800;color:#fff">Aperçu : ${THEME_SWATCHES[themeKey]?.label || themeKey}</span>
-        <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">✕</button>
-      </div>
-      <div style="padding:2rem;display:flex;flex-direction:column;align-items:center;gap:1.5rem">
-        <!-- Simulation score -->
-        <div style="display:flex;gap:2rem;align-items:center">
-          <div style="text-align:center">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.5);margin-bottom:4px">Équipe 1</div>
-            <div style="font-size:5rem;font-weight:900;color:${sw.score};text-shadow:0 0 20px ${sw.score}40;line-height:1">7</div>
-          </div>
-          <div style="font-size:1.5rem;font-weight:900;color:rgba(255,255,255,0.3)">–</div>
-          <div style="text-align:center">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.5);margin-bottom:4px">Équipe 2</div>
-            <div style="font-size:5rem;font-weight:900;color:${sw.score};text-shadow:0 0 20px ${sw.score}40;line-height:1">3</div>
-          </div>
-        </div>
-        <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.5rem 1.5rem;font-size:0.8rem;color:rgba(255,255,255,0.7)">● Partie en cours — LIVE</div>
-        <button onclick="equipTheme('${themeKey}');this.closest('[style]').remove();" style="padding:0.6rem 1.5rem;border-radius:10px;background:rgba(205,127,50,0.3);border:1px solid rgba(205,127,50,0.5);color:#ffd700;font-weight:700;cursor:pointer;font-family:inherit">
-          ✅ Activer ce thème
-        </button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  // Applique le thème sur toute la page admin pour un vrai aperçu
+  if (typeof ThemeManager !== 'undefined') {
+    ThemeManager.applyTheme(themeKey, { persist: false });
+  }
+  const sw = THEME_SWATCHES[themeKey] || { bg:'#111', score:'#cd7f32', label: themeKey };
+  const label = sw.label || themeKey;
+  // Mini toast d'info
+  showToast(`👁 Aperçu : ${label} — Clique Activer pour équiper`, 'ok');
+  // Mettre en évidence la carte
+  document.querySelectorAll('.theme-preview-card').forEach(c => c.classList.remove('active-theme'));
+  const card = document.getElementById('themeCard_' + themeKey);
+  if (card) card.classList.add('active-theme');
 }
 
 async function equipTheme(themeKey) {
