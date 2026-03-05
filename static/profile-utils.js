@@ -117,9 +117,10 @@ window.ProfileUtils = (() => {
     const b = badge || {};
     const options = opts || {};
     const size = options.size || 22;
-    const innerSize = options.innerSize || Math.max(12, Math.round(size * 0.78));
-    const borderWidth = options.borderWidth || 1.5;
+    const innerSize = options.innerSize || Math.max(12, Math.round(size * 0.8));
+    const borderWidth = options.borderWidth || 1.6;
     const showRing = options.showRing !== false;
+    const withHalo = options.halo !== false;
     const color = b.color || '#888';
     const name = escapeHtml(b.name || '');
 
@@ -136,11 +137,11 @@ window.ProfileUtils = (() => {
       inner = `<span style="font-size:${Math.max(10, Math.round(innerSize * 0.62))}px;font-weight:800;line-height:1;color:${color}">${escapeHtml((b.name || '?')[0].toUpperCase())}</span>`;
     }
 
-    const shellSize = size + 6;
+    const shellSize = size + Math.max(8, Math.round(size * 0.28));
     const ring = showRing
-      ? `box-shadow:inset 0 0 0 ${borderWidth}px ${color}66,0 0 0 1px rgba(255,255,255,.05),0 4px 12px rgba(0,0,0,.28);`
+      ? `box-shadow:inset 0 0 0 ${borderWidth}px ${color}88,inset 0 0 0 ${Math.max(1, borderWidth - 0.5)}px rgba(255,255,255,.2),0 0 0 1px rgba(255,255,255,.08),0 8px 16px rgba(0,0,0,.32)${withHalo ? `,0 0 14px ${color}66` : ''};`
       : `border:${borderWidth}px solid ${color}66;`;
-    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${shellSize}px;height:${shellSize}px;border-radius:50%;background:radial-gradient(circle at 30% 25%,${color}30 0%,${color}16 48%,rgba(0,0,0,.15) 100%);${ring}overflow:hidden;flex-shrink:0">${inner}</span>`;
+    return `<span title="${name}" style="display:inline-flex;align-items:center;justify-content:center;width:${shellSize}px;height:${shellSize}px;border-radius:50%;background:radial-gradient(circle at 28% 22%,${color}3a 0%,${color}18 44%,rgba(0,0,0,.2) 100%);${ring}overflow:hidden;flex-shrink:0;transform:translateZ(0)"><span style="display:inline-flex;align-items:center;justify-content:center;width:${innerSize}px;height:${innerSize}px;border-radius:50%;overflow:hidden;background:rgba(0,0,0,.14)">${inner}</span></span>`;
   }
 
   function badgesOnlyHTML(user, imgSize) {

@@ -130,7 +130,18 @@ def service_worker():
 
 @app.after_request
 def set_headers(response):
-    if response.content_type and any(ct in response.content_type for ct in ['javascript', 'css', 'image', 'font']):
+    path = request.path or ""
+    if path == '/sw.js':
+        # Forcer iOS/Android a toujours revalider le service worker apres deploiement.
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Service-Worker-Allowed'] = '/'
+    elif path.startswith('/api/avatar/'):
+        # Les avatars peuvent rester en cache court, mais doivent se rafraichir rapidement.
+        response.headers['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=600'
+    elif path.startswith('/api/') or path == '/current_user':
+        # Evite les fuites/cache stale de donnees utilisateur entre sessions.
+        response.headers['Cache-Control'] = 'no-store'
+    elif response.content_type and any(ct in response.content_type for ct in ['javascript', 'css', 'image', 'font']):
         response.headers['Cache-Control'] = 'public, max-age=604800, stale-while-revalidate=86400'
     elif response.content_type and 'text/html' in response.content_type:
         response.headers['Cache-Control'] = 'no-cache, must-revalidate'
@@ -2390,19 +2401,47 @@ def api_update_profile():
     username = session.get("username")
     if not username:
         return jsonify({"error": "Non connecté"}), 401
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     nickname = _html.escape((data.get("nickname") or "").strip())[:50]
     bio = _html.escape((data.get("bio") or "").strip())[:120]
     raw_preset = (data.get("avatar_preset") or "").strip()
     avatar_preset = (raw_preset if '<' not in raw_preset and '>' not in raw_preset else "")[:10]
+    has_preset_field = "avatar_preset" in data
+    clear_avatar_image = bool(has_preset_field and avatar_preset)
     conn = get_db_connection()
     cur = conn.cursor()
     if USE_POSTGRES:
-        cur.execute("UPDATE users SET nickname=%s, bio=%s, avatar_preset=%s WHERE username=%s",
-                    (nickname or None, bio or None, avatar_preset or None, username))
+        if clear_avatar_image:
+            cur.execute(
+                "UPDATE users SET nickname=%s, bio=%s, avatar_preset=%s, avatar_url=NULL WHERE username=%s",
+                (nickname or None, bio or None, avatar_preset or None, username),
+            )
+        elif has_preset_field:
+            cur.execute(
+                "UPDATE users SET nickname=%s, bio=%s, avatar_preset=%s WHERE username=%s",
+                (nickname or None, bio or None, avatar_preset or None, username),
+            )
+        else:
+            cur.execute(
+                "UPDATE users SET nickname=%s, bio=%s WHERE username=%s",
+                (nickname or None, bio or None, username),
+            )
     else:
-        cur.execute("UPDATE users SET nickname=?, bio=?, avatar_preset=? WHERE username=?",
-                    (nickname or None, bio or None, avatar_preset or None, username))
+        if clear_avatar_image:
+            cur.execute(
+                "UPDATE users SET nickname=?, bio=?, avatar_preset=?, avatar_url=NULL WHERE username=?",
+                (nickname or None, bio or None, avatar_preset or None, username),
+            )
+        elif has_preset_field:
+            cur.execute(
+                "UPDATE users SET nickname=?, bio=?, avatar_preset=? WHERE username=?",
+                (nickname or None, bio or None, avatar_preset or None, username),
+            )
+        else:
+            cur.execute(
+                "UPDATE users SET nickname=?, bio=? WHERE username=?",
+                (nickname or None, bio or None, username),
+            )
     conn.commit(); cur.close(); conn.close()
     return jsonify({"success": True, "message": "Profil mis à jour"})
 

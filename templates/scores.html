@@ -91,7 +91,7 @@ async function loadScores() {
         ? ProfileUtils.avatarWithCosmeticsHTML(p, 26)
         : `<span style="width:26px;height:26px;border-radius:50%;background:var(--bg-tertiary);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700">${esc((u || '?')[0].toUpperCase())}</span>`;
       const bdgs = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML)
-        ? ProfileUtils.badgesOnlyHTML({ badges: (p.badges || []).slice(0, 3) }, 16)
+        ? ProfileUtils.badgesOnlyHTML({ badges: (p.badges || []).slice(0, 3) }, 18)
         : '';
       return `<span style="display:inline-flex;align-items:center;gap:5px;max-width:100%">${av}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">${esc(dname)}</span>${bdgs ? `<span style="display:inline-flex;gap:2px;align-items:center">${bdgs}</span>` : ''}</span>`;
     }).join('<span style="opacity:.45;margin:0 6px">&</span>');

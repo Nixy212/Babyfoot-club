@@ -301,7 +301,7 @@ async function loadLeaderboard(me) {
       const streak = p.winstreak || 0;
       const badges = p.badges || [];
       const badgesMarkup = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML)
-        ? ProfileUtils.badgesOnlyHTML({ badges }, 22)
+        ? ProfileUtils.badgesOnlyHTML({ badges }, 24)
         : badges.slice(0, 5).map((b) => `<span title="${escapeHtml(b.name || '')}" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${(b.color || '#888')}22;border:1.5px solid ${(b.color || '#888')}55;font-size:14px">${escapeHtml(b.icon || '🏅')}</span>`).join('');
       const isOnline = onlineSet.has(p.username);
       function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}

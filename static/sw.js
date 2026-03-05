@@ -2,7 +2,7 @@
 // Met en cache les ressources statiques pour fonctionner
 // même avec une connexion faible ou intermittente.
 
-const CACHE_NAME = 'babyfoot-v42';
+const CACHE_NAME = 'babyfoot-v43';
 
 // Ressources mises en cache au premier chargement (shell de l'app)
 const STATIC_ASSETS = [
@@ -45,10 +45,17 @@ self.addEventListener('fetch', (e) => {
   // Socket.IO : jamais intercepté (temps réel)
   if (url.pathname.startsWith('/socket.io')) return;
 
-  // API dynamique : réseau d'abord, fallback cache si dispo
+  // API utilisateur sensible : toujours réseau, jamais cache (sessions / profil)
   if (
     url.pathname.startsWith('/api/') ||
-    url.pathname.startsWith('/current_user') ||
+    url.pathname.startsWith('/current_user')
+  ) {
+    e.respondWith(networkFirst(e.request, { cache: false }));
+    return;
+  }
+
+  // API dynamique publique : réseau d'abord, fallback cache si dispo
+  if (
     url.pathname.startsWith('/leaderboard') ||
     url.pathname.startsWith('/reservations') ||
     url.pathname.startsWith('/user_stats') ||
@@ -98,16 +105,18 @@ async function staleWhileRevalidate(request) {
 }
 
 // ── Stratégie : Réseau d'abord (dynamique) ───────────────────
-async function networkFirst(request) {
+async function networkFirst(request, opts) {
+  const options = opts || {};
+  const allowCache = options.cache !== false;
   try {
     const response = await fetch(request, { signal: AbortSignal.timeout(8000) });
-    if (response.ok && request.method === 'GET') {
+    if (allowCache && response.ok && request.method === 'GET') {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    const cached = await caches.match(request);
+    const cached = allowCache ? await caches.match(request) : null;
     if (cached) return cached;
     // Fallback offline pour les pages HTML
     if (request.mode === 'navigate') {

@@ -360,8 +360,9 @@
 }
 .badge-input:focus { border-color:#6aa3ff; }
 .badge-chip {
-  display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
-  border-radius:99px;font-size:0.78rem;font-weight:700;border:1px solid;
+  display:inline-flex;align-items:center;gap:7px;padding:5px 11px;
+  border-radius:99px;font-size:0.79rem;font-weight:800;border:1px solid;
+  box-shadow:0 6px 16px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.08);
 }
 </style>
 
@@ -702,21 +703,7 @@ async function loadUsers() {
       </div>`;
     }).join('');
 
-    // Peupler le select cosmétiques de la section test
-    const cosUserSel = document.getElementById('cosUserSelect');
-    if (cosUserSel) {
-      cosUserSel.innerHTML = '<option value="">Sélectionner un joueur…</option>' +
-        users.filter(u => !/^Joueur\d+$/i.test(u.username)).map(u =>
-          `<option value="${u.username}">${u.nickname ? u.nickname + ' (' + u.username + ')' : u.username}</option>`
-        ).join('');
-    }
-    const cosCosmeticSel = document.getElementById('cosCosmeticSelect');
-    if (cosCosmeticSel && catalogData) {
-      cosCosmeticSel.innerHTML = '<option value="">Sélectionner un cosmétique…</option>' +
-        Object.entries(catalogData.catalog).map(([k,v]) =>
-          `<option value="${k}">${v.icon || ''} ${v.label}</option>`
-        ).join('');
-    }
+    populateUserCosmeticSelects(users);
   } catch(e) {
     console.error('Erreur chargement users:', e);
   }
@@ -1100,7 +1087,7 @@ async function loadBadgeCatalogue() {
     }
     el.innerHTML = badges.map(b => {
       const badgeVisual = (window.ProfileUtils && ProfileUtils.badgeHTML)
-        ? ProfileUtils.badgeHTML(b, { size: 18, innerSize: 14 })
+        ? ProfileUtils.badgeHTML(b, { size: 20, innerSize: 15 })
         : `<span style="font-size:14px">${b.icon||'🏅'}</span>`;
       return `
       <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border-subtle)">
@@ -1222,7 +1209,7 @@ async function loadPlayerBadges() {
     }
     el.innerHTML = badges.map((b) => {
       const visual = (window.ProfileUtils && ProfileUtils.badgeHTML)
-        ? ProfileUtils.badgeHTML(b, { size: 18, innerSize: 14 })
+        ? ProfileUtils.badgeHTML(b, { size: 20, innerSize: 15 })
         : `<span>${b.icon || '🏅'}</span>`;
       return `<span class="badge-chip" style="background:${b.color}22;border-color:${b.color}55;color:${b.color}" title="${b.description || b.name}">
         ${visual} ${b.name}
@@ -1420,8 +1407,57 @@ async function resetMyCosmetics() {
   } catch(e) { showToast('Erreur réseau', 'err'); }
 }
 
-function populateUserCosmeticSelects() {
-  // sera peuplé quand les users sont chargés
+function populateUserCosmeticSelects(usersList) {
+  const cosUserSel = document.getElementById('cosUserSelect');
+  const cosCosmeticSel = document.getElementById('cosCosmeticSelect');
+
+  const fillUsers = (users) => {
+    if (!cosUserSel) return;
+    const safeUsers = (Array.isArray(users) ? users : [])
+      .filter(u => u && u.username && !/^Joueur\d+$/i.test(u.username));
+    cosUserSel.innerHTML = '<option value="">Sélectionner un joueur…</option>' +
+      safeUsers.map(u => `<option value="${u.username}">${u.nickname ? u.nickname + ' (' + u.username + ')' : u.username}</option>`).join('');
+  };
+
+  if (Array.isArray(usersList)) {
+    fillUsers(usersList);
+  } else if (cosUserSel && cosUserSel.options.length <= 1) {
+    fetch('/users_list')
+      .then(r => r.json())
+      .then(fillUsers)
+      .catch(() => {});
+  }
+
+  if (!cosCosmeticSel) return;
+  const catalog = (catalogData && catalogData.catalog) ? catalogData.catalog : {};
+  const entries = Object.entries(catalog);
+  if (!entries.length) {
+    cosCosmeticSel.innerHTML = '<option value="">Chargement des cosmétiques…</option>';
+    return;
+  }
+
+  const byType = { theme: [], frame: [], badge: [], other: [] };
+  entries.forEach(([key, meta]) => {
+    const type = (meta && meta.type) || 'other';
+    if (!byType[type]) byType[type] = [];
+    byType[type].push([key, meta || {}]);
+  });
+  Object.keys(byType).forEach((k) => {
+    byType[k].sort((a, b) => String((a[1] && a[1].label) || a[0]).localeCompare(String((b[1] && b[1].label) || b[0]), 'fr'));
+  });
+
+  const renderGroup = (label, list) => {
+    if (!list || !list.length) return '';
+    const options = list.map(([key, meta]) => `<option value="${key}">${meta.icon || ''} ${meta.label || key}</option>`).join('');
+    return `<optgroup label="${label}">${options}</optgroup>`;
+  };
+
+  cosCosmeticSel.innerHTML =
+    '<option value="">Sélectionner un cosmétique…</option>' +
+    renderGroup('Thèmes', byType.theme) +
+    renderGroup('Cadres', byType.frame) +
+    renderGroup('Badges', byType.badge) +
+    renderGroup('Autres', byType.other);
 }
 
 async function unlockForUser() {

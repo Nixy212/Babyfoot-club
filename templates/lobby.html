@@ -368,7 +368,7 @@ function makePlayerCard(username, amHost, color) {
 
   // Badges (affichage harmonise)
   const badgesHtml = (window.ProfileUtils && ProfileUtils.badgesOnlyHTML)
-    ? ProfileUtils.badgesOnlyHTML(prof, 20)
+    ? ProfileUtils.badgesOnlyHTML(prof, 22)
     : '';
 
   const onlineDot = ONLINE.has(username) ? '<span class="online-dot-lobby"></span>' : '';
