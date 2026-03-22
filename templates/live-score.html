@@ -1094,7 +1094,12 @@ function registerSocketEvents() {
     else { showToast('🏆 Partie terminée !', 'info'); setTimeout(() => showArea('noGameArea'), 3000); }
   });
 
-  socket.on('game_stopped', () => { location.href = '/dashboard'; });
+  socket.on('game_stopped', (meta) => {
+    if (meta?.reason === 'tie') showToast("Partie arrêtee : score nul, rien n'a ete enregistre.", 'info');
+    else if (meta?.saved) showToast('Partie arretee et resultat enregistre.', 'ok');
+    else showToast('Partie arretee.', 'info');
+    setTimeout(() => { location.href = '/dashboard'; }, 900);
+  });
   socket.on('game_reset', () => { checkActiveGame(); });
 
   socket.on('rematch_prompt', () => {

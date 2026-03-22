@@ -269,10 +269,21 @@ current_game = {
     "reserved_by": None, "started_at": None
 }
 
-active_lobby = {
-    "host": None, "invited": [], "accepted": [],
-    "declined": [], "team1": [], "team2": [], "active": False
-}
+def _empty_lobby_state():
+    # Garder une forme unique evite les etats partiels cote front.
+    return {
+        "host": None,
+        "invited": [],
+        "accepted": [],
+        "declined": [],
+        "team1": [],
+        "team2": [],
+        "active": False,
+        "join_requests": {},
+        "team_pref": {},
+    }
+
+active_lobby = _empty_lobby_state()
 
 # ── Verrou lobby (évite les race conditions invitation + join simultanés) ──
 _lobby_lock = _threading.Lock()
@@ -289,6 +300,12 @@ servo_commands = {"servo1": [], "servo2": []}
 rematch_pending = False       # True entre game_ended et le lancement du rematch
 pending_invitations = {}      # username -> {from, timestamp}
 pending_rematch_replacements = {}  # replacement_username -> invitation rematch en attente
+
+def _clear_lobby_ephemera(lobby_state=None):
+    lobby_state = lobby_state or active_lobby
+    for user in list(lobby_state.get('invited', [])):
+        pending_invitations.pop(user, None)
+    team_swap_requests.clear()
 
 # ── connected_users : sid -> username pour les handlers SocketIO ──
 connected_users = {}
@@ -352,6 +369,51 @@ def row_to_dict(row):
     if row is None:
         return None
     return dict(row)
+
+def _user_exists(username):
+    """Verifie qu'un compte session existe encore en base."""
+    if not username:
+        return False
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        q = "SELECT 1 FROM users WHERE username = %s" if USE_POSTGRES else "SELECT 1 FROM users WHERE username = ?"
+        cur.execute(q, (username,))
+        return cur.fetchone() is not None
+    except Exception as e:
+        # Fail-open : on ne veut pas ejecter tout le monde si la DB a juste un souci temporaire.
+        logger.warning(f"Verification utilisateur impossible pour {username}: {e}")
+        return True
+    finally:
+        if cur is not None:
+            try:
+                cur.close()
+            except Exception:
+                pass
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+@app.before_request
+def invalidate_stale_authenticated_user():
+    username = session.get('username')
+    path = request.path or ''
+    if not username:
+        return None
+    if path.startswith('/static/'):
+        return None
+    if any(path.startswith(prefix) for prefix in _CSRF_EXEMPT_PATH_PREFIXES):
+        return None
+    if _user_exists(username):
+        return None
+    logger.warning(f"Session invalidee: utilisateur supprime ou introuvable ({username})")
+    invalidate_role_cache(username)
+    session.clear()
+    return None
 
 # ── Initialisation DB ─────────────────────────────────────────
 
@@ -1064,8 +1126,29 @@ def _launch_rematch(game):
     socketio.emit('game_started', current_game, namespace='/')
     socketio.emit('servo1_unlock', {}, namespace='/')
     socketio.emit('servo2_unlock', {}, namespace='/')
+    _start_arduino_for_current_game('rematch')
 
 # ── Roles ─────────────────────────────────────────────────────
+
+def _start_arduino_for_current_game(source):
+    """Demarre une session Arduino unique pour la partie courante."""
+    try:
+        from arduino_manager import start_game_arduino as _start_arduino
+        from arduino_manager import arduino_state as _ard_state
+        for _gid in list(_ard_state.active_tokens.keys()):
+            _ard_state.revoke_token(_gid)
+        _ard_game_id = id(current_game)
+        _ard_token = _start_arduino(_ard_game_id)
+        socketio.emit('arduino_token_generated', {
+            'game_id': _ard_game_id,
+            'token': _ard_token,
+            'source': source
+        }, namespace='/')
+        logger.info(f"Token Arduino genere ({source}): game_id={_ard_game_id}")
+        return True
+    except Exception as _e:
+        logger.error(f"Erreur token Arduino ({source}): {_e}")
+        return False
 
 # Cache roles pour eviter des requetes DB a chaque appel socket
 _role_cache = {}
@@ -1078,6 +1161,7 @@ def _get_user_role(username):
         return _role_cache[username]
     # Fallback hardcodé pour compatibilité (écrasé si en DB)
     hardcoded = {"Imran": 1, "Apoutou": 2, "Hamara": 2, "MDA": 2}
+    cacheable = True
     try:
         conn = get_db_connection()
         cur = conn.cursor()
@@ -1087,11 +1171,16 @@ def _get_user_role(username):
         cur.close(); conn.close()
         if row is not None and row.get('role') is not None:
             role = int(row['role'])
+        elif row is None:
+            role = 0
         else:
             role = hardcoded.get(username, 0)
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Lecture role impossible pour {username}: {e}")
+        cacheable = False
         role = hardcoded.get(username, 0)
-    _role_cache[username] = role
+    if cacheable:
+        _role_cache[username] = role
     return role
 
 def invalidate_role_cache(username=None):
@@ -1769,12 +1858,15 @@ def scores_all():
 
 @app.route("/admin/reset_database", methods=["POST"])
 def admin_reset_database():
+    global active_lobby
     username = session.get('username')
     if not is_super_admin(username):
         return jsonify({"success": False, "message": "Reserve a l'administrateur principal (classe 1)"}), 403
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+        cur.execute("DELETE FROM user_badges")
+        cur.execute("DELETE FROM user_quests")
         cur.execute("DELETE FROM scores")
         cur.execute("DELETE FROM reservations")
         cur.execute("DELETE FROM games")
@@ -1782,8 +1874,15 @@ def admin_reset_database():
         conn.commit()
         cur.close()
         conn.close()
+        invalidate_role_cache()
         seed_accounts()
-        return jsonify({"success": True, "message": "Base de donnees reinitialisee"})
+        seed_quests()
+        _reset_game_state()
+        _clear_lobby_ephemera(active_lobby)
+        active_lobby = _empty_lobby_state()
+        socketio.emit('lobby_cancelled', {'reason': 'admin_reset'}, namespace='/')
+        socketio.emit('game_reset', current_game, namespace='/')
+        return jsonify({"success": True, "message": "Base de donnees reinitialisee et etat live nettoye"})
     except Exception as e:
         logger.error(f"Erreur reset_database: {e}")
         return jsonify({"success": False, "message": "Erreur interne du serveur"}), 500
@@ -1794,7 +1893,7 @@ def delete_user():
     admin_username = session.get('username')
     if not is_super_admin(admin_username):
         return jsonify({"success": False, "message": "Reserve a l'administrateur principal (classe 1)"}), 403
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     username_to_delete = data.get('username')
     if not username_to_delete:
         return jsonify({"success": False, "message": "Nom d'utilisateur requis"}), 400
@@ -1812,6 +1911,10 @@ def delete_user():
     # Supprimer reservations d'abord (scores supprimés par CASCADE)
     q_res = "DELETE FROM reservations WHERE reserved_by = %s" if USE_POSTGRES else "DELETE FROM reservations WHERE reserved_by = ?"
     cur.execute(q_res, (username_to_delete,))
+    q_badges = "DELETE FROM user_badges WHERE username = %s" if USE_POSTGRES else "DELETE FROM user_badges WHERE username = ?"
+    cur.execute(q_badges, (username_to_delete,))
+    q_quests = "DELETE FROM user_quests WHERE username = %s" if USE_POSTGRES else "DELETE FROM user_quests WHERE username = ?"
+    cur.execute(q_quests, (username_to_delete,))
     q_delete = "DELETE FROM users WHERE username = %s" if USE_POSTGRES else "DELETE FROM users WHERE username = ?"
     cur.execute(q_delete, (username_to_delete,))
     conn.commit()
@@ -1828,7 +1931,7 @@ def set_user_role():
     admin_username = session.get('username')
     if not is_super_admin(admin_username):
         return jsonify({"success": False, "message": "Réservé au super admin"}), 403
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     target = data.get('username')
     role = data.get('role')
     if not target or role not in [0, 1, 2]:
@@ -2019,6 +2122,9 @@ def reserve_and_lobby():
     # Bloquer la création de lobby si une partie est en cours (sauf super admin)
     if current_game.get('active') and not is_super_admin(username):
         return jsonify({"success": False, "message": "Une partie est en cours — lobby indisponible"}), 400
+    with _lobby_lock:
+        if active_lobby.get('active') and not is_super_admin(username):
+            return jsonify({"success": False, "message": "Un lobby est deja en cours — seul Imran peut le remplacer"}), 409
     now = now_local()
     start_time = now
     end_time = now + timedelta(minutes=duration)
@@ -2027,14 +2133,39 @@ def reserve_and_lobby():
     if result_data and result_data.get("success"):
         # Creer le lobby avec l'utilisateur comme hote
         with _lobby_lock:
+            if active_lobby.get('active') and not is_super_admin(username):
+                rollback_conn = None
+                rollback_cur = None
+                try:
+                    rollback_conn = get_db_connection()
+                    rollback_cur = rollback_conn.cursor()
+                    q = "DELETE FROM reservations WHERE reserved_by = %s AND start_time = %s" if USE_POSTGRES else "DELETE FROM reservations WHERE reserved_by = ? AND start_time = ?"
+                    rollback_cur.execute(q, (username, result_data.get("start")))
+                    rollback_conn.commit()
+                except Exception as rollback_error:
+                    logger.error(f"Rollback reserve_and_lobby impossible: {rollback_error}")
+                finally:
+                    if rollback_cur is not None:
+                        try:
+                            rollback_cur.close()
+                        except Exception:
+                            pass
+                    if rollback_conn is not None:
+                        try:
+                            rollback_conn.close()
+                        except Exception:
+                            pass
+                return jsonify({"success": False, "message": "Un lobby vient juste d'etre cree par quelqu'un d'autre"}), 409
             if active_lobby.get('active'):
+                _clear_lobby_ephemera(active_lobby)
                 socketio.emit('lobby_cancelled', {}, namespace='/')
-            active_lobby = {
-                "host": username, "invited": [],
-                "accepted": [username], "declined": [],
-                "team1": [username], "team2": [],
-                "active": True, "join_requests": {}
-            }
+            active_lobby = _empty_lobby_state()
+            active_lobby.update({
+                "host": username,
+                "accepted": [username],
+                "team1": [username],
+                "active": True,
+            })
         socketio.emit('lobby_created', {'host': username, 'invited': []}, namespace='/')
         return jsonify({"success": True, "redirect": "/lobby"})
     return result
@@ -2146,7 +2277,9 @@ def _do_reservation_nolock(username, start_time, end_time, duration, mode):
         conflict = cur.fetchone()
         if conflict:
             c = row_to_dict(conflict)
-            if c['reserved_by'] != username and not is_admin(username):
+            if c['reserved_by'] == username:
+                return jsonify({"success": False, "message": "Vous avez deja une reservation qui chevauche ce creneau"}), 409
+            if not is_admin(username):
                 return jsonify({"success": False, "message": f"Ce creneau chevauche une reservation de {c['reserved_by']}"}), 409
 
         # Champs compatibilite
@@ -2165,6 +2298,8 @@ def _do_reservation_nolock(username, start_time, end_time, duration, mode):
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (start_time, reserved_by) DO NOTHING
             """, (day_fr, time_display, json.dumps([]), json.dumps([]), mode, username, start_iso, end_iso, duration))
+            if cur.rowcount == 0:
+                return jsonify({"success": False, "message": "Vous avez deja une reservation a cette heure"}), 409
         else:
             # Verifier doublon exact
             cur.execute(
@@ -3429,8 +3564,13 @@ def _process_goal(team):
 def handle_connect():
     global rematch_pending
     username = session.get('username')
-    if not username:
-        logger.warning(f"WS refuse: utilisateur non authentifie ({request.sid})")
+    if not username or not _user_exists(username):
+        if username:
+            logger.warning(f"WS refuse: session stale ou utilisateur supprime ({username}, {request.sid})")
+            invalidate_role_cache(username)
+            session.clear()
+        else:
+            logger.warning(f"WS refuse: utilisateur non authentifie ({request.sid})")
         return False
     connected_users[request.sid] = username
     logger.info(f"WS connecte: {username} ({request.sid})")
@@ -3458,10 +3598,14 @@ def handle_connect():
                 emit('rematch_prompt', {})
 
     # Invitation lobby en attente → la renvoyer
-    if username in pending_invitations:
+    if active_lobby.get('active') and username in pending_invitations:
         inv = pending_invitations[username]
         if _time.time() - inv.get('timestamp', 0) < 300:
             emit('lobby_invitation', {'from': inv['from'], 'to': username})
+        else:
+            pending_invitations.pop(username, None)
+    else:
+        pending_invitations.pop(username, None)
 
     # Rejouer les demandes de join en attente pour l'hôte/admin qui se reconnecte.
     if active_lobby.get('active') and (username == active_lobby.get('host') or is_admin(username)):
@@ -3512,11 +3656,8 @@ def _remove_player_from_lobby(username):
             for u in list(active_lobby.get('invited', [])):
                 pending_invitations.pop(u, None)
             pending_invitations.pop(username, None)
-            active_lobby = {
-                "host": None, "invited": [], "accepted": [],
-                "declined": [], "team1": [], "team2": [],
-                "active": False, "join_requests": {}, "team_pref": {}
-            }
+            _clear_lobby_ephemera(active_lobby)
+            active_lobby = _empty_lobby_state()
             result['action'] = 'cancelled'
             return result
         # Promouvoir le premier candidat
@@ -3603,14 +3744,17 @@ def handle_create_lobby(data):
         return
     with _lobby_lock:
         if active_lobby.get('active'):
+            _clear_lobby_ephemera(active_lobby)
             socketio.emit('lobby_cancelled', {}, namespace='/')
         invited_users = data.get('invited', [])
-        active_lobby = {
-            "host": username, "invited": invited_users,
-            "accepted": [username], "declined": [],
-            "team1": [username], "team2": [],
-            "active": True, "join_requests": {}
-        }
+        active_lobby = _empty_lobby_state()
+        active_lobby.update({
+            "host": username,
+            "invited": invited_users,
+            "accepted": [username],
+            "team1": [username],
+            "active": True,
+        })
     socketio.emit('lobby_created', {'host': username, 'invited': invited_users}, namespace='/')
     for user in invited_users:
         emit_to_user(user, 'lobby_invitation', {'from': username, 'to': user})
@@ -4034,12 +4178,8 @@ def handle_cancel_lobby():
     if username != active_lobby.get('host') and not is_admin(username):
         emit('error', {'message': "Seul l'hote ou un admin peut annuler"})
         return
-    for user in list(active_lobby.get('invited', [])):
-        pending_invitations.pop(user, None)
-    active_lobby = {
-        "host": None, "invited": [], "accepted": [],
-        "declined": [], "team1": [], "team2": [], "active": False
-    }
+    _clear_lobby_ephemera(active_lobby)
+    active_lobby = _empty_lobby_state()
     socketio.emit('lobby_cancelled', {}, namespace='/')
 
 @socketio.on('start_game_from_lobby')
@@ -4064,29 +4204,15 @@ def handle_start_game_from_lobby():
         "reserved_by": username if has_active_reservation(username) else None,
         "started_at": now_local().isoformat()
     }
-    active_lobby = {
-        "host": None, "invited": [], "accepted": [],
-        "declined": [], "team1": [], "team2": [], "active": False
-    }
+    _clear_lobby_ephemera(active_lobby)
+    active_lobby = _empty_lobby_state()
     rematch_votes = {"team1": [], "team2": []}
     servo_commands["servo1"].append("open")
     servo_commands["servo2"].append("open")
     socketio.emit('game_started', current_game, namespace='/')
     socketio.emit('servo1_unlock', {}, namespace='/')
     socketio.emit('servo2_unlock', {}, namespace='/')
-    # ── Token Arduino : généré à chaque démarrage de partie ──────────────
-    try:
-        from arduino_manager import start_game_arduino as _start_arduino
-        _ard_game_id = id(current_game)
-        _ard_token = _start_arduino(_ard_game_id)
-        socketio.emit('arduino_token_generated', {
-            'game_id': _ard_game_id,
-            'token': _ard_token,
-            'source': 'lobby'
-        }, namespace='/')
-        logger.info(f"Token Arduino généré (lobby): game_id={_ard_game_id}")
-    except Exception as _e:
-        logger.error(f"Erreur token Arduino (lobby): {_e}")
+    _start_arduino_for_current_game('lobby')
 
 @socketio.on('start_game')
 def handle_start_game(data):
@@ -4120,19 +4246,7 @@ def handle_start_game(data):
         socketio.emit('game_started', current_game, namespace='/')
         socketio.emit('servo1_unlock', {}, namespace='/')
         socketio.emit('servo2_unlock', {}, namespace='/')
-        # ── Token Arduino ─────────────────────────────────────────────────
-        try:
-            from arduino_manager import start_game_arduino as _start_arduino
-            _ard_game_id = id(current_game)
-            _ard_token = _start_arduino(_ard_game_id)
-            socketio.emit('arduino_token_generated', {
-                'game_id': _ard_game_id,
-                'token': _ard_token,
-                'source': 'direct'
-            }, namespace='/')
-            logger.info(f"Token Arduino généré (direct): game_id={_ard_game_id}")
-        except Exception as _e:
-            logger.error(f"Erreur token Arduino (direct): {_e}")
+        _start_arduino_for_current_game('direct')
     except Exception as e:
         logger.error(f"Erreur start_game: {e}")
         emit('error', {'message': "Erreur interne du serveur"})
@@ -4179,17 +4293,23 @@ def handle_stop_game():
     if not can_stop:
         emit('error', {'message': "Seul l'admin ou l'hote de la partie peut l'arreter"})
         return
+    stop_meta = {"saved": False, "reason": "empty"}
     # Sauvegarder si des buts ont ete marques
     if current_game.get('active') and (current_game.get('team1_score', 0) > 0 or current_game.get('team2_score', 0) > 0):
         t1 = current_game.get('team1_score', 0)
         t2 = current_game.get('team2_score', 0)
-        current_game['winner'] = 'team1' if t1 > t2 else ('team2' if t2 > t1 else 'team1')
-        try:
-            save_game_results(current_game)
-        except Exception as e:
-            logger.error(f"Erreur sauvegarde stop_game: {e}")
+        if t1 == t2:
+            stop_meta = {"saved": False, "reason": "tie"}
+        else:
+            current_game['winner'] = 'team1' if t1 > t2 else 'team2'
+            try:
+                save_game_results(current_game)
+                stop_meta = {"saved": True, "reason": "manual_stop"}
+            except Exception as e:
+                logger.error(f"Erreur sauvegarde stop_game: {e}")
+                stop_meta = {"saved": False, "reason": "save_error"}
     _reset_game_state()
-    socketio.emit('game_stopped', {}, namespace='/')
+    socketio.emit('game_stopped', stop_meta, namespace='/')
     socketio.emit('servo1_lock', {}, namespace='/')
     socketio.emit('servo2_lock', {}, namespace='/')
     # ── Révoquer le token Arduino (stop manuel) ───────────────────────────
