@@ -47,8 +47,8 @@ if (typeof window.io === 'undefined') {
 .resa-slot-display { background:rgba(39,174,96,.08); border:1px solid rgba(39,174,96,.22); border-radius:10px; padding:.75rem 1rem; display:flex; align-items:center; gap:.875rem; }
 .resa-slot-time { font-size:1.2rem; font-weight:800; color:#2ecc71; line-height:1; }
 .resa-slot-label { font-size:.75rem; color:var(--text-muted); margin-top:2px; }
-.notification-bar { position:fixed; top:72px; right:20px; max-width:380px; z-index:9999; display:flex; flex-direction:column; gap:.5rem; pointer-events:none; }
-.notification { background:var(--bg-elevated); border:1px solid var(--border-accent); border-radius:12px; padding:.875rem 1rem; display:flex; align-items:center; gap:.75rem; box-shadow:0 4px 24px rgba(0,0,0,.5); animation:notif-in .3s ease; pointer-events:all; }
+.notification-bar { position:fixed; top:calc(72px + var(--safe-top)); right:20px; max-width:380px; z-index:9999; display:flex; flex-direction:column; gap:.5rem; pointer-events:none; }
+.notification { background:var(--bg-elevated); border:1px solid var(--border-accent); border-radius:12px; padding:.875rem 1rem; display:flex; align-items:center; gap:.75rem; box-shadow:0 4px 24px rgba(0,0,0,.5); animation:notif-in .3s ease; pointer-events:all; backdrop-filter:blur(18px); }
 @keyframes notif-in { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
 .notification-buttons { display:flex; gap:.375rem; flex-shrink:0; }
 .notification-buttons button { padding:.375rem .75rem; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-size:.8rem; transition:all .15s; font-family:inherit; }
@@ -63,6 +63,7 @@ if (typeof window.io === 'undefined') {
   .lobby-main-btn { font-size:.88rem !important; }
   .notification-bar { right:10px; left:10px; max-width:none; }
 }
+body.network-saver .notification { backdrop-filter:none; }
 </style>
 {% endblock %}
 
@@ -233,7 +234,8 @@ if (typeof window.io === 'undefined') {
 <script>
 let socket;
 try { socket = io({reconnection:true,reconnectionDelay:1000,reconnectionDelayMax:10000,reconnectionAttempts:Infinity,timeout:20000,upgrade:false,transports:['polling']}); }
-catch(e) { socket = {emit:()=>{},on:()=>{},connected:false}; }
+catch(e) { socket = {emit:()=>{},on:()=>{},once:()=>{},off:()=>{},connected:false}; }
+if (window.initReconnectIndicator) window.initReconnectIndicator(socket);
 
 let currentUsername=null, isAdmin=false, hasReservation=false;
 let activeLobbyState=null, myJoinRequestPending=false, isGameActive=false;
@@ -636,12 +638,34 @@ function initDashboardBindings() {
   if (servo2Btn) servo2Btn.addEventListener('click', () => unlockServo2(servo2Btn));
 }
 
+function loadSecondaryWidgets() {
+  return Promise.allSettled([loadLeaderboard(), loadReservations(), loadQuestsWidget()]);
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 (async()=>{
   initDashboardBindings();
   await loadCurrentUser();
-  await Promise.all([loadLeaderboard(),loadReservations(),loadQuestsWidget()]);
+  const defer = window.requestIdleCallback
+    ? (cb) => requestIdleCallback(cb, { timeout: 900 })
+    : (cb) => setTimeout(cb, 260);
+
+  if (window.__bfNetworkProfile && window.__bfNetworkProfile.slow) {
+    await loadReservations();
+    defer(() => {
+      loadLeaderboard();
+      loadQuestsWidget();
+    });
+  } else {
+    await loadSecondaryWidgets();
+  }
 })();
+
+window.addEventListener('online', () => {
+  if (currentUsername) loadUserStats(currentUsername);
+  loadSecondaryWidgets();
+  checkActiveLobby();
+});
 </script>
 {% endblock %}
 

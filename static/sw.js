@@ -1,8 +1,8 @@
 // Service Worker - Baby-Foot Club
 // Optimise mobile et connexions lentes (cache statique + runtime robuste).
 
-const STATIC_CACHE = 'babyfoot-static-v47';
-const RUNTIME_CACHE = 'babyfoot-runtime-v47';
+const STATIC_CACHE = 'babyfoot-static-v48';
+const RUNTIME_CACHE = 'babyfoot-runtime-v48';
 
 const STATIC_ASSETS = [
   '/static/design-v3.css',
@@ -10,7 +10,6 @@ const STATIC_ASSETS = [
   '/static/profile-utils.js',
   '/static/theme-manager.js',
   '/static/pwa.js',
-  '/static/particles-bg.js',
   '/static/main.js',
   '/static/manifest.json',
   '/static/images/logo.svg',
@@ -55,6 +54,9 @@ self.addEventListener('activate', (event) => {
         .filter((k) => k.startsWith('babyfoot-') && k !== STATIC_CACHE && k !== RUNTIME_CACHE)
         .map((k) => caches.delete(k))
     );
+    if (self.registration.navigationPreload) {
+      await self.registration.navigationPreload.enable();
+    }
     await self.clients.claim();
   })());
 });
@@ -102,11 +104,21 @@ self.addEventListener('fetch', (event) => {
 
   // Navigation HTML: réseau d'abord, fallback cache puis page hors-ligne
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, {
-      cacheName: RUNTIME_CACHE,
-      timeoutMs: 6500,
-      fallbackToOfflinePage: true,
-    }));
+    event.respondWith((async () => {
+      const preload = await event.preloadResponse;
+      if (preload) {
+        if (shouldCacheResponse(preload)) {
+          const cache = await caches.open(RUNTIME_CACHE);
+          cache.put(request, preload.clone());
+        }
+        return preload;
+      }
+      return networkFirst(request, {
+        cacheName: RUNTIME_CACHE,
+        timeoutMs: 6500,
+        fallbackToOfflinePage: true,
+      });
+    })());
     return;
   }
 

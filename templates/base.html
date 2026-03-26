@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0f111a">
   <meta name="color-scheme" content="dark">
   <meta name="csrf-token" content="{{ csrf_token }}">
@@ -12,6 +12,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BabyFoot">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.svg', v=asset_version) }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='design-v3.css', v=asset_version) }}">
@@ -79,6 +81,34 @@
   <button id="onboardingTrigger" class="mobile-menu-action-btn" type="button">💡 Aide rapide</button>
 </div>
 <div class="menu-overlay" id="menuOverlay"></div>
+
+<div class="network-pill" id="networkPill" hidden role="status" aria-live="polite" aria-atomic="true">
+  <span class="network-pill-dot" aria-hidden="true"></span>
+  <span id="networkPillText">Connexion lente</span>
+</div>
+
+<nav class="mobile-dock" aria-label="Navigation rapide mobile">
+  <a href="/dashboard" class="mobile-dock-link {% if active_page == 'dashboard' %}active{% endif %}">
+    <span class="mobile-dock-icon" data-bficon="home" data-size="18"></span>
+    <span class="mobile-dock-label">Accueil</span>
+  </a>
+  <a href="/reservation" class="mobile-dock-link {% if active_page == 'reservation' %}active{% endif %}">
+    <span class="mobile-dock-icon" data-bficon="calendar" data-size="18"></span>
+    <span class="mobile-dock-label">Réserver</span>
+  </a>
+  <a href="/lobby" class="mobile-dock-link {% if active_page == 'lobby' %}active{% endif %}">
+    <span class="mobile-dock-icon" data-bficon="gamepad" data-size="18"></span>
+    <span class="mobile-dock-label">Lobby</span>
+  </a>
+  <a href="/live-score" class="mobile-dock-link {% if active_page == 'live' %}active{% endif %}">
+    <span class="mobile-dock-icon" data-bficon="trophy" data-size="18"></span>
+    <span class="mobile-dock-label">Live</span>
+  </a>
+  <button type="button" class="mobile-dock-link mobile-dock-menu {% if active_page in ['stats', 'top', 'scores', 'settings', 'admin'] %}active{% endif %}" id="mobileDockMenuBtn">
+    <span class="mobile-dock-icon" data-bficon="stats" data-size="18"></span>
+    <span class="mobile-dock-label">Menu</span>
+  </button>
+</nav>
 
 <div class="onboarding-overlay" id="onboardingModal" style="display:none">
   <div class="onboarding-card">
@@ -151,14 +181,16 @@ const BF_ONBOARDING_KEY = 'bf_onboarding_seen_v2';
   window.__csrfFetchPatched = true;
 })();
 
-function toggleMenu() {
+function toggleMenu(forceOpen) {
   const menu = document.getElementById('mobileMenu');
-  const isOpen = menu.classList.contains('open');
-  document.getElementById('burger').classList.toggle('open');
-  menu.classList.toggle('open');
+  if (!menu) return;
+  const shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : !menu.classList.contains('open');
+  const burger = document.getElementById('burger');
+  if (burger) burger.classList.toggle('open', shouldOpen);
+  menu.classList.toggle('open', shouldOpen);
   const overlay = document.getElementById('menuOverlay');
-  if (overlay) overlay.classList.toggle('open');
-  document.body.style.overflow = isOpen ? '' : 'hidden';
+  if (overlay) overlay.classList.toggle('open', shouldOpen);
+  document.body.style.overflow = shouldOpen ? 'hidden' : '';
 }
 
 // logout est défini dans profile-utils.js mais on garde un fallback
@@ -268,10 +300,20 @@ function initBaseUX() {
   if (burger) burger.addEventListener('click', toggleMenu);
 
   const mobileMenuClose = document.getElementById('mobileMenuClose');
-  if (mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMenu);
+  if (mobileMenuClose) mobileMenuClose.addEventListener('click', () => toggleMenu(false));
 
   const menuOverlay = document.getElementById('menuOverlay');
-  if (menuOverlay) menuOverlay.addEventListener('click', toggleMenu);
+  if (menuOverlay) menuOverlay.addEventListener('click', () => toggleMenu(false));
+
+  const dockMenuBtn = document.getElementById('mobileDockMenuBtn');
+  if (dockMenuBtn) dockMenuBtn.addEventListener('click', toggleMenu);
+
+  document.querySelectorAll('#mobileMenu a').forEach((link) => {
+    link.addEventListener('click', () => {
+      const menu = document.getElementById('mobileMenu');
+      if (menu && menu.classList.contains('open')) toggleMenu(false);
+    });
+  });
 
   const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
   if (mobileLogoutBtn) {
@@ -310,6 +352,17 @@ function initBaseUX() {
   if (isMobile) {
     setTimeout(() => openOnboarding(false), 900);
   }
+
+  window.addEventListener('resize', () => {
+    if (!window.matchMedia('(max-width: 768px)').matches) toggleMenu(false);
+  });
+
+  window.addEventListener('bf:network-change', (ev) => {
+    let storedCompact = null;
+    try { storedCompact = localStorage.getItem(BF_COMPACT_KEY); } catch(e) {}
+    if (storedCompact !== null) return;
+    setCompactMode(!!(ev.detail && ev.detail.slow), false);
+  });
 }
 
 // Auto-appel sur toutes les pages (chaque page peut aussi l'appeler, le guard evite le doublon)
@@ -334,6 +387,7 @@ window.addEventListener('pageshow', (ev) => {
 (function () {
   function shouldLoadParticles() {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return false;
     const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const t = String((c && c.effectiveType) || '').toLowerCase();
     if ((c && c.saveData) || ['slow-2g', '2g', '3g'].includes(t)) return false;

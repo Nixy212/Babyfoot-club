@@ -224,7 +224,7 @@
 
     /* ── Popup quête débloquée ───────────────────────────────── */
     .quest-unlock-toast {
-      position:fixed; bottom:5rem; left:50%; transform:translateX(-50%);
+      position:fixed; bottom:calc(5rem + var(--safe-bottom)); left:50%; transform:translateX(-50%);
       z-index:10001; pointer-events:none;
       display:flex; flex-direction:column; align-items:center; gap:8px;
       width:90%; max-width:320px;
@@ -244,6 +244,13 @@
     .quest-unlock-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:rgba(205,127,50,0.8); margin-bottom:2px; }
     .quest-unlock-name  { font-size:0.9rem; font-weight:800; color:#fff; }
     .quest-unlock-reward{ font-size:0.75rem; color:rgba(255,215,0,0.85); margin-top:2px; }
+    @media (max-width: 768px) {
+      .quest-unlock-toast { bottom: calc(var(--mobile-dock-height) + 1rem + var(--safe-bottom)); }
+    }
+    @media (hover: none), (pointer: coarse) {
+      .no-game-option:hover,
+      .replace-item:hover { transform:none; }
+    }
   </style>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
 <script>

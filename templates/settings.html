@@ -324,6 +324,387 @@
         grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
       }
     }
+
+    .cosmetic-showcase {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+      gap: 0.9rem;
+      margin-bottom: 1.2rem;
+    }
+    .cosmetic-showcase-loading {
+      grid-column: 1 / -1;
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      border: 1px dashed rgba(205,127,50,0.22);
+      background: rgba(205,127,50,0.04);
+      color: var(--text-muted);
+      text-align: center;
+      font-size: 0.82rem;
+    }
+    .cosmetic-preview-surface {
+      position: relative;
+      overflow: hidden;
+      min-height: 230px;
+      border-radius: 18px;
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255,255,255,0.12), transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(255,255,255,0.14), transparent 26%),
+        linear-gradient(145deg, var(--preview-c1, rgba(205,127,50,0.22)), var(--preview-c2, rgba(16,18,28,0.86)));
+      box-shadow: 0 18px 34px rgba(0,0,0,0.26);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      isolation: isolate;
+    }
+    .cosmetic-preview-surface::after {
+      content: '';
+      position: absolute;
+      inset: auto -18% -34% 46%;
+      height: 120px;
+      background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 68%);
+      pointer-events: none;
+      opacity: 0.7;
+      z-index: 0;
+    }
+    .cosmetic-preview-head,
+    .cosmetic-preview-body,
+    .cosmetic-preview-foot {
+      position: relative;
+      z-index: 1;
+    }
+    .cosmetic-preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+    .cosmetic-preview-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.36rem 0.68rem;
+      border-radius: 999px;
+      background: rgba(10,12,18,0.34);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+    }
+    .cosmetic-preview-avatar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 96px;
+      height: 96px;
+      margin-bottom: 0.9rem;
+    }
+    .cosmetic-preview-avatar .avatar-shell {
+      width: 96px !important;
+      height: 96px !important;
+    }
+    .cosmetic-preview-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .cosmetic-preview-sub {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.76);
+      margin-top: 0.3rem;
+      line-height: 1.45;
+      max-width: 28ch;
+    }
+    .cosmetic-preview-loadout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.9rem;
+    }
+    .cosmetic-mini-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.34rem 0.66rem;
+      border-radius: 999px;
+      background: rgba(8,10,16,0.42);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .cosmetic-showcase-side {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .cosmetic-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+    .cosmetic-kpi {
+      padding: 0.85rem 0.75rem;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      background: linear-gradient(145deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018));
+      text-align: center;
+    }
+    .cosmetic-kpi-value {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--bronze);
+      line-height: 1;
+    }
+    .cosmetic-kpi-label {
+      display: block;
+      margin-top: 0.32rem;
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+    .cosmetic-next-card {
+      padding: 0.95rem 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(205,127,50,0.22);
+      background: linear-gradient(155deg, rgba(205,127,50,0.12), rgba(205,127,50,0.03));
+    }
+    .cosmetic-next-kicker {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--bronze);
+    }
+    .cosmetic-next-name {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-top: 0.42rem;
+      line-height: 1.25;
+    }
+    .cosmetic-next-desc {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
+      line-height: 1.45;
+    }
+    .cosmetic-next-progress {
+      margin-top: 0.85rem;
+    }
+    .cosmetic-progress-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 0.38rem;
+    }
+    .cosmetic-progress-track {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .cosmetic-progress-bar {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #cd7f32, #ffd700);
+      transition: width .5s ease;
+    }
+    .cosmetic-visibility,
+    .cosmetic-preview-visibility {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .cosmetic-visibility-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.22rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-secondary);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .cosmetic-option {
+      min-height: 214px;
+      border-radius: 16px;
+      gap: 0.5rem;
+      overflow: hidden;
+    }
+    .cosmetic-option::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.24), rgba(255,255,255,0.05));
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .cosmetic-option[data-rarity="core"]::before,
+    .cosmetic-option[data-rarity="starter"]::before { background: linear-gradient(90deg, #b98048, #e2b27f, #b98048); }
+    .cosmetic-option[data-rarity="rare"]::before    { background: linear-gradient(90deg, #4aa0ff, #8e7dff, #4aa0ff); }
+    .cosmetic-option[data-rarity="epic"]::before    { background: linear-gradient(90deg, #ff9d42, #ffd66f, #ff9d42); }
+    .cosmetic-option[data-rarity="legendary"]::before { background: linear-gradient(90deg, #ffb84a, #fff3bf, #ff8c3b, #ffb84a); }
+    .cosmetic-option[data-rarity="core"],
+    .cosmetic-option[data-rarity="starter"] { background: linear-gradient(165deg, rgba(184,118,59,0.12), rgba(24,19,14,0.94)); }
+    .cosmetic-option[data-rarity="rare"]    { background: linear-gradient(165deg, rgba(72,110,208,0.13), rgba(18,18,31,0.94)); }
+    .cosmetic-option[data-rarity="epic"]    { background: linear-gradient(165deg, rgba(212,136,78,0.16), rgba(23,19,14,0.95)); }
+    .cosmetic-option[data-rarity="legendary"] { background: linear-gradient(165deg, rgba(215,164,58,0.18), rgba(24,20,12,0.97)); }
+    .cosmetic-option.is-locked {
+      opacity: 0.78;
+      filter: none;
+      background-blend-mode: normal;
+    }
+    .cosmetic-option.is-locked .cosmetic-desc,
+    .cosmetic-option.is-locked .cosmetic-quest-source,
+    .cosmetic-option.is-locked .cosmetic-visibility-chip {
+      opacity: 0.72;
+    }
+    .cosmetic-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.55rem;
+    }
+    .cosmetic-rarity {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.24rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .cosmetic-rarity.is-starter { color: #e6b98a; background: rgba(185,128,72,0.12); border-color: rgba(185,128,72,0.28); }
+    .cosmetic-rarity.is-rare { color: #9ec5ff; background: rgba(74,160,255,0.12); border-color: rgba(74,160,255,0.28); }
+    .cosmetic-rarity.is-epic { color: #ffd27e; background: rgba(255,171,73,0.12); border-color: rgba(255,171,73,0.28); }
+    .cosmetic-rarity.is-legendary { color: #fff0a7; background: rgba(215,164,58,0.16); border-color: rgba(215,164,58,0.34); }
+    .cosmetic-quest-source {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      line-height: 1.35;
+      min-height: 2.1em;
+    }
+    .cosmetic-impact {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.38;
+      min-height: 2.7em;
+    }
+    .cosmetic-progress-inline {
+      margin-top: auto;
+    }
+    .quest-card {
+      padding: 0.95rem 1rem;
+      border-radius: 14px;
+      background: linear-gradient(155deg, rgba(255,255,255,0.035), rgba(255,255,255,0.016));
+      border: 1px solid var(--border-subtle);
+    }
+    .quest-card.is-complete {
+      border-color: rgba(39,174,96,.28);
+      background: linear-gradient(155deg, rgba(39,174,96,.1), rgba(20,28,22,.85));
+    }
+    .quest-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+    .quest-card-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .quest-card-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-top: 0.24rem;
+    }
+    .quest-reward-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin: 0.55rem 0 0.7rem;
+    }
+    .quest-reward-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.26rem 0.58rem;
+      border-radius: 999px;
+      background: rgba(205,127,50,0.1);
+      border: 1px solid rgba(205,127,50,0.22);
+      color: var(--bronze);
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .quest-card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.7rem;
+    }
+    .quest-status {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+    .quest-status.ok { color: #2ecc71; }
+    @media (max-width: 768px) {
+      .cosmetic-showcase {
+        grid-template-columns: 1fr;
+      }
+      .cosmetic-preview-surface {
+        min-height: 208px;
+      }
+      .cosmetic-option {
+        min-height: 204px;
+      }
+    }
+    @media (max-width: 540px) {
+      .cosmetic-grid,
+      .frame-grid {
+        grid-template-columns: 1fr;
+      }
+      .cosmetic-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .cosmetic-preview-avatar,
+      .cosmetic-preview-avatar .avatar-shell {
+        width: 84px !important;
+        height: 84px !important;
+      }
+    }
   </style>
 {% endblock %}
 
@@ -416,8 +797,12 @@
         <!-- Cosmétiques actifs -->
         <div style="margin-bottom:1.5rem">
           <div class="cosmetic-help">
-            Le systeme d'aide reste identique, mais la partie premium a ete retravaillee:
-            cadres plus lisibles, rendu plus propre et verrouillage plus clair.
+            Les cosmétiques servent maintenant de vraie signature visuelle:
+            ils se voient mieux sur mobile, montrent plus clairement leur rareté,
+            et chaque récompense explique où elle brillera dans le site.
+          </div>
+          <div id="cosmeticShowcase" class="cosmetic-showcase">
+            <div class="cosmetic-showcase-loading">Chargement du prestige du profil…</div>
           </div>
           <div class="cosmetic-block-title">🎨 Thème actif</div>
           <div id="themeSelectorGrid" class="cosmetic-grid"></div>
@@ -540,6 +925,32 @@ let currentAvatarFile = null;
 let equippedTheme = null;
 let equippedFrame = null;
 let unlockedCosmetics = [];
+let cosmeticsCatalog = {};
+let questsState = [];
+
+const RARITY_META = {
+  core:      { label: 'Base',       className: 'is-starter' },
+  starter:   { label: 'Starter',    className: 'is-starter' },
+  rare:      { label: 'Rare',       className: 'is-rare' },
+  epic:      { label: 'Epic',       className: 'is-epic' },
+  legendary: { label: 'Legendaire', className: 'is-legendary' },
+};
+
+const THEME_SELECTOR_BASE = [
+  { key:'default',      cosmetic_key:null,          name:'Classique Club', icon:'⚽', desc:'Style bronze du club', impact:'Toujours propre et lisible.', c1:'rgba(205,127,50,0.18)', c2:'rgba(16,18,28,0.82)', rarity:'core', showcase:['Dashboard', 'Lobby', 'Live'] },
+  { key:'theme_fire',   cosmetic_key:'theme_fire',  name:'Fire',           icon:'🔥', desc:'Aura aggressive',      c1:'rgba(235,95,53,0.34)',  c2:'rgba(62,19,12,0.86)' },
+  { key:'theme_night',  cosmetic_key:'theme_night', name:'Night',          icon:'🌌', desc:'Style nocturne',      c1:'rgba(126,105,232,0.34)', c2:'rgba(26,20,42,0.84)' },
+  { key:'theme_gold',   cosmetic_key:'theme_gold',  name:'Gold',           icon:'✨', desc:'Prestige lumineux',   c1:'rgba(222,178,61,0.36)',  c2:'rgba(42,31,7,0.86)' },
+  { key:'theme_royal',  cosmetic_key:'theme_royal', name:'Royal',          icon:'👑', desc:'Vibe champion',      c1:'rgba(66,136,224,0.34)',  c2:'rgba(12,26,46,0.84)' },
+  { key:'theme_master', cosmetic_key:'theme_master',name:'Master',         icon:'🏆', desc:'Skin prestige',      c1:'rgba(208,161,56,0.32)',  c2:'rgba(16,16,16,0.88)' },
+];
+
+const FRAME_SELECTOR_BASE = [
+  { key:'none',          cosmetic_key:null,            name:'Sans cadre', icon:'⚪', desc:'Rendu minimal',       impact:'Aucun cadre applique.', rarity:'core', showcase:['Avatar'] },
+  { key:'frame_bronze',  cosmetic_key:'frame_bronze',  name:'Bronze',     icon:'🥉', desc:'Premier cadre',      rarity:'starter' },
+  { key:'frame_flame',   cosmetic_key:'frame_flame',   name:'Flamme',     icon:'🔥', desc:'Contour anime',      rarity:'epic' },
+  { key:'frame_phoenix', cosmetic_key:'frame_phoenix', name:'Phenix',     icon:'🦅', desc:'Halo de prestige',   rarity:'legendary' },
+];
 
 function normalizeCosmeticKey(type, key) {
   const raw = String(key || '').trim().toLowerCase();
@@ -587,6 +998,67 @@ function normalizeUnlockedCosmetics(list) {
   return Array.from(out);
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function rarityMeta(key) {
+  return RARITY_META[String(key || '').toLowerCase()] || RARITY_META.rare;
+}
+
+function cosmeticQuest(key) {
+  return (questsState || []).find((q) => q.reward_cosmetic === key) || null;
+}
+
+function cosmeticDefinition(type, base) {
+  const catalogMeta = base.cosmetic_key ? (cosmeticsCatalog[base.cosmetic_key] || {}) : {};
+  const quest = base.cosmetic_key ? cosmeticQuest(base.cosmetic_key) : null;
+  const rarityKey = String(base.rarity || catalogMeta.rarity || 'rare').toLowerCase();
+  return {
+    key: base.key,
+    cosmetic_key: base.cosmetic_key,
+    type,
+    name: catalogMeta.label || base.name,
+    icon: catalogMeta.icon || base.icon,
+    desc: catalogMeta.impact || base.impact || base.desc,
+    tagline: base.desc,
+    rarity: rarityKey,
+    rarityMeta: rarityMeta(rarityKey),
+    preview_colors: catalogMeta.preview_colors || [],
+    showcase: Array.isArray(catalogMeta.showcase) && catalogMeta.showcase.length ? catalogMeta.showcase : (base.showcase || []),
+    quest,
+    c1: base.c1,
+    c2: base.c2,
+  };
+}
+
+function cosmeticProgressPct(quest) {
+  if (!quest || !quest.condition_value) return 0;
+  return Math.max(0, Math.min(100, Math.round((quest.progress || 0) / quest.condition_value * 100)));
+}
+
+function showcaseChipsHTML(items, limit = 4) {
+  const list = (Array.isArray(items) ? items : []).slice(0, limit);
+  return list.map((item) => `<span class="cosmetic-visibility-chip">${escapeHtml(item)}</span>`).join('');
+}
+
+function cosmeticStateLabel(isEquipped, isLocked) {
+  if (isEquipped) return 'Equipe';
+  if (isLocked) return 'A gagner';
+  return 'Disponible';
+}
+
+function displayProfileName() {
+  const input = document.getElementById('nicknameInput');
+  const nickname = input ? input.value.trim() : '';
+  return nickname || (currentUser && currentUser.username) || 'Joueur';
+}
+
 const ELO_TIERS = [
   { name:'Recrue',    icon:'🎮', min:800,  max:949  },
   { name:'Amateur',   icon:'🌱', min:950,  max:1099 },
@@ -624,6 +1096,7 @@ function selectPreset(emoji) {
   const em = document.getElementById('avatarPreviewEmoji');
   if (img) img.style.display = 'none';
   if (em) { em.textContent = emoji; em.style.display = 'block'; }
+  renderCosmeticShowcase();
 }
 
 function handleAvatarUpload(input) {
@@ -753,6 +1226,7 @@ function showAvatarCropTool(img, src) {
     if (prevImg) { prevImg.src = compressed; prevImg.style.display = 'block'; }
     if (em) em.style.display = 'none';
     overlay.remove();
+    renderCosmeticShowcase();
     toast('Photo recadree - Sauvegarde pour appliquer', 'ok');
   });
 }
@@ -863,12 +1337,14 @@ async function equipCosmetic(type, key) {
         const cr = await fetch('/api/my_cosmetics');
         if (cr.ok) {
           const cd = await cr.json();
+          cosmeticsCatalog = cd.catalog || cosmeticsCatalog || {};
           unlockedCosmetics = normalizeUnlockedCosmetics(cd.unlocked || []);
           equippedTheme = normalizeCosmeticKey('theme', cd.active_theme || equippedTheme || 'default');
           equippedFrame = normalizeCosmeticKey('frame', cd.active_frame || equippedFrame || 'none');
         }
       } catch(e) {}
       renderCosmeticSelectors();
+      renderCosmeticShowcase();
       if (window._baseUserData) {
         window._baseUserData.active_theme = equippedTheme || 'default';
         window._baseUserData.active_frame = equippedFrame || 'none';
@@ -883,25 +1359,111 @@ async function equipCosmetic(type, key) {
   } catch(e) { toast('Erreur réseau', 'err'); }
 }
 
+function renderCosmeticShowcase() {
+  const el = document.getElementById('cosmeticShowcase');
+  if (!el) return;
+
+  const themeDef = cosmeticDefinition('theme', THEME_SELECTOR_BASE.find((item) => item.key === (equippedTheme || 'default')) || THEME_SELECTOR_BASE[0]);
+  const frameDef = cosmeticDefinition('frame', FRAME_SELECTOR_BASE.find((item) => item.key === (equippedFrame || 'none')) || FRAME_SELECTOR_BASE[0]);
+
+  const previewUser = {
+    username: (currentUser && currentUser.username) || 'demo',
+    nickname: displayProfileName(),
+    avatar_preset: currentAvatarPreset || (currentUser && currentUser.avatar_preset) || '⚽',
+    has_avatar: !!(currentUser && (currentUser.avatar_url || currentUser.has_avatar)),
+    active_theme: equippedTheme || 'default',
+    active_frame: equippedFrame || 'none',
+  };
+  const previewImgEl = document.getElementById('avatarPreviewImg');
+  const localPreviewSrc = previewImgEl && previewImgEl.style.display !== 'none' ? previewImgEl.src : '';
+  let previewAvatar = (window.ProfileUtils && ProfileUtils.avatarWithCosmeticsHTML)
+    ? ProfileUtils.avatarWithCosmeticsHTML(previewUser, 96)
+    : `<span style="font-size:2.6rem">${escapeHtml(previewUser.avatar_preset)}</span>`;
+  if (localPreviewSrc) {
+    const themeClass = equippedTheme && equippedTheme !== 'default'
+      ? `avatar-theme-${equippedTheme.replace('theme_', '')}`
+      : 'avatar-theme-default';
+    const frameClass = equippedFrame && equippedFrame !== 'none'
+      ? `avatar-${equippedFrame.replace('_', '-')}`
+      : '';
+    previewAvatar = `<span class="avatar-shell avatar-shell-circle ${themeClass} ${frameClass}" style="width:96px;height:96px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden"><span style="position:relative;width:96px;height:96px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%"><img src="${localPreviewSrc}" style="position:absolute;inset:0;width:96px;height:96px;border-radius:50%;object-fit:cover" alt=""></span></span>`;
+  }
+
+  const allUnlockables = Object.entries(cosmeticsCatalog || {}).filter(([, meta]) => ['theme', 'frame', 'badge'].includes(meta.type));
+  const unlockedSet = new Set(unlockedCosmetics || []);
+  const unlockedCount = allUnlockables.filter(([key]) => unlockedSet.has(key)).length;
+  const themeCount = allUnlockables.filter(([, meta]) => meta.type === 'theme').length;
+  const frameCount = allUnlockables.filter(([, meta]) => meta.type === 'frame').length;
+  const unlockedThemes = allUnlockables.filter(([key, meta]) => meta.type === 'theme' && unlockedSet.has(key)).length;
+  const unlockedFrames = allUnlockables.filter(([key, meta]) => meta.type === 'frame' && unlockedSet.has(key)).length;
+
+  const nextQuest = (questsState || [])
+    .filter((q) => !q.completed && q.reward_cosmetic)
+    .sort((a, b) => cosmeticProgressPct(b) - cosmeticProgressPct(a))[0] || null;
+  const nextPct = cosmeticProgressPct(nextQuest);
+  const nextRewardMeta = nextQuest ? (nextQuest.reward_meta || cosmeticsCatalog[nextQuest.reward_cosmetic] || {}) : null;
+  const previewColors = themeDef.preview_colors || [];
+  const previewC1 = previewColors[2] || previewColors[1] || themeDef.c1 || 'rgba(205,127,50,0.24)';
+  const previewC2 = previewColors[0] || previewColors[1] || themeDef.c2 || 'rgba(16,18,28,0.86)';
+
+  const nextCard = nextQuest
+    ? `
+      <div class="cosmetic-next-card">
+        <div class="cosmetic-next-kicker">Prochaine recompense marquee</div>
+        <div class="cosmetic-next-name">${escapeHtml(nextQuest.reward_label || nextQuest.name)}</div>
+        <div class="cosmetic-next-desc">${escapeHtml(nextQuest.description || '')}</div>
+        <div class="quest-reward-line" style="margin-top:.7rem">
+          <span class="quest-reward-pill">${escapeHtml(nextRewardMeta.icon || nextQuest.icon || '🏆')} ${escapeHtml(rarityMeta(nextRewardMeta.rarity || 'rare').label)}</span>
+          ${showcaseChipsHTML(nextRewardMeta.showcase || [], 3)}
+        </div>
+        <div class="cosmetic-next-progress">
+          <div class="cosmetic-progress-top">
+            <span>${escapeHtml(nextQuest.icon || '🏅')} ${escapeHtml(nextQuest.name)}</span>
+            <strong>${nextQuest.progress || 0}/${nextQuest.condition_value || 0}</strong>
+          </div>
+          <div class="cosmetic-progress-track"><div class="cosmetic-progress-bar" style="width:${nextPct}%"></div></div>
+        </div>
+      </div>`
+    : `
+      <div class="cosmetic-next-card">
+        <div class="cosmetic-next-kicker">Collection complete</div>
+        <div class="cosmetic-next-name">Tout est debloque</div>
+        <div class="cosmetic-next-desc">Ton profil affiche deja toutes les recompenses cosmetics disponibles. Il ne te reste qu'a les montrer partout.</div>
+      </div>`;
+
+  el.innerHTML = `
+    <div class="cosmetic-preview-surface" style="--preview-c1:${previewC1};--preview-c2:${previewC2}">
+      <div class="cosmetic-preview-head">
+        <span class="cosmetic-preview-eyebrow">✨ Prestige du profil</span>
+        <span class="cosmetic-rarity ${themeDef.rarityMeta.className}">${escapeHtml(themeDef.rarityMeta.label)}</span>
+      </div>
+      <div class="cosmetic-preview-body">
+        <div class="cosmetic-preview-avatar">${previewAvatar}</div>
+        <div class="cosmetic-preview-name">${escapeHtml(displayProfileName())}</div>
+        <div class="cosmetic-preview-sub">${escapeHtml(themeDef.desc || 'Donne du style a ton profil sur tout le site.')}</div>
+        <div class="cosmetic-preview-loadout">
+          <span class="cosmetic-mini-tag">${escapeHtml(themeDef.icon || '🎨')} ${escapeHtml(themeDef.name)}</span>
+          <span class="cosmetic-mini-tag">${escapeHtml(frameDef.icon || '🖼️')} ${escapeHtml(frameDef.name)}</span>
+        </div>
+      </div>
+      <div class="cosmetic-preview-foot">
+        <div class="cosmetic-preview-visibility">${showcaseChipsHTML(themeDef.showcase || [], 4)}</div>
+      </div>
+    </div>
+    <div class="cosmetic-showcase-side">
+      <div class="cosmetic-kpi-grid">
+        <div class="cosmetic-kpi"><span class="cosmetic-kpi-value">${unlockedCount}</span><span class="cosmetic-kpi-label">Cosmetiques debloques</span></div>
+        <div class="cosmetic-kpi"><span class="cosmetic-kpi-value">${unlockedThemes}/${themeCount || 0}</span><span class="cosmetic-kpi-label">Themes possedes</span></div>
+        <div class="cosmetic-kpi"><span class="cosmetic-kpi-value">${unlockedFrames}/${frameCount || 0}</span><span class="cosmetic-kpi-label">Cadres possedes</span></div>
+      </div>
+      ${nextCard}
+    </div>`;
+}
+
 function renderCosmeticSelectors() {
   const themeGrid = document.getElementById('themeSelectorGrid');
   const frameGrid = document.getElementById('frameSelectorGrid');
   if (!themeGrid || !frameGrid) return;
-
-  const THEMES = [
-    { key:'default',      name:'Défaut', icon:'🌑', desc:'Sombre bronze',      cosmetic_key: null,           c1:'rgba(205,127,50,0.18)', c2:'rgba(16,18,28,0.82)' },
-    { key:'theme_fire',   name:'Fire',   icon:'🔥', desc:'Rouge intense',      cosmetic_key: 'theme_fire',   c1:'rgba(235,95,53,0.34)',  c2:'rgba(62,19,12,0.86)' },
-    { key:'theme_night',  name:'Night',  icon:'🌌', desc:'Violet nocturne',    cosmetic_key: 'theme_night',  c1:'rgba(126,105,232,0.34)', c2:'rgba(26,20,42,0.84)' },
-    { key:'theme_gold',   name:'Gold',   icon:'✨', desc:'Or brillant',        cosmetic_key: 'theme_gold',   c1:'rgba(222,178,61,0.36)',  c2:'rgba(42,31,7,0.86)' },
-    { key:'theme_royal',  name:'Royal',  icon:'💙', desc:'Bleu royal',         cosmetic_key: 'theme_royal',  c1:'rgba(66,136,224,0.34)',  c2:'rgba(12,26,46,0.84)' },
-    { key:'theme_master', name:'Master', icon:'🏆', desc:'Noir et or',         cosmetic_key: 'theme_master', c1:'rgba(208,161,56,0.32)',  c2:'rgba(16,16,16,0.88)' },
-  ];
-  const FRAMES = [
-    { key:'none',          name:'Aucun',  icon:'⚪', desc:'Sans effet',           cosmetic_key: null },
-    { key:'frame_bronze',  name:'Bronze', icon:'🟤', desc:'Anneau sobre',         cosmetic_key: 'frame_bronze' },
-    { key:'frame_flame',   name:'Flamme', icon:'🔥', desc:'Contour dynamique',    cosmetic_key: 'frame_flame' },
-    { key:'frame_phoenix', name:'Phénix', icon:'🦅', desc:'Effet premium anime', cosmetic_key: 'frame_phoenix' },
-  ];
 
   const previewSeed = {
     username: (currentUser && currentUser.username) || 'demo',
@@ -911,38 +1473,67 @@ function renderCosmeticSelectors() {
     active_frame: 'none',
   };
 
-  themeGrid.innerHTML = THEMES.map((t) => {
+  themeGrid.innerHTML = THEME_SELECTOR_BASE.map((base) => {
+    const t = cosmeticDefinition('theme', base);
     const isEquipped = equippedTheme === t.key || (!equippedTheme && t.key === 'default');
     const isLocked = t.cosmetic_key && !unlockedCosmetics.includes(t.cosmetic_key);
-    const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
-    return `<button type="button" data-cosmetic-type="theme" data-cosmetic-key="${t.key}" data-locked="${isLocked ? '1' : '0'}" class="cosmetic-option theme-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" style="--theme-c1:${t.c1};--theme-c2:${t.c2}" aria-pressed="${isEquipped ? 'true' : 'false'}">
+    const stateLabel = cosmeticStateLabel(isEquipped, isLocked);
+    const progressPct = cosmeticProgressPct(t.quest);
+    const progressHtml = (isLocked && t.quest)
+      ? `<div class="cosmetic-progress-inline">
+          <div class="cosmetic-progress-top"><span>${escapeHtml(t.quest.icon || '🏅')} ${escapeHtml(t.quest.name)}</span><strong>${t.quest.progress || 0}/${t.quest.condition_value || 0}</strong></div>
+          <div class="cosmetic-progress-track"><div class="cosmetic-progress-bar" style="width:${progressPct}%"></div></div>
+        </div>`
+      : '';
+    return `<button type="button" data-cosmetic-type="theme" data-cosmetic-key="${t.key}" data-locked="${isLocked ? '1' : '0'}" data-rarity="${t.rarity}" class="cosmetic-option theme-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" style="--theme-c1:${t.c1};--theme-c2:${t.c2}" aria-pressed="${isEquipped ? 'true' : 'false'}">
       ${isLocked ? '<span class="cosmetic-lock">🔒</span>' : ''}
-      <span class="theme-preview"><span class="theme-preview-icon">${t.icon}</span></span>
-      <span class="cosmetic-label">${t.name}</span>
-      <span class="cosmetic-desc">${t.desc}</span>
-      <span class="cosmetic-state">${stateLabel}</span>
+      <span class="theme-preview"><span class="theme-preview-icon">${escapeHtml(t.icon)}</span></span>
+      <span class="cosmetic-header-row">
+        <span class="cosmetic-label">${escapeHtml(t.name)}</span>
+        <span class="cosmetic-rarity ${t.rarityMeta.className}">${escapeHtml(t.rarityMeta.label)}</span>
+      </span>
+      <span class="cosmetic-desc">${escapeHtml(t.tagline || '')}</span>
+      <span class="cosmetic-impact">${escapeHtml(t.desc || '')}</span>
+      <span class="cosmetic-quest-source">${t.quest ? `${escapeHtml(t.quest.icon || '🏅')} ${escapeHtml(t.quest.name)}` : 'Disponible des le depart'}</span>
+      <span class="cosmetic-visibility">${showcaseChipsHTML(t.showcase || [], 3)}</span>
+      ${progressHtml}
+      <span class="cosmetic-state">${escapeHtml(stateLabel)}</span>
     </button>`;
   }).join('');
 
-  frameGrid.innerHTML = FRAMES.map((f) => {
+  frameGrid.innerHTML = FRAME_SELECTOR_BASE.map((base) => {
+    const f = cosmeticDefinition('frame', base);
     const isEquipped = equippedFrame === f.key || (!equippedFrame && f.key === 'none');
     const isLocked = f.cosmetic_key && !unlockedCosmetics.includes(f.cosmetic_key);
-    const stateLabel = isEquipped ? 'Actif' : (isLocked ? 'Verrouille' : 'Disponible');
+    const stateLabel = cosmeticStateLabel(isEquipped, isLocked);
     const frameUser = Object.assign({}, previewSeed, {
       active_theme: equippedTheme || 'default',
       active_frame: f.key === 'none' ? 'none' : f.key,
     });
     const framePreview = (window.ProfileUtils && ProfileUtils.avatarWithCosmeticsHTML)
       ? ProfileUtils.avatarWithCosmeticsHTML(frameUser, 50)
-      : `<span style="font-size:1.2rem">${f.icon}</span>`;
+      : `<span style="font-size:1.2rem">${escapeHtml(f.icon)}</span>`;
+    const progressPct = cosmeticProgressPct(f.quest);
+    const progressHtml = (isLocked && f.quest)
+      ? `<div class="cosmetic-progress-inline">
+          <div class="cosmetic-progress-top"><span>${escapeHtml(f.quest.icon || '🏅')} ${escapeHtml(f.quest.name)}</span><strong>${f.quest.progress || 0}/${f.quest.condition_value || 0}</strong></div>
+          <div class="cosmetic-progress-track"><div class="cosmetic-progress-bar" style="width:${progressPct}%"></div></div>
+        </div>`
+      : '';
 
-    return `<button type="button" data-cosmetic-type="frame" data-cosmetic-key="${f.key}" data-locked="${isLocked ? '1' : '0'}" class="cosmetic-option frame-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" aria-pressed="${isEquipped ? 'true' : 'false'}">
+    return `<button type="button" data-cosmetic-type="frame" data-cosmetic-key="${f.key}" data-locked="${isLocked ? '1' : '0'}" data-rarity="${f.rarity}" class="cosmetic-option frame-option ${isEquipped ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}" aria-pressed="${isEquipped ? 'true' : 'false'}">
       ${isLocked ? '<span class="cosmetic-lock">🔒</span>' : ''}
       <span class="frame-preview-wrap">${framePreview}</span>
-      <span class="cosmetic-label">${f.icon} ${f.name}</span>
-      <span class="cosmetic-desc">${f.desc}</span>
-      ${f.key !== 'none' ? '<span class="frame-tag">Premium</span>' : ''}
-      <span class="cosmetic-state">${stateLabel}</span>
+      <span class="cosmetic-header-row">
+        <span class="cosmetic-label">${escapeHtml(f.icon)} ${escapeHtml(f.name)}</span>
+        <span class="cosmetic-rarity ${f.rarityMeta.className}">${escapeHtml(f.rarityMeta.label)}</span>
+      </span>
+      <span class="cosmetic-desc">${escapeHtml(f.tagline || '')}</span>
+      <span class="cosmetic-impact">${escapeHtml(f.desc || '')}</span>
+      <span class="cosmetic-quest-source">${f.quest ? `${escapeHtml(f.quest.icon || '🏅')} ${escapeHtml(f.quest.name)}` : 'Equipe sans condition'}</span>
+      <span class="cosmetic-visibility">${showcaseChipsHTML(f.showcase || [], 3)}</span>
+      ${progressHtml}
+      <span class="cosmetic-state">${escapeHtml(stateLabel)}</span>
     </button>`;
   }).join('');
 }
@@ -956,9 +1547,16 @@ function handleCosmeticGridClick(event) {
   const key = btn.dataset.cosmeticKey;
   if (!type || !key) return;
   if (btn.dataset.locked === '1') {
-    toast(type === 'theme'
-      ? '🔒 Complete des quetes pour debloquer ce theme'
-      : '🔒 Complete des quetes pour debloquer ce cadre', 'err');
+    const quest = cosmeticQuest(key);
+    const questsEl = document.getElementById('questsFullList');
+    if (quest && questsEl && typeof questsEl.scrollIntoView === 'function') {
+      questsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    toast(quest
+      ? `🔒 Debloque-le avec la quete "${quest.name}"`
+      : (type === 'theme'
+        ? '🔒 Complete des quetes pour debloquer ce theme'
+        : '🔒 Complete des quetes pour debloquer ce cadre'), 'err');
     return;
   }
   equipCosmetic(type, key);
@@ -1000,6 +1598,7 @@ function initSettingsBindings() {
   if (nicknameInput && nicknameCount) {
     nicknameInput.addEventListener('input', () => {
       nicknameCount.textContent = `${nicknameInput.value.length}/30`;
+      renderCosmeticShowcase();
     });
   }
 
@@ -1034,32 +1633,53 @@ async function loadQuests() {
   if (!el) return;
   try {
     const res = await fetch('/api/my_quests');
-    if (!res.ok) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Impossible de charger les quêtes</p>'; return; }
+    if (!res.ok) {
+      questsState = [];
+      renderCosmeticShowcase();
+      el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Impossible de charger les quêtes</p>';
+      return;
+    }
     const quests = await res.json();
-    if (!quests || quests.error) { el.innerHTML = ''; return; }
+    if (!quests || quests.error) {
+      questsState = [];
+      renderCosmeticShowcase();
+      el.innerHTML = '';
+      return;
+    }
+    questsState = Array.isArray(quests) ? quests : [];
+    renderCosmeticShowcase();
+    renderCosmeticSelectors();
     if (!quests.length) { el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Aucune quête disponible</p>'; return; }
 
     el.innerHTML = quests.map(q => {
       const pct = q.condition_value > 0 ? Math.min(100, Math.round(q.progress / q.condition_value * 100)) : 0;
-      const barColor = q.completed ? '#2ecc71' : pct >= 80 ? '#f1c40f' : '#cd7f32';
-      return `<div style="padding:.875rem 1rem;border-radius:10px;background:var(--bg-tertiary);border:1px solid ${q.completed ? 'rgba(39,174,96,.25)' : 'var(--border-subtle)'}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${q.completed ? 0 : '8px'}">
-          <div style="display:flex;align-items:center;gap:.6rem">
-            <span style="font-size:1.2rem">${q.icon}</span>
+      const rewardMeta = q.reward_meta || {};
+      const rewardRarity = rarityMeta(rewardMeta.rarity || 'rare');
+      return `<div class="quest-card ${q.completed ? 'is-complete' : ''}">
+        <div class="quest-card-head">
+          <div style="display:flex;align-items:flex-start;gap:.7rem">
+            <span style="font-size:1.25rem;line-height:1">${escapeHtml(q.icon)}</span>
             <div>
-              <div style="font-weight:700;font-size:.9rem${q.completed ? ';text-decoration:line-through;opacity:.6' : ''}">${q.name}</div>
-              <div style="font-size:.72rem;color:var(--text-muted);margin-top:1px">🎁 ${q.reward_label}</div>
+              <div class="quest-card-title"${q.completed ? ' style="text-decoration:line-through;opacity:.74"' : ''}>${escapeHtml(q.name)}</div>
+              <div class="quest-card-desc">${escapeHtml(q.description || '')}</div>
             </div>
           </div>
-          ${q.completed
-            ? '<span style="color:#2ecc71;font-weight:800;font-size:.85rem">✓ Débloqué</span>'
-            : `<span style="font-size:.78rem;color:var(--text-muted)">${q.progress}/${q.condition_value}</span>`
-          }
+          <span class="cosmetic-rarity ${rewardRarity.className}">${escapeHtml(rewardRarity.label)}</span>
         </div>
-        ${!q.completed ? `<div style="height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;border-radius:99px;background:${barColor};width:${pct}%;transition:width .8s"></div></div>` : ''}
+        <div class="quest-reward-line">
+          <span class="quest-reward-pill">${escapeHtml(rewardMeta.icon || '🎁')} ${escapeHtml(q.reward_label || 'Cosmetique')}</span>
+          ${showcaseChipsHTML(rewardMeta.showcase || [], 3)}
+        </div>
+        ${!q.completed ? `<div class="cosmetic-progress-track"><div class="cosmetic-progress-bar" style="width:${pct}%"></div></div>` : ''}
+        <div class="quest-card-foot">
+          <span class="quest-status ${q.completed ? 'ok' : ''}">${q.completed ? '✓ Debloque' : `${q.progress || 0}/${q.condition_value || 0}`}</span>
+          <span style="font-size:.72rem;color:var(--text-muted)">${escapeHtml((rewardMeta.type || q.reward_type || 'reward').toUpperCase())}</span>
+        </div>
       </div>`;
     }).join('');
   } catch(e) {
+    questsState = [];
+    renderCosmeticShowcase();
     el.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Erreur de chargement</p>';
   }
 }
@@ -1211,10 +1831,11 @@ async function loadProfile() {
     try {
       const cr = await fetch('/api/my_cosmetics');
       if (cr.ok) {
-        const cd = await cr.json();
-        unlockedCosmetics = normalizeUnlockedCosmetics(cd.unlocked || []);
-        equippedTheme = normalizeCosmeticKey('theme', cd.active_theme || 'default');
-        equippedFrame = normalizeCosmeticKey('frame', cd.active_frame || 'none');
+      const cd = await cr.json();
+      cosmeticsCatalog = cd.catalog || cosmeticsCatalog || {};
+      unlockedCosmetics = normalizeUnlockedCosmetics(cd.unlocked || []);
+      equippedTheme = normalizeCosmeticKey('theme', cd.active_theme || 'default');
+      equippedFrame = normalizeCosmeticKey('frame', cd.active_frame || 'none');
         if (window._baseUserData) {
           window._baseUserData.active_theme = equippedTheme;
           window._baseUserData.active_frame = equippedFrame;
@@ -1223,6 +1844,7 @@ async function loadProfile() {
       }
     } catch(e) { unlockedCosmetics = []; }
     renderCosmeticSelectors();
+    renderCosmeticShowcase();
 
     // ELO
     try {

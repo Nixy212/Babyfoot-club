@@ -793,6 +793,57 @@ COSMETICS_CATALOG = {
     "badge_perfect": {"type": "badge", "label": "Perfectionniste",      "icon": "🎯", "css_class": "badge-perfect"},
 }
 
+COSMETIC_MOTIVATION_META = {
+    "theme_fire": {
+        "rarity": "rare",
+        "impact": "Teinte l'ensemble du site avec une identite feu tres visible.",
+        "showcase": ["Navigation", "Lobby", "Live", "Classement"],
+    },
+    "theme_night": {
+        "rarity": "rare",
+        "impact": "Donne un style nocturne premium sur toutes les pages du club.",
+        "showcase": ["Navigation", "Profil", "Live", "Top joueurs"],
+    },
+    "theme_gold": {
+        "rarity": "epic",
+        "impact": "Ajoute une finition doree qui donne un vrai effet de statut.",
+        "showcase": ["Navigation", "Lobby", "Live", "Historique"],
+    },
+    "theme_royal": {
+        "rarity": "epic",
+        "impact": "Affiche un style champion visible partout ou ton profil apparait.",
+        "showcase": ["Navigation", "Lobby", "Live", "Classement"],
+    },
+    "theme_master": {
+        "rarity": "legendary",
+        "impact": "Le skin prestige ultime: noir profond, or chaud et aura premium.",
+        "showcase": ["Navigation", "Profil", "Live", "Classement"],
+    },
+    "frame_bronze": {
+        "rarity": "starter",
+        "impact": "Encadre ton avatar sur le menu, le lobby, le live et le classement.",
+        "showcase": ["Avatar menu", "Lobby", "Live", "Classement"],
+    },
+    "frame_flame": {
+        "rarity": "epic",
+        "impact": "Ajoute un contour anime tres lisible, meme sur mobile.",
+        "showcase": ["Avatar menu", "Lobby", "Live", "Dashboard"],
+    },
+    "frame_phoenix": {
+        "rarity": "legendary",
+        "impact": "Cadre prestige avec halo intense pour les gros accomplissements.",
+        "showcase": ["Avatar menu", "Lobby", "Live", "Classement"],
+    },
+    "badge_perfect": {
+        "rarity": "legendary",
+        "impact": "Badge signature pour afficher un exploit rare sur ton profil.",
+        "showcase": ["Profil", "Lobby", "Live", "Classement"],
+    },
+}
+for _cosmetic_key, _cosmetic_meta in COSMETIC_MOTIVATION_META.items():
+    if _cosmetic_key in COSMETICS_CATALOG:
+        COSMETICS_CATALOG[_cosmetic_key].update(_cosmetic_meta)
+
 def seed_quests():
     """Insère les quêtes de base si elles n'existent pas."""
     try:
@@ -2904,6 +2955,7 @@ def api_my_quests():
             "reward_cosmetic": qdef.get("reward_cosmetic"),
             "reward_label":    qdef.get("reward_label"),
             "reward_type":     cosmetic.get("type"),
+            "reward_meta":     cosmetic,
             "progress":        progress,
             "completed":       completed,
             "completed_at":    str(row.get("completed_at") or ""),

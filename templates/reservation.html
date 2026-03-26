@@ -14,7 +14,7 @@
     .nav,.page{position:relative;z-index:1}
 
     /* Status */
-    .status-card{border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;border:1px solid}
+    .status-card{border-radius:20px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;border:1px solid;box-shadow:0 18px 42px rgba(0,0,0,.18);backdrop-filter:blur(16px);overflow:hidden;position:relative}
     .status-free{background:linear-gradient(135deg,rgba(39,174,96,0.12),rgba(39,174,96,0.05));border-color:rgba(39,174,96,0.35)}
     .status-busy{background:linear-gradient(135deg,rgba(231,76,60,0.12),rgba(231,76,60,0.05));border-color:rgba(231,76,60,0.35)}
     .status-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;animation:pdot 2s infinite}
@@ -23,26 +23,26 @@
     @keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.2)}}
 
     /* Play now */
-    .play-now-card{background:linear-gradient(135deg,rgba(39,174,96,0.15),rgba(39,174,96,0.05));border:1px solid rgba(39,174,96,0.4);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;display:none}
+    .play-now-card{background:linear-gradient(160deg,rgba(39,174,96,0.16),rgba(39,174,96,0.05));border:1px solid rgba(39,174,96,0.36);border-radius:20px;padding:1.5rem;margin-bottom:1.25rem;display:none;box-shadow:0 18px 42px rgba(0,0,0,.18);backdrop-filter:blur(16px)}
     .play-now-card h3{color:#2ecc71;margin:0 0 .75rem;font-size:1.1rem}
 
     /* Pills */
     .pill-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
-    .dpill{padding:.5rem 1.1rem;border-radius:99px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-weight:600;font-size:.9rem;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .dpill{padding:.5rem 1.1rem;border-radius:99px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-weight:600;font-size:.9rem;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
     .dpill:hover{border-color:rgba(205,127,50,.5);color:var(--text-primary)}
     .dpill.on{background:linear-gradient(135deg,#cd7f32,#b8732f);border-color:#cd7f32;color:#fff;box-shadow:0 2px 12px rgba(205,127,50,.4)}
-    .mpill{padding:.5rem 1.4rem;border-radius:99px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-weight:600;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .mpill{padding:.5rem 1.4rem;border-radius:99px;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--text-secondary);font-weight:600;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
     .mpill.on{background:linear-gradient(135deg,rgba(205,127,50,.2),rgba(205,127,50,.08));border-color:rgba(205,127,50,.5);color:#cd7f32}
     .pill-label{font-size:.8rem;color:var(--text-muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.06em}
 
     /* Plan card */
-    .plan-card{background:var(--bg-secondary);border:1px solid var(--border-normal);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem}
+    .plan-card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));border:1px solid var(--border-normal);border-radius:20px;padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 18px 42px rgba(0,0,0,.18);backdrop-filter:blur(16px)}
     .plan-card h3{color:var(--bronze);margin:0 0 1.1rem;font-size:1.1rem}
     .day-tabs{display:flex;gap:.5rem;margin-bottom:1rem}
-    .dtab{flex:1;padding:.65rem;border-radius:10px;border:1.5px solid var(--border-normal);background:transparent;color:var(--text-tertiary);font-weight:600;cursor:pointer;text-align:center;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .dtab{flex:1;padding:.65rem;border-radius:10px;border:1.5px solid var(--border-normal);background:transparent;color:var(--text-tertiary);font-weight:600;cursor:pointer;text-align:center;transition:all .15s;-webkit-appearance:none;font-family:inherit;min-height:46px;display:inline-flex;align-items:center;justify-content:center}
     .dtab.on{background:rgba(205,127,50,.12);border-color:rgba(205,127,50,.4);color:#cd7f32}
     .time-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
-    input[type=time]{width:100%;padding:.7rem 1rem;background:var(--bg-elevated);border:1.5px solid var(--border-normal);border-radius:10px;color:var(--text-primary);font-size:1.1rem;font-weight:600;outline:none;-webkit-appearance:none;transition:border-color .15s;box-sizing:border-box;font-family:inherit}
+    input[type=time]{width:100%;padding:.7rem 1rem;background:var(--bg-elevated);border:1.5px solid var(--border-normal);border-radius:12px;color:var(--text-primary);font-size:1.1rem;font-weight:600;outline:none;-webkit-appearance:none;transition:border-color .15s;box-sizing:border-box;font-family:inherit;min-height:52px}
     input[type=time]:focus{border-color:rgba(205,127,50,.5);box-shadow:0 0 0 3px rgba(205,127,50,.1)}
     .end-label{font-size:.85rem;color:var(--text-tertiary);white-space:nowrap;font-weight:500}
 
@@ -50,11 +50,11 @@
     .conflict-box{display:none;padding:.6rem .85rem;border-radius:8px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;font-size:.85rem;margin-bottom:1rem}
 
     /* My resa */
-    .my-resa{background:linear-gradient(135deg,rgba(205,127,50,.15),rgba(205,127,50,.05));border:1px solid rgba(205,127,50,.4);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none}
+    .my-resa{background:linear-gradient(160deg,rgba(205,127,50,.16),rgba(205,127,50,.05));border:1px solid rgba(205,127,50,.36);border-radius:20px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none;box-shadow:0 18px 42px rgba(0,0,0,.18);backdrop-filter:blur(16px)}
     .my-resa h3{color:#cd7f32;margin:0 0 .5rem}
 
     /* Timeline */
-    .timeline-wrap{background:var(--bg-secondary);border:1px solid var(--border-normal);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+    .timeline-wrap{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1px solid var(--border-normal);border-radius:20px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 18px 42px rgba(0,0,0,.18);backdrop-filter:blur(16px)}
     .tl-title{color:var(--text-secondary);font-size:.875rem;text-transform:uppercase;letter-spacing:.07em;margin:0 0 1rem}
     /* Conteneur scrollable */
     .tl-outer{
@@ -101,27 +101,41 @@
 
     /* Next free */
     .free-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
-    .free-pill{padding:.4rem .85rem;border-radius:99px;background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:#2ecc71;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit}
+    .free-pill{padding:.4rem .85rem;border-radius:99px;background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:#2ecc71;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;-webkit-appearance:none;font-family:inherit;min-height:42px;display:inline-flex;align-items:center;justify-content:center}
     .free-pill:hover{background:rgba(39,174,96,.2)}
 
     /* Confirm btn */
-    .cbtn{width:100%;padding:1rem;border-radius:12px;border:none;background:linear-gradient(135deg,#cd7f32,#b8732f);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:opacity .15s,transform .15s;margin-bottom:.75rem;font-family:inherit}
+    .cbtn{width:100%;padding:1rem;border-radius:14px;border:none;background:linear-gradient(135deg,#cd7f32,#b8732f);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;-webkit-appearance:none;transition:opacity .15s,transform .15s,box-shadow .15s;margin-bottom:.75rem;font-family:inherit;min-height:52px;box-shadow:0 14px 30px rgba(205,127,50,.18)}
     .cbtn:disabled{opacity:.4;cursor:not-allowed}
     .cbtn:not(:disabled):active{transform:scale(.98)}
-    .cbtn.green{background:linear-gradient(135deg,#27ae60,#219a52)}
+    .cbtn.green{background:linear-gradient(135deg,#27ae60,#219a52);box-shadow:0 14px 30px rgba(39,174,96,.18)}
 
     /* Separator */
     .sep{display:flex;align-items:center;gap:.75rem;margin:.25rem 0 1.25rem;font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
     .sep::before,.sep::after{content:'';flex:1;height:1px;background:var(--border-subtle)}
 
     /* Toast */
-    .toast-wrap{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none}
-    .toast{background:var(--bg-elevated);border:1px solid var(--border-normal);border-radius:10px;padding:.65rem 1.25rem;font-size:.9rem;font-weight:600;color:var(--text-primary);box-shadow:0 4px 20px rgba(0,0,0,.4);animation:tin .25s ease;white-space:nowrap}
+    .toast-wrap{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none;width:min(92vw,420px)}
+    .toast{background:var(--bg-elevated);border:1px solid var(--border-normal);border-radius:12px;padding:.65rem 1.25rem;font-size:.9rem;font-weight:600;color:var(--text-primary);box-shadow:0 4px 20px rgba(0,0,0,.4);animation:tin .25s ease;white-space:normal;text-align:center;width:100%}
     .toast.ok{border-color:rgba(39,174,96,.4);color:#2ecc71}
     .toast.err{border-color:rgba(231,76,60,.4);color:#e74c3c}
+    .toast.inf{border-color:rgba(74,159,212,.35);color:#4a9fd4}
     @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:6px}
     @keyframes sp{to{transform:rotate(360deg)}}
+    body.network-saver .status-dot,
+    body.network-saver .spin{animation:none!important}
+    body.network-saver .status-card,
+    body.network-saver .play-now-card,
+    body.network-saver .plan-card,
+    body.network-saver .timeline-wrap,
+    body.network-saver .my-resa{backdrop-filter:none}
+    @media(max-width:768px){
+      .status-card,.play-now-card,.plan-card,.timeline-wrap,.my-resa{padding:1rem;border-radius:18px}
+      .time-row{flex-direction:column;align-items:stretch}
+      .end-label{white-space:normal}
+      .toast-wrap{bottom:calc(var(--mobile-dock-height) + 1rem + var(--safe-bottom));padding:0 .5rem}
+    }
   </style>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
 <script>
@@ -262,6 +276,8 @@ let durPlan = 10, modePlan = '1v1';
 let dayOff = 0;
 let STATUS = null;
 let myId = null;
+let refreshTimer = null;
+let offlineToastShown = false;
 
 // ── Helpers
 function toggleMenu() {
@@ -334,9 +350,28 @@ function checkConflict(){
 // ── Refresh statut
 async function refresh(){
   try{
-    const d=await fetch('/api/babyfoot_status').then(r=>r.json());
-    STATUS=d;renderStatus(d);findMyResa(d);renderTL();renderFree();updatePreview();
-  }catch(e){console.error(e);}
+    const res = await fetch('/api/babyfoot_status');
+    if (!res.ok) throw new Error('status_unavailable');
+    const d = await res.json();
+    if (!d || typeof d.is_free === 'undefined') throw new Error('invalid_status');
+    STATUS=d;offlineToastShown=false;renderStatus(d);findMyResa(d);renderTL();renderFree();updatePreview();
+  }catch(e){
+    console.error(e);
+    if (!STATUS) {
+      const card=document.getElementById('statusCard');
+      const txt=document.getElementById('statusText');
+      const sub=document.getElementById('statusSub');
+      if (card && txt && sub) {
+        card.className='status-card status-busy';
+        txt.textContent='Connexion instable';
+        sub.textContent='Impossible de charger les reservations pour le moment';
+      }
+    }
+    if (!offlineToastShown && navigator.onLine===false) {
+      toast('Connexion perdue - affichage local conserve','inf');
+      offlineToastShown=true;
+    }
+  }
 }
 
 function renderStatus(d){
@@ -356,6 +391,9 @@ function renderStatus(d){
     const rem=Math.max(1,Math.ceil((new Date(cur.end_time)-now)/60000));
     sub.textContent='Par '+cur.reserved_by+' · encore '+rem+' min';
     document.getElementById('playNowSection').style.display='none';
+  }
+  if (navigator.onLine===false) {
+    sub.textContent += sub.textContent ? ' · mode hors ligne' : 'Mode hors ligne';
   }
 }
 
@@ -508,7 +546,8 @@ async function cancelMyResa(){
 let _socket = null;
 try {
   _socket = io({ transports: ['polling'], upgrade: false, reconnection: true });
-} catch(e) { _socket = { emit: () => {}, on: () => {} }; }
+} catch(e) { _socket = { emit: () => {}, on: () => {}, once: () => {}, off: () => {} }; }
+if (window.initReconnectIndicator) window.initReconnectIndicator(_socket);
 
 async function goToLobby(btn) {
   // Vérifier s'il y a déjà un lobby actif
@@ -524,16 +563,27 @@ async function goToLobby(btn) {
   let redirected = false;
   let socketError = false;
   _socket.emit('create_lobby', { invited: [] });
-  _socket.on('lobby_created', () => {
+  _socket.once('lobby_created', () => {
     if (!redirected) { redirected = true; window.location.href = '/lobby'; }
   });
-  _socket.on('error', (data) => {
+  _socket.once('error', (data) => {
     socketError = true;
     if (btn) { btn.disabled = false; btn.textContent = '👥 Créer un lobby'; }
-    alert('Impossible de créer un lobby : ' + (data.message || '?'));
+    toast('Impossible de creer un lobby : ' + (data.message || '?'),'err');
   });
   // Fallback si socket ne répond pas dans 3s (sauf en cas d'erreur explicite)
   setTimeout(() => { if (!redirected && !socketError) { redirected = true; window.location.href = '/lobby'; } }, 3000);
+}
+
+function getRefreshDelay() {
+  const profile = window.__bfNetworkProfile || {};
+  if (profile.offline) return 90000;
+  return profile.slow ? 60000 : 30000;
+}
+
+function scheduleRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(refresh, getRefreshDelay());
 }
 
 function initReservationBindings(){
@@ -587,10 +637,9 @@ function initReservationBindings(){
 async function init(){
   initReservationBindings();
   try{
-    const u=await fetch('/current_user').then(r=>r.json());
+    const u=await loadBaseUser();
     if(!u){location.href='/login';return;}
     ME=u.username;IS_ADMIN=u.is_admin;
-    ProfileUtils.updateNav(u);
     // Lien admin dans menu mobile (si admin)
     if (u && u.is_admin) {
       const mm = document.getElementById('mobileMenu');
@@ -609,9 +658,31 @@ async function init(){
   document.getElementById('planTime').value=String(nh%24).padStart(2,'0')+':'+String(nm%60).padStart(2,'0');
   await refresh();
   onTime();
-  setInterval(refresh,30000);
+  scheduleRefresh();
 }
 init();
+
+window.addEventListener('bf:network-change', () => {
+  scheduleRefresh();
+});
+
+window.addEventListener('online', () => {
+  offlineToastShown=false;
+  refresh();
+  scheduleRefresh();
+});
+
+window.addEventListener('offline', () => {
+  scheduleRefresh();
+  if (!offlineToastShown) {
+    toast('Connexion perdue - certaines actions patienteront','inf');
+    offlineToastShown=true;
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refresh();
+});
 </script>
 
 {% endblock %}
