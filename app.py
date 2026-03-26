@@ -292,6 +292,8 @@ _lobby_lock = _threading.Lock()
 # Si un joueur se reconnecte dans les 8s, il n'est pas retiré du lobby
 _lobby_grace = {}
 _LOBBY_GRACE_SECONDS = 8
+_rematch_grace = {}
+_REMATCH_GRACE_SECONDS = 6
 
 team_swap_requests = {}
 rematch_votes = {"team1": [], "team2": []}
@@ -306,6 +308,122 @@ def _clear_lobby_ephemera(lobby_state=None):
     for user in list(lobby_state.get('invited', [])):
         pending_invitations.pop(user, None)
     team_swap_requests.clear()
+
+def _current_game_players():
+    return list(dict.fromkeys(list(current_game.get('team1_players', []) or []) + list(current_game.get('team2_players', []) or [])))
+
+def _current_game_team(username):
+    if username in current_game.get('team1_players', []):
+        return 'team1'
+    if username in current_game.get('team2_players', []):
+        return 'team2'
+    return None
+
+def _emit_rematch_vote_update(no_player=None):
+    players = _current_game_players()
+    yes_players = (set(rematch_votes.get('team1', [])) | set(rematch_votes.get('team2', []))) & set(players)
+    no_players = set(rematch_no_votes) & set(players)
+    payload = {
+        'yes': len(yes_players),
+        'no': len(no_players),
+        'total': len(players),
+    }
+    if no_player:
+        payload['no_player'] = no_player
+    socketio.emit('rematch_vote_update', payload, namespace='/')
+
+def _rematch_ready_to_launch():
+    if current_game.get('active') or not rematch_pending or pending_rematch_replacements:
+        return False
+    players = _current_game_players()
+    if not players:
+        return False
+    yes_players = set(rematch_votes.get('team1', [])) | set(rematch_votes.get('team2', []))
+    return all(player in yes_players for player in players)
+
+def _notify_rematch_host_decision(declined_player):
+    host = current_game.get('started_by')
+    payload = {
+        'declined_player': declined_player,
+        'host': host
+    }
+    approvers = set()
+    if host:
+        approvers.add(host)
+    for user in set(connected_users.values()):
+        if user != host and is_admin(user):
+            approvers.add(user)
+    for approver in approvers:
+        emit_to_user(approver, 'host_replace_or_quit', payload)
+
+def _mark_player_unavailable_for_rematch(username):
+    if not username or current_game.get('active') or not rematch_pending:
+        return False
+    if not _current_game_team(username):
+        return False
+    if username in rematch_no_votes:
+        return False
+    rematch_no_votes.append(username)
+    rematch_votes['team1'] = [u for u in rematch_votes.get('team1', []) if u != username]
+    rematch_votes['team2'] = [u for u in rematch_votes.get('team2', []) if u != username]
+    return True
+
+def _cancel_rematch_flow():
+    global rematch_votes, rematch_no_votes, rematch_pending, pending_rematch_replacements
+    rematch_votes = {"team1": [], "team2": []}
+    rematch_no_votes = []
+    rematch_pending = False
+    pending_rematch_replacements.clear()
+    _rematch_grace.clear()
+    socketio.emit('rematch_cancelled', {}, namespace='/')
+
+def _accept_user_into_lobby(username, allow_direct=False):
+    if username in active_lobby.get('team1', []) or username in active_lobby.get('team2', []):
+        pending_invitations.pop(username, None)
+        return True, None
+
+    was_invited = username in active_lobby.get('invited', [])
+    was_accepted = username in active_lobby.get('accepted', [])
+    if not allow_direct and not was_invited and not was_accepted:
+        return False, "Invitation requise"
+
+    if was_invited:
+        active_lobby['invited'].remove(username)
+    if not was_accepted:
+        active_lobby.setdefault('accepted', []).append(username)
+
+    t1 = len(active_lobby.get('team1', []))
+    t2 = len(active_lobby.get('team2', []))
+    pref = active_lobby.get('team_pref', {}).pop(username, '')
+    placed = False
+    if pref == 'team1' and t1 < 2:
+        active_lobby['team1'].append(username)
+        placed = True
+    elif pref == 'team2' and t2 < 2:
+        active_lobby['team2'].append(username)
+        placed = True
+    if not placed:
+        if t1 <= t2 and t1 < 2:
+            active_lobby['team1'].append(username)
+            placed = True
+        elif t2 < 2:
+            active_lobby['team2'].append(username)
+            placed = True
+        elif t1 < 2:
+            active_lobby['team1'].append(username)
+            placed = True
+
+    if not placed:
+        if not was_accepted and username in active_lobby.get('accepted', []):
+            active_lobby['accepted'].remove(username)
+        if was_invited and username not in active_lobby.get('invited', []):
+            active_lobby.setdefault('invited', []).append(username)
+        return False, 'Equipes completes'
+
+    pending_invitations.pop(username, None)
+    if username in active_lobby.get('declined', []):
+        active_lobby['declined'].remove(username)
+    return True, None
 
 # ── connected_users : sid -> username pour les handlers SocketIO ──
 connected_users = {}
@@ -1153,6 +1271,7 @@ def _reset_game_state():
     rematch_votes = {"team1": [], "team2": []}
     rematch_pending = False
     pending_rematch_replacements.clear()
+    _rematch_grace.clear()
     servo_commands["servo1"].append("close")
     servo_commands["servo2"].append("close")
 
@@ -1160,6 +1279,7 @@ def _launch_rematch(game):
     """Lance un rematch. Centralise le code de relance."""
     global current_game, rematch_votes, rematch_no_votes, servo_commands, rematch_pending, pending_rematch_replacements
     rematch_no_votes.clear()
+    _rematch_grace.clear()
     current_game = {
         "team1_score": 0, "team2_score": 0,
         "team1_players": game['team1_players'],
@@ -3626,6 +3746,9 @@ def handle_connect():
         return False
     connected_users[request.sid] = username
     logger.info(f"WS connecte: {username} ({request.sid})")
+    if username in _rematch_grace:
+        _rematch_grace.pop(username, None)
+        logger.info(f"Rematch grace annule pour {username} (reconnecte)")
 
     # Annuler le délai de grâce si le joueur était en train de naviguer
     if username in _lobby_grace:
@@ -3748,6 +3871,27 @@ def handle_disconnect():
             'declined_player': inv.get('declined_player'),
             'reason': 'offline'
         })
+    if username and rematch_pending and not current_game.get('active') and _current_game_team(username) and not is_user_online(username):
+        _rematch_grace[username] = _time.time()
+
+        def _delayed_rematch_remove(uname, disc_time):
+            _time.sleep(_REMATCH_GRACE_SECONDS)
+            if _rematch_grace.get(uname) != disc_time:
+                return
+            _rematch_grace.pop(uname, None)
+            if is_user_online(uname) or current_game.get('active') or not rematch_pending:
+                return
+            if uname == current_game.get('started_by'):
+                _cancel_rematch_flow()
+                logger.info(f"Rematch annule : hote {uname} hors ligne")
+                return
+            if _mark_player_unavailable_for_rematch(uname):
+                _emit_rematch_vote_update(no_player=uname)
+                _notify_rematch_host_decision(uname)
+                logger.info(f"Rematch : {uname} retire des participants en attente")
+
+        t = _threading.Thread(target=_delayed_rematch_remove, args=(username, _rematch_grace[username]), daemon=True)
+        t.start()
     if username and active_lobby.get('active') and not is_user_online(username):
         # Délai de grâce : on attend avant de retirer le joueur du lobby
         # (navigation entre pages = déconnexion + reconnexion rapide)
@@ -3910,6 +4054,13 @@ def handle_accept_lobby():
     if not username or not active_lobby.get('active'):
         return
     with _lobby_lock:
+        accepted, err = _accept_user_into_lobby(username)
+        if not accepted:
+            if err:
+                emit('error', {'message': err})
+            return
+        socketio.emit('lobby_update', active_lobby, namespace='/')
+        return
         # Vérification atomique : déjà dans une équipe ?
         if username in active_lobby.get('team1', []) or username in active_lobby.get('team2', []):
             return
@@ -4019,6 +4170,39 @@ def handle_accept_join_request(data):
         emit('error', {'message': 'Seul l hote peut accepter les demandes'})
         return
     with _lobby_lock:
+        join_requests = active_lobby.get('join_requests', {})
+        req = join_requests.get(request_id)
+        if not req:
+            return
+        from_user = req.get('from')
+        join_requests.pop(request_id, None)
+        if not from_user:
+            return
+        dup = [rid for rid, v in join_requests.items() if v.get('from') == from_user]
+        for rid in dup:
+            join_requests.pop(rid, None)
+        accepted, err = _accept_user_into_lobby(from_user, allow_direct=True)
+        if not accepted:
+            emit_to_user(from_user, 'join_request_result', {
+                'accepted': False,
+                'host': host,
+                'from': from_user,
+                'to': from_user,
+                'request_id': request_id,
+                'message': err or 'Impossible de rejoindre ce lobby'
+            })
+            emit('error', {'message': err or 'Impossible de valider cette demande'})
+            socketio.emit('lobby_update', active_lobby, namespace='/')
+            return
+        emit_to_user(from_user, 'join_request_result', {
+            'accepted': True,
+            'host': host,
+            'from': from_user,
+            'to': from_user,
+            'request_id': request_id
+        })
+        socketio.emit('lobby_update', active_lobby, namespace='/')
+        return
         join_requests = active_lobby.get('join_requests', {})
         req = join_requests.get(request_id)
         if not req:
@@ -4418,6 +4602,32 @@ def handle_vote_rematch(data):
     username = get_socket_user()
     if not username:
         return
+    if current_game.get('active') or not rematch_pending:
+        emit('error', {'message': 'Aucune revanche en attente'})
+        return
+    vote = str((data or {}).get('vote') or '').strip().lower()
+    team = _current_game_team(username)
+    if not team:
+        emit('error', {'message': 'Seuls les joueurs de la partie peuvent voter'})
+        return
+    if vote == 'no':
+        if _mark_player_unavailable_for_rematch(username):
+            _emit_rematch_vote_update(no_player=username)
+            _notify_rematch_host_decision(username)
+        return
+    if vote != 'yes':
+        emit('error', {'message': 'Vote invalide'})
+        return
+    if username in rematch_no_votes:
+        emit('error', {'message': 'Vous avez deja quitte la revanche'})
+        return
+    rematch_votes['team1'] = [u for u in rematch_votes.get('team1', []) if u != username]
+    rematch_votes['team2'] = [u for u in rematch_votes.get('team2', []) if u != username]
+    rematch_votes[team].append(username)
+    _emit_rematch_vote_update()
+    if _rematch_ready_to_launch():
+        _launch_rematch(current_game)
+    return
     all_players = list(current_game.get('team1_players', [])) + list(current_game.get('team2_players', []))
     host = current_game.get('started_by')
 
@@ -4473,16 +4683,23 @@ def handle_vote_rematch(data):
 
 @socketio.on('host_quit_rematch')
 def handle_host_quit_rematch():
-    global rematch_votes, rematch_no_votes, rematch_pending, pending_rematch_replacements
     username = get_socket_user()
     host = current_game.get('started_by')
     if username != host and not is_admin(username):
         return
-    rematch_votes = {"team1": [], "team2": []}
-    rematch_no_votes = []
-    rematch_pending = False
-    pending_rematch_replacements.clear()
-    socketio.emit('rematch_cancelled', {}, namespace='/')
+    _cancel_rematch_flow()
+
+@socketio.on('leave_rematch')
+def handle_leave_rematch():
+    username = get_socket_user()
+    if not username or current_game.get('active') or not rematch_pending:
+        return
+    if username == current_game.get('started_by') or is_admin(username):
+        _cancel_rematch_flow()
+        return
+    if _mark_player_unavailable_for_rematch(username):
+        _emit_rematch_vote_update(no_player=username)
+        _notify_rematch_host_decision(username)
 
 def _validate_rematch_replacement_request(actor_username, data):
     """Valide une demande de remplacement pour la revanche."""
@@ -4499,6 +4716,8 @@ def _validate_rematch_replacement_request(actor_username, data):
         return None, "Parametres manquants"
     if declined_player == replacement_player:
         return None, "Le remplacant doit etre different"
+    if declined_player not in rematch_no_votes:
+        return None, "Ce joueur n'a pas quitte la revanche"
 
     t1 = list(current_game.get('team1_players', []) or [])
     t2 = list(current_game.get('team2_players', []) or [])
@@ -4561,12 +4780,16 @@ def _apply_rematch_replacement(payload):
     rematch_votes['team1'] = [u for u in rematch_votes.get('team1', []) if u not in (declined_player, replacement_player)]
     rematch_votes['team2'] = [u for u in rematch_votes.get('team2', []) if u not in (declined_player, replacement_player)]
     pending_rematch_replacements.pop(replacement_player, None)
+    team = payload.get('team')
+    if team in ('team1', 'team2') and replacement_player not in rematch_votes[team]:
+        rematch_votes[team].append(replacement_player)
 
     socketio.emit('rematch_player_replaced', {
         'declined_player': declined_player,
         'replacement_player': replacement_player,
-        'team': payload.get('team')
+        'team': team
     }, namespace='/')
+    _emit_rematch_vote_update()
 
 @socketio.on('rematch_replace_player')
 def handle_rematch_replace_player(data):
@@ -4580,7 +4803,8 @@ def handle_rematch_replace_player(data):
         emit('error', {'message': err})
         return
     _apply_rematch_replacement(payload)
-    _launch_rematch(current_game)
+    if _rematch_ready_to_launch():
+        _launch_rematch(current_game)
 
 @socketio.on('rematch_invite_player')
 def handle_rematch_invite_player(data):
@@ -4599,13 +4823,20 @@ def handle_rematch_invite_player(data):
     replacement_player = payload['replacement_player']
     if is_guest_player(replacement_player):
         _apply_rematch_replacement(payload)
-        _launch_rematch(current_game)
+        if _rematch_ready_to_launch():
+            _launch_rematch(current_game)
         return
 
     # Nettoyer les invitations de rematch expirees.
     now_ts = _time.time()
     stale = [u for u, inv in list(pending_rematch_replacements.items()) if now_ts - inv.get('timestamp', 0) > 120]
     for u in stale:
+        pending_rematch_replacements.pop(u, None)
+    same_declined = [
+        u for u, inv in list(pending_rematch_replacements.items())
+        if inv.get('declined_player') == payload['declined_player']
+    ]
+    for u in same_declined:
         pending_rematch_replacements.pop(u, None)
 
     invite_payload = {
@@ -4670,7 +4901,8 @@ def handle_rematch_replacement_response(data):
         return
 
     _apply_rematch_replacement(payload)
-    _launch_rematch(current_game)
+    if _rematch_ready_to_launch():
+        _launch_rematch(current_game)
 @socketio.on('reset_game')
 def handle_reset():
     global current_game, rematch_votes, servo_commands, rematch_pending

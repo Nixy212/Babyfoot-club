@@ -239,7 +239,23 @@ if (window.initReconnectIndicator) window.initReconnectIndicator(socket);
 
 let currentUsername=null, isAdmin=false, hasReservation=false;
 let activeLobbyState=null, myJoinRequestPending=false, isGameActive=false;
+let pendingReplacementInviteEl=null;
 const escHtml = (s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function syncJoinRequestState() {
+  if (!currentUsername || !activeLobbyState?.active) {
+    myJoinRequestPending = false;
+    return;
+  }
+  const L = activeLobbyState;
+  const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername)||(L.team1||[]).includes(currentUsername)||(L.team2||[]).includes(currentUsername);
+  if (imIn) {
+    myJoinRequestPending = false;
+    return;
+  }
+  const requests = Object.values(L.join_requests || {});
+  myJoinRequestPending = requests.some((req) => req && req.from === currentUsername);
+}
 
 // ── Chargement utilisateur ──────────────────────────────────────────────────
 async function loadCurrentUser() {
@@ -287,12 +303,14 @@ async function checkActiveLobby() {
     const [lR,gR] = await Promise.all([fetch('/api/active_lobby'),fetch('/api/current_game')]);
     if (lR.ok) activeLobbyState = await lR.json();
     if (gR.ok) { const g=await gR.json(); isGameActive=!!(g?.active || g?.current_game?.active); }
+    syncJoinRequestState();
     updateLobbyCardUI();
   } catch(e) {}
 }
 
 function updateLobbyCardUI() {
   if (!currentUsername) return;
+  syncJoinRequestState();
   const card=document.getElementById('lobbyCard'), badge=document.getElementById('lobbyBadge');
   const btn=document.getElementById('lobbyBtn'), title=document.getElementById('lobbyTitle');
   const desc=document.getElementById('lobbyDesc'), icon=document.getElementById('lobbyTitleIcon');
@@ -300,7 +318,7 @@ function updateLobbyCardUI() {
 
   if (activeLobbyState?.active) {
     const L=activeLobbyState;
-    const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername);
+    const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername)||(L.team1||[]).includes(currentUsername)||(L.team2||[]).includes(currentUsername);
     if (imIn) {
       card.className='lobby-card lobby-card-active'; icon.style.background='linear-gradient(135deg,rgba(205,127,50,.25),rgba(255,215,0,.12))';
       icon.innerHTML='<i class="fas fa-gamepad" style="color:#cd7f32"></i>'; title.textContent='Lobby en cours';
@@ -345,7 +363,7 @@ function updateLobbyCardUI() {
 async function handleLobbyBtn() {
   if (activeLobbyState?.active) {
     const L=activeLobbyState;
-    const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername);
+    const imIn = L.host===currentUsername||(L.accepted||[]).includes(currentUsername)||(L.invited||[]).includes(currentUsername)||(L.team1||[]).includes(currentUsername)||(L.team2||[]).includes(currentUsername);
     if (imIn) { location.href='/lobby'; }
     else if (!myJoinRequestPending) { socket.emit('request_join_lobby'); myJoinRequestPending=true; updateLobbyCardUI(); showNotif('Demande envoyée à '+L.host,'info'); }
   } else {
@@ -398,6 +416,17 @@ function showNotif(msg, type) {
   n.appendChild(close);
   bar.appendChild(n);
   setTimeout(()=>{ n.style.cssText+=';opacity:0;transform:translateX(20px);transition:all .3s'; setTimeout(()=>n.remove(),300); },5000);
+}
+
+function buildActionNotification(color, renderContent) {
+  const bar = document.getElementById('notificationBar');
+  if (!bar) return null;
+  const n = document.createElement('div');
+  n.className = 'notification';
+  n.style.borderLeft = `3px solid ${color}`;
+  renderContent(n);
+  bar.appendChild(n);
+  return n;
 }
 
 // ── API calls ────────────────────────────────────────────────────────────────
@@ -515,8 +544,13 @@ function _servo(btn,ev,label,color){
 // ── Socket ───────────────────────────────────────────────────────────────────
 socket.on('lobby_created',d=>{if(d.host===currentUsername||(d.invited||[]).includes(currentUsername)){showNotif('Lobby créé — redirection…','success');setTimeout(()=>location.href='/lobby',500);}else checkActiveLobby();});
 socket.on('lobby_cancelled',()=>{activeLobbyState=null;myJoinRequestPending=false;updateLobbyCardUI();});
-socket.on('lobby_update',d=>{activeLobbyState=d;updateLobbyCardUI();});
-socket.on('game_started',()=>{isGameActive=true;checkActiveLobby();});
+socket.on('lobby_update',d=>{activeLobbyState=d;syncJoinRequestState();updateLobbyCardUI();});
+socket.on('game_started',(game)=>{
+  isGameActive=true;
+  const players=[...(game?.team1_players||[]),...(game?.team2_players||[])];
+  if(players.includes(currentUsername)||game?.started_by===currentUsername){ location.href='/live-score'; return; }
+  checkActiveLobby();
+});
 socket.on('game_stopped',()=>{isGameActive=false;checkActiveLobby();});
 socket.on('join_request_result',d=>{
   myJoinRequestPending=false;
@@ -524,15 +558,18 @@ socket.on('join_request_result',d=>{
   if(recipient && recipient!==currentUsername) return; // pas pour moi
   if(d.accepted){
     showNotif('✓ Accepté par '+d.host+' — redirection…','success');
-    // Courte attente pour que lobby_update arrive et mette à jour activeLobbyState
-    setTimeout(()=>location.href='/lobby',1000);
+    setTimeout(()=>location.href='/lobby',500);
   }else{
-    showNotif('✕ '+d.host+' a refusé votre demande','error');
+    showNotif('✕ '+(d.message || (d.host+' a refusé votre demande')),'error');
     checkActiveLobby();
   }
 });
 socket.on('lobby_invitation', (d) => {
   if (d.to !== currentUsername) return;
+  if (activeLobbyState?.active) {
+    const alreadyIn = activeLobbyState.host===currentUsername||(activeLobbyState.accepted||[]).includes(currentUsername)||(activeLobbyState.invited||[]).includes(currentUsername)||(activeLobbyState.team1||[]).includes(currentUsername)||(activeLobbyState.team2||[]).includes(currentUsername);
+    if (alreadyIn) return;
+  }
   const bar = document.getElementById('notificationBar');
   if (!bar) return;
 
@@ -611,6 +648,54 @@ socket.on('join_request', (d) => {
   n.appendChild(actions);
   bar.appendChild(n);
   setTimeout(() => n.remove && n.remove(), 20000);
+});
+socket.on('rematch_replacement_invite', (d) => {
+  const replacementPlayer = d?.replacement_player || '';
+  if (pendingReplacementInviteEl) pendingReplacementInviteEl.remove();
+  pendingReplacementInviteEl = buildActionNotification('#cd7f32', (n) => {
+    const txt = document.createElement('div');
+    txt.style.flex = '1';
+    const who = document.createElement('strong');
+    who.style.color = 'var(--bronze)';
+    who.textContent = d?.host || 'L’hôte';
+    txt.appendChild(who);
+    txt.appendChild(document.createTextNode(` vous propose de remplacer ${d?.declined_player || 'un joueur'} pour la revanche`));
+
+    const actions = document.createElement('div');
+    actions.className = 'notification-buttons';
+
+    const accept = document.createElement('button');
+    accept.className = 'btn-accept';
+    accept.type = 'button';
+    accept.textContent = '✓ Rejoindre';
+    accept.addEventListener('click', () => {
+      socket.emit('rematch_replacement_response', { accept: true });
+      showNotif(`✓ Invitation acceptée${replacementPlayer ? ' pour '+replacementPlayer : ''} — préparation…`, 'success');
+      n.remove();
+      pendingReplacementInviteEl = null;
+    });
+
+    const decline = document.createElement('button');
+    decline.className = 'btn-decline';
+    decline.type = 'button';
+    decline.textContent = '✕';
+    decline.addEventListener('click', () => {
+      socket.emit('rematch_replacement_response', { accept: false });
+      n.remove();
+      pendingReplacementInviteEl = null;
+    });
+
+    actions.appendChild(accept);
+    actions.appendChild(decline);
+    n.appendChild(txt);
+    n.appendChild(actions);
+  });
+});
+socket.on('rematch_cancelled', () => {
+  if (pendingReplacementInviteEl) {
+    pendingReplacementInviteEl.remove();
+    pendingReplacementInviteEl = null;
+  }
 });
 socket.on('error',d=>showNotif('✕ '+(d.message||'Erreur'),'error'));
 socket.on('elo_updated',d=>{if(!d?.changes)return;const me=d.changes.find(c=>c.player===currentUsername);if(!me)return;const sign=me.delta>=0?'+':'';showNotif(`${me.tier_up?'🎉 Niveau supérieur ! ':me.delta>=20?'🔥 Belle victoire ! ':''}${sign}${me.delta} pts ELO`,me.delta>=0?'success':'error');});

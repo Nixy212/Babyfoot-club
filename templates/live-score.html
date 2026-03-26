@@ -452,7 +452,7 @@ if (typeof window.io === 'undefined') {
     </div>
     <div id="myVoteConfirm" style="display:none;color:var(--text-secondary);font-size:.875rem;padding:.75rem;background:rgba(255,255,255,.04);border-radius:8px"></div>
     <div class="rematch-actions-secondary">
-      <button class="btn btn-ghost btn-rematch-exit" onclick="leaveRematch()">↩ Retour dashboard</button>
+      <button class="btn btn-ghost btn-rematch-exit" onclick="leaveRematch()">✕ Quitter la revanche</button>
     </div>
   </div>
 </div>
@@ -464,7 +464,7 @@ if (typeof window.io === 'undefined') {
     <p id="hostDecisionMsg" style="color:var(--text-secondary);font-size:.9rem;margin-bottom:1.25rem"></p>
     <div style="display:flex;gap:.75rem">
       <button class="btn btn-ghost" style="flex:1" onclick="hostReplacePlayer()">👥 Remplacer</button>
-      <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="hostQuitRematch()">✕ Quitter</button>
+      <button class="btn" style="flex:1;background:rgba(231,76,60,.1);color:#e74c3c;border:1px solid rgba(231,76,60,.25)" onclick="hostQuitRematch()">✕ Annuler</button>
     </div>
   </div>
 </div>
@@ -472,9 +472,8 @@ if (typeof window.io === 'undefined') {
 <!-- Popup Remplacement joueur -->
 <div id="replacePlayerPopup" style="display:none;position:fixed;inset:0;z-index:9003;background:rgba(0,0,0,.84);align-items:center;justify-content:center;padding:1.5rem">
   <div class="popup-card" style="background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:20px;padding:1.5rem;width:100%;max-width:420px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.75rem">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem">
       <h3 style="margin:0;font-size:1.05rem">👥 Choisir un remplaçant</h3>
-      <button class="btn btn-ghost" style="font-size:.75rem;padding:.35rem .65rem" onclick="closeReplacePlayerPopup()">✕</button>
     </div>
     <p id="replacePlayerHint" style="margin:.1rem 0 .6rem;color:var(--text-secondary);font-size:.82rem"></p>
     <div id="replacePlayerList" class="replace-list"></div>
@@ -1002,8 +1001,12 @@ function respondReplacementInvite(accept) {
 
 function leaveRematch() {
   const iAmHost = !!(lastGame && (lastGame.started_by === currentUser));
-  if (socket && socket.connected && (iAmHost || isAdmin)) {
-    socket.emit('host_quit_rematch');
+  const t1 = parsePlayers(lastGame ? lastGame.team1_players : []);
+  const t2 = parsePlayers(lastGame ? lastGame.team2_players : []);
+  const isParticipant = t1.includes(currentUser) || t2.includes(currentUser);
+  if (socket && socket.connected) {
+    if (iAmHost || isAdmin) socket.emit('host_quit_rematch');
+    else if (isParticipant) socket.emit('leave_rematch');
   }
   document.getElementById('rematchPopup').style.display = 'none';
   document.getElementById('hostDecisionPopup').style.display = 'none';
@@ -1162,6 +1165,14 @@ function registerSocketEvents() {
   socket.on('rematch_player_replaced', (data) => {
     const oldP = data && data.declined_player ? data.declined_player : 'Joueur';
     const newP = data && data.replacement_player ? data.replacement_player : 'remplaçant';
+    if (lastGame) {
+      const team = data && data.team ? data.team : null;
+      if (team === 'team1' && Array.isArray(lastGame.team1_players)) {
+        lastGame.team1_players = lastGame.team1_players.map((p) => p === oldP ? newP : p);
+      } else if (team === 'team2' && Array.isArray(lastGame.team2_players)) {
+        lastGame.team2_players = lastGame.team2_players.map((p) => p === oldP ? newP : p);
+      }
+    }
     document.getElementById('replacePlayerPopup').style.display = 'none';
     document.getElementById('hostDecisionPopup').style.display = 'none';
     document.getElementById('replacementInvitePopup').style.display = 'none';

@@ -265,7 +265,7 @@ function render() {
   document.getElementById('inviteSection').style.display = amHost ? 'block' : 'none';
 
   // Bouton quitter
-  document.getElementById('leaveBtn').textContent = amHost ? '✕ Fermer le lobby' : '✕ Quitter le lobby';
+  document.getElementById('leaveBtn').textContent = '✕ Quitter le lobby';
 
   // Bouton lancer
   const team1Ok = (LOBBY.team1 || []).length > 0;
@@ -693,10 +693,10 @@ socket.on('join_request_result', data => {
       if (!d.active) { saferedirect('/dashboard'); return; }
       LOBBY = d;
       render();
-      socket.emit('accept_lobby');
+      setTimeout(() => saferedirect('/lobby'), 300);
     }).catch(() => saferedirect('/dashboard'));
   } else {
-    toast('Votre demande a été refusée', 'err');
+    toast(data.message || 'Votre demande a été refusée', 'err');
   }
 });
 
